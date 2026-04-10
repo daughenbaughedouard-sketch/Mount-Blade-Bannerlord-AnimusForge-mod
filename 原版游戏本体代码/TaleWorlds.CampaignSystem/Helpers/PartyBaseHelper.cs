@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using TaleWorlds.CampaignSystem;
@@ -9,360 +9,342 @@ using TaleWorlds.Core;
 using TaleWorlds.Library;
 using TaleWorlds.Localization;
 
-namespace Helpers
+namespace Helpers;
+
+public static class PartyBaseHelper
 {
-	// Token: 0x0200000E RID: 14
-	public static class PartyBaseHelper
+	public static void SortRoster(MobileParty mobileParty)
 	{
-		// Token: 0x06000073 RID: 115 RVA: 0x00006C30 File Offset: 0x00004E30
-		public static void SortRoster(MobileParty mobileParty)
+		CharacterObject characterObject = null;
+		foreach (TroopRosterElement item in mobileParty.MemberRoster.GetTroopRoster())
 		{
-			CharacterObject characterObject = null;
-			foreach (TroopRosterElement troopRosterElement in mobileParty.MemberRoster.GetTroopRoster())
+			if (characterObject == null || characterObject.Tier < item.Character.Tier)
 			{
-				if (characterObject == null || characterObject.Tier < troopRosterElement.Character.Tier)
+				characterObject = item.Character;
+				if (characterObject.Tier == Campaign.Current.Models.CharacterStatsModel.MaxCharacterTier)
 				{
-					characterObject = troopRosterElement.Character;
-					if (characterObject.Tier == Campaign.Current.Models.CharacterStatsModel.MaxCharacterTier)
-					{
-						break;
-					}
+					break;
 				}
 			}
-			if (characterObject != null)
-			{
-				mobileParty.MemberRoster.SwapTroopsAtIndices(mobileParty.MemberRoster.FindIndexOfTroop(characterObject), 0);
-			}
 		}
-
-		// Token: 0x06000074 RID: 116 RVA: 0x00006CDC File Offset: 0x00004EDC
-		public static TextObject GetPartySizeText(PartyBase party)
+		if (characterObject != null)
 		{
-			TextObject result;
-			if (party.NumberOfHealthyMembers == party.NumberOfAllMembers)
-			{
-				result = new TextObject(party.NumberOfHealthyMembers.ToString(), null);
-			}
-			else
-			{
-				MBTextManager.SetTextVariable("HEALTHY_NUM", party.NumberOfHealthyMembers);
-				MBTextManager.SetTextVariable("WOUNDED_NUM", party.NumberOfAllMembers - party.NumberOfHealthyMembers);
-				result = GameTexts.FindText("str_party_health", null);
-			}
-			return result;
+			mobileParty.MemberRoster.SwapTroopsAtIndices(mobileParty.MemberRoster.FindIndexOfTroop(characterObject), 0);
 		}
+	}
 
-		// Token: 0x06000075 RID: 117 RVA: 0x00006D44 File Offset: 0x00004F44
-		public static TextObject GetPartySizeText(int healtyNumber, int woundedNumber, bool isInspected)
+	public static TextObject GetPartySizeText(PartyBase party)
+	{
+		if (party.NumberOfHealthyMembers == party.NumberOfAllMembers)
 		{
-			string seed = "";
-			if (!isInspected)
-			{
-				string str = (from t in new int[] { 0, 10, 100, 1000 }
-					where t < healtyNumber + woundedNumber
-					select t).Aggregate(seed, (string current, int t) => current + "?");
-				return new TextObject("{=!}" + str, null);
-			}
+			return new TextObject(party.NumberOfHealthyMembers.ToString());
+		}
+		MBTextManager.SetTextVariable("HEALTHY_NUM", party.NumberOfHealthyMembers);
+		MBTextManager.SetTextVariable("WOUNDED_NUM", party.NumberOfAllMembers - party.NumberOfHealthyMembers);
+		return GameTexts.FindText("str_party_health");
+	}
+
+	public static TextObject GetPartySizeText(int healtyNumber, int woundedNumber, bool isInspected)
+	{
+		string seed = "";
+		if (isInspected)
+		{
 			if (woundedNumber == 0)
 			{
-				return new TextObject(healtyNumber, null);
+				return new TextObject(healtyNumber);
 			}
-			TextObject textObject = GameTexts.FindText("str_party_health", null);
+			TextObject textObject = GameTexts.FindText("str_party_health");
 			textObject.SetTextVariable("HEALTHY_NUM", healtyNumber);
 			textObject.SetTextVariable("WOUNDED_NUM", woundedNumber);
 			return textObject;
 		}
+		string text = new int[4] { 0, 10, 100, 1000 }.Where((int t) => t < healtyNumber + woundedNumber).Aggregate(seed, (string current, int t) => current + "?");
+		return new TextObject("{=!}" + text);
+	}
 
-		// Token: 0x06000076 RID: 118 RVA: 0x00006E0C File Offset: 0x0000500C
-		public static string GetShipSizeText(int shipCount, bool isInspected)
+	public static string GetShipSizeText(int shipCount, bool isInspected)
+	{
+		if (isInspected)
 		{
-			if (isInspected)
-			{
-				return shipCount.ToString();
-			}
-			return "?";
+			return shipCount.ToString();
 		}
+		return "?";
+	}
 
-		// Token: 0x06000077 RID: 119 RVA: 0x00006E20 File Offset: 0x00005020
-		public static float FindPartySizeNormalLimit(MobileParty mobileParty)
+	public static float FindPartySizeNormalLimit(MobileParty mobileParty)
+	{
+		int num = Math.Min((mobileParty.LeaderHero != null && mobileParty.Party.Owner?.Clan != null && mobileParty.LeaderHero != mobileParty.Party.Owner.Clan.Leader) ? mobileParty.LeaderHero.CharacterObject.TroopWage : 0, mobileParty.TotalWage);
+		int a = (int)((float)(mobileParty.PaymentLimit - num) / Campaign.Current.AverageWage) + 1;
+		int num2 = TaleWorlds.Library.MathF.Max(1, TaleWorlds.Library.MathF.Min(a, mobileParty.Party.PartySizeLimit));
+		return TaleWorlds.Library.MathF.Max(0.1f, (float)num2 / (float)mobileParty.Party.PartySizeLimit);
+	}
+
+	public static Hero GetCaptainOfTroop(PartyBase affectorParty, CharacterObject affectorCharacter)
+	{
+		foreach (TroopRosterElement item in affectorParty.MemberRoster.GetTroopRoster())
 		{
-			int val;
-			if (mobileParty.LeaderHero != null)
+			if (item.Character.IsHero && !item.Character.HeroObject.IsWounded && MBRandom.RandomFloat < 0.2f)
 			{
-				Hero owner = mobileParty.Party.Owner;
-				if (((owner != null) ? owner.Clan : null) != null && mobileParty.LeaderHero != mobileParty.Party.Owner.Clan.Leader)
-				{
-					val = mobileParty.LeaderHero.CharacterObject.TroopWage;
-					goto IL_51;
-				}
+				return item.Character.HeroObject;
 			}
-			val = 0;
-			IL_51:
-			int num = Math.Min(val, mobileParty.TotalWage);
-			int a = (int)((float)(mobileParty.PaymentLimit - num) / Campaign.Current.AverageWage) + 1;
-			int num2 = MathF.Max(1, MathF.Min(a, mobileParty.Party.PartySizeLimit));
-			return MathF.Max(0.1f, (float)num2 / (float)mobileParty.Party.PartySizeLimit);
 		}
+		return affectorParty.LeaderHero;
+	}
 
-		// Token: 0x06000078 RID: 120 RVA: 0x00006ED4 File Offset: 0x000050D4
-		public static Hero GetCaptainOfTroop(PartyBase affectorParty, CharacterObject affectorCharacter)
+	public static string PrintRosterContents(TroopRoster roster)
+	{
+		MBStringBuilder mBStringBuilder = default(MBStringBuilder);
+		mBStringBuilder.Initialize(16, "PrintRosterContents");
+		for (int i = 0; i < roster.Count; i++)
 		{
-			foreach (TroopRosterElement troopRosterElement in affectorParty.MemberRoster.GetTroopRoster())
+			TroopRosterElement elementCopyAtIndex = roster.GetElementCopyAtIndex(i);
+			TextObject value;
+			if (elementCopyAtIndex.Character.IsHero)
 			{
-				if (troopRosterElement.Character.IsHero && !troopRosterElement.Character.HeroObject.IsWounded && MBRandom.RandomFloat < 0.2f)
-				{
-					return troopRosterElement.Character.HeroObject;
-				}
+				value = elementCopyAtIndex.Character.Name;
 			}
-			return affectorParty.LeaderHero;
+			else
+			{
+				TextObject textObject = new TextObject("{=fW0XS9JC}{ELEMENT_NUMBER} {ELEMENT_CHAR_NAME}");
+				textObject.SetTextVariable("ELEMENT_NUMBER", elementCopyAtIndex.Number);
+				textObject.SetTextVariable("ELEMENT_CHAR_NAME", elementCopyAtIndex.Character.Name);
+				value = textObject;
+			}
+			mBStringBuilder.Append(value);
+			if (i < roster.Count - 1)
+			{
+				mBStringBuilder.Append(", ");
+			}
 		}
+		return mBStringBuilder.ToStringAndRelease();
+	}
 
-		// Token: 0x06000079 RID: 121 RVA: 0x00006F68 File Offset: 0x00005168
-		public static string PrintRosterContents(TroopRoster roster)
+	public static TextObject PrintSummarisedItemRoster(ItemRoster items)
+	{
+		int num = 0;
+		int num2 = 0;
+		int num3 = 0;
+		int num4 = 0;
+		int num5 = 0;
+		int num6 = 0;
+		int num7 = 0;
+		int num8 = 0;
+		ItemObject itemObject = null;
+		ItemObject itemObject2 = null;
+		ItemObject itemObject3 = null;
+		ItemObject itemObject4 = null;
+		for (int i = 0; i < items.Count; i++)
 		{
-			MBStringBuilder mbstringBuilder = default(MBStringBuilder);
-			mbstringBuilder.Initialize(16, "PrintRosterContents");
-			for (int i = 0; i < roster.Count; i++)
+			ItemRosterElement elementCopyAtIndex = items.GetElementCopyAtIndex(i);
+			ItemObject item = elementCopyAtIndex.EquipmentElement.Item;
+			int? obj;
+			if (item.IsTradeGood)
 			{
-				TroopRosterElement elementCopyAtIndex = roster.GetElementCopyAtIndex(i);
-				TextObject value;
-				if (elementCopyAtIndex.Character.IsHero)
+				if (itemObject3 != null)
 				{
-					value = elementCopyAtIndex.Character.Name;
+					_ = itemObject3.Value;
+					if (0 == 0)
+					{
+						obj = itemObject3?.Value;
+						goto IL_0083;
+					}
 				}
-				else
+				obj = -1;
+				goto IL_0083;
+			}
+			int? obj2;
+			if (item.HasArmorComponent)
+			{
+				if (itemObject2 != null)
 				{
-					TextObject textObject = new TextObject("{=fW0XS9JC}{ELEMENT_NUMBER} {ELEMENT_CHAR_NAME}", null);
-					textObject.SetTextVariable("ELEMENT_NUMBER", elementCopyAtIndex.Number);
-					textObject.SetTextVariable("ELEMENT_CHAR_NAME", elementCopyAtIndex.Character.Name);
-					value = textObject;
+					_ = itemObject2.Value;
+					if (0 == 0)
+					{
+						obj2 = itemObject2?.Value;
+						goto IL_0100;
+					}
 				}
-				mbstringBuilder.Append<TextObject>(value);
-				if (i < roster.Count - 1)
+				obj2 = -1;
+				goto IL_0100;
+			}
+			int? obj3;
+			if (item.WeaponComponent != null)
+			{
+				if (itemObject != null)
 				{
-					mbstringBuilder.Append<string>(", ");
+					_ = itemObject.Value;
+					if (0 == 0)
+					{
+						obj3 = itemObject?.Value;
+						goto IL_017a;
+					}
+				}
+				obj3 = -1;
+				goto IL_017a;
+			}
+			int? obj4;
+			if (itemObject4 != null)
+			{
+				_ = itemObject4.Value;
+				if (0 == 0)
+				{
+					obj4 = itemObject4?.Value;
+					goto IL_01e8;
 				}
 			}
-			return mbstringBuilder.ToStringAndRelease();
+			obj4 = -1;
+			goto IL_01e8;
+			IL_01e8:
+			if (obj4 < item.Value)
+			{
+				num8 = elementCopyAtIndex.Amount;
+				itemObject4 = item;
+			}
+			num7 += elementCopyAtIndex.Amount;
+			continue;
+			IL_0100:
+			if (obj2 < item.Value)
+			{
+				num4 = elementCopyAtIndex.Amount;
+				itemObject2 = item;
+			}
+			num3 += elementCopyAtIndex.Amount;
+			continue;
+			IL_017a:
+			if (obj3 < item.Value)
+			{
+				num2 = elementCopyAtIndex.Amount;
+				itemObject = item;
+			}
+			num += elementCopyAtIndex.Amount;
+			continue;
+			IL_0083:
+			if (obj < item.Value)
+			{
+				num6 = elementCopyAtIndex.Amount;
+				itemObject3 = item;
+			}
+			num5 += elementCopyAtIndex.Amount;
 		}
-
-		// Token: 0x0600007A RID: 122 RVA: 0x00007020 File Offset: 0x00005220
-		public static TextObject PrintSummarisedItemRoster(ItemRoster items)
+		num5 -= num6;
+		num3 -= num4;
+		num -= num2;
+		num7 -= num8;
+		int[] array = new int[4] { num6, num4, num2, num8 };
+		int[] array2 = new int[4] { num5, num3, num, num7 };
+		ItemObject[] array3 = new ItemObject[4] { itemObject3, itemObject2, itemObject, itemObject4 };
+		TextObject[,] array4 = new TextObject[4, 2]
 		{
-			int num = 0;
-			int num2 = 0;
-			int num3 = 0;
-			int num4 = 0;
-			int num5 = 0;
-			int num6 = 0;
-			int num7 = 0;
-			int num8 = 0;
-			ItemObject itemObject = null;
-			ItemObject itemObject2 = null;
-			ItemObject itemObject3 = null;
-			ItemObject itemObject4 = null;
-			for (int i = 0; i < items.Count; i++)
 			{
-				ItemRosterElement elementCopyAtIndex = items.GetElementCopyAtIndex(i);
-				ItemObject item = elementCopyAtIndex.EquipmentElement.Item;
-				if (item.IsTradeGood)
-				{
-					bool flag;
-					if (itemObject3 == null)
-					{
-						flag = true;
-					}
-					else
-					{
-						int value = itemObject3.Value;
-						flag = false;
-					}
-					int? num9 = (flag ? new int?(-1) : ((itemObject3 != null) ? new int?(itemObject3.Value) : null));
-					int value2 = item.Value;
-					if ((num9.GetValueOrDefault() < value2) & (num9 != null))
-					{
-						num6 = elementCopyAtIndex.Amount;
-						itemObject3 = item;
-					}
-					num5 += elementCopyAtIndex.Amount;
-				}
-				else if (item.HasArmorComponent)
-				{
-					bool flag2;
-					if (itemObject2 == null)
-					{
-						flag2 = true;
-					}
-					else
-					{
-						int value3 = itemObject2.Value;
-						flag2 = false;
-					}
-					int? num9 = (flag2 ? new int?(-1) : ((itemObject2 != null) ? new int?(itemObject2.Value) : null));
-					int value2 = item.Value;
-					if ((num9.GetValueOrDefault() < value2) & (num9 != null))
-					{
-						num4 = elementCopyAtIndex.Amount;
-						itemObject2 = item;
-					}
-					num3 += elementCopyAtIndex.Amount;
-				}
-				else if (item.WeaponComponent != null)
-				{
-					bool flag3;
-					if (itemObject == null)
-					{
-						flag3 = true;
-					}
-					else
-					{
-						int value4 = itemObject.Value;
-						flag3 = false;
-					}
-					int? num9 = (flag3 ? new int?(-1) : ((itemObject != null) ? new int?(itemObject.Value) : null));
-					int value2 = item.Value;
-					if ((num9.GetValueOrDefault() < value2) & (num9 != null))
-					{
-						num2 = elementCopyAtIndex.Amount;
-						itemObject = item;
-					}
-					num += elementCopyAtIndex.Amount;
-				}
-				else
-				{
-					bool flag4;
-					if (itemObject4 == null)
-					{
-						flag4 = true;
-					}
-					else
-					{
-						int value5 = itemObject4.Value;
-						flag4 = false;
-					}
-					int? num9 = (flag4 ? new int?(-1) : ((itemObject4 != null) ? new int?(itemObject4.Value) : null));
-					int value2 = item.Value;
-					if ((num9.GetValueOrDefault() < value2) & (num9 != null))
-					{
-						num8 = elementCopyAtIndex.Amount;
-						itemObject4 = item;
-					}
-					num7 += elementCopyAtIndex.Amount;
-				}
-			}
-			num5 -= num6;
-			num3 -= num4;
-			num -= num2;
-			num7 -= num8;
-			int[] array = new int[] { num6, num4, num2, num8 };
-			int[] array2 = new int[] { num5, num3, num, num7 };
-			ItemObject[] array3 = new ItemObject[] { itemObject3, itemObject2, itemObject, itemObject4 };
-			TextObject[,] array4 = new TextObject[4, 2];
-			array4[0, 0] = new TextObject("{=nc9KELFA}trade goods", null);
-			array4[0, 1] = new TextObject("{=eVcvaxz6}trade good", null);
-			array4[1, 0] = new TextObject("{=YJJwR5PB}pieces of armour", null);
-			array4[1, 1] = new TextObject("{=pF47ldtJ}piece of armour", null);
-			array4[2, 0] = new TextObject("{=ADabRUeh}weapons", null);
-			array4[2, 1] = new TextObject("{=Rs8xhY46}weapon", null);
-			array4[3, 0] = new TextObject("{=Py5jvZWL}type of items", null);
-			array4[3, 1] = new TextObject("{=2HmzaFVK}type of item", null);
-			TextObject[,] array5 = array4;
-			List<TextObject> list = new List<TextObject>();
-			for (int j = 0; j < array.Length; j++)
+				new TextObject("{=nc9KELFA}trade goods"),
+				new TextObject("{=eVcvaxz6}trade good")
+			},
 			{
-				if (array[j] != 0)
-				{
-					TextObject textObject = new TextObject("{=eBea9Ext}{VALUABLE_ITEM_COUNT} {VALUABLE_ITEM_NAME}{?IS_THERE_OTHER_ITEMS} and {?PLURAL}{OTHER_ITEMS_COUNT}other {OTHER_ITEMS_CATEGORY_PLURAL}{?}an other {OTHER_ITEMS_CATEGORY_SINGULAR}{\\?}{?}{\\?}", null);
-					textObject.SetTextVariable("OTHER_ITEMS_COUNT", array2[j]);
-					textObject.SetTextVariable("OTHER_ITEMS_CATEGORY_PLURAL", array5[j, 0]);
-					textObject.SetTextVariable("OTHER_ITEMS_CATEGORY_SINGULAR", array5[j, 1]);
-					textObject.SetTextVariable("VALUABLE_ITEM_COUNT", array[j]);
-					textObject.SetTextVariable("VALUABLE_ITEM_NAME", array3[j].Name);
-					textObject.SetTextVariable("IS_THERE_OTHER_ITEMS", (array2[j] > 0) ? 1 : 0);
-					textObject.SetTextVariable("PLURAL", (array2[j] == 1) ? 0 : 1);
-					list.Add(textObject);
-				}
-			}
-			if (list.Count <= 0)
+				new TextObject("{=YJJwR5PB}pieces of armour"),
+				new TextObject("{=pF47ldtJ}piece of armour")
+			},
 			{
-				return TextObject.GetEmpty();
+				new TextObject("{=ADabRUeh}weapons"),
+				new TextObject("{=Rs8xhY46}weapon")
+			},
+			{
+				new TextObject("{=Py5jvZWL}type of items"),
+				new TextObject("{=2HmzaFVK}type of item")
 			}
-			return GameTexts.GameTextHelper.MergeTextObjectsWithComma(list, false);
-		}
-
-		// Token: 0x0600007B RID: 123 RVA: 0x0000745C File Offset: 0x0000565C
-		public static TextObject PrintRegularTroopCategories(TroopRoster roster)
+		};
+		List<TextObject> list = new List<TextObject>();
+		for (int j = 0; j < array.Length; j++)
 		{
-			int num = 0;
-			int num2 = 0;
-			int num3 = 0;
-			int num4 = 0;
-			for (int i = 0; i < roster.Count; i++)
+			if (array[j] != 0)
 			{
-				TroopRosterElement elementCopyAtIndex = roster.GetElementCopyAtIndex(i);
-				CharacterObject character = elementCopyAtIndex.Character;
-				if (!character.IsHero && elementCopyAtIndex.Number != 0)
-				{
-					if (character.IsInfantry)
-					{
-						num += elementCopyAtIndex.Number;
-					}
-					else if (character.IsRanged)
-					{
-						if (character.IsMounted)
-						{
-							num4 += elementCopyAtIndex.Number;
-						}
-						else
-						{
-							num2 += elementCopyAtIndex.Number;
-						}
-					}
-					else if (character.IsMounted)
-					{
-						num3 += elementCopyAtIndex.Number;
-					}
-				}
-			}
-			Dictionary<string, int> dictionary = new Dictionary<string, int>();
-			if (num != 0)
-			{
-				dictionary.Add("Infantry", num);
-			}
-			if (num2 != 0)
-			{
-				dictionary.Add("Ranged", num2);
-			}
-			if (num3 != 0)
-			{
-				dictionary.Add("Cavalry", num3);
-			}
-			if (num4 != 0)
-			{
-				dictionary.Add("HorseArcher", num4);
-			}
-			List<TextObject> list = new List<TextObject>();
-			foreach (KeyValuePair<string, int> keyValuePair in dictionary)
-			{
-				TextObject textObject = new TextObject("{=ksTDGuXs}{TROOP_TYPE_COUNT} {TROOP_TYPE} {?TROOP_TYPE_COUNT>1}troops{?}troop{\\?}", null);
-				textObject.SetTextVariable("TROOP_TYPE_COUNT", keyValuePair.Value);
-				textObject.SetTextVariable("TROOP_TYPE", GameTexts.FindText("str_troop_type_name", keyValuePair.Key));
+				TextObject textObject = new TextObject("{=eBea9Ext}{VALUABLE_ITEM_COUNT} {VALUABLE_ITEM_NAME}{?IS_THERE_OTHER_ITEMS} and {?PLURAL}{OTHER_ITEMS_COUNT}other {OTHER_ITEMS_CATEGORY_PLURAL}{?}an other {OTHER_ITEMS_CATEGORY_SINGULAR}{\\?}{?}{\\?}");
+				textObject.SetTextVariable("OTHER_ITEMS_COUNT", array2[j]);
+				textObject.SetTextVariable("OTHER_ITEMS_CATEGORY_PLURAL", array4[j, 0]);
+				textObject.SetTextVariable("OTHER_ITEMS_CATEGORY_SINGULAR", array4[j, 1]);
+				textObject.SetTextVariable("VALUABLE_ITEM_COUNT", array[j]);
+				textObject.SetTextVariable("VALUABLE_ITEM_NAME", array3[j].Name);
+				textObject.SetTextVariable("IS_THERE_OTHER_ITEMS", (array2[j] > 0) ? 1 : 0);
+				textObject.SetTextVariable("PLURAL", (array2[j] != 1) ? 1 : 0);
 				list.Add(textObject);
 			}
-			return GameTexts.GameTextHelper.MergeTextObjectsWithComma(list, true);
 		}
-
-		// Token: 0x0600007C RID: 124 RVA: 0x000075DC File Offset: 0x000057DC
-		public static CharacterObject GetVisualPartyLeader(PartyBase party)
+		if (list.Count <= 0)
 		{
-			if (party == null)
+			return TextObject.GetEmpty();
+		}
+		return GameTexts.GameTextHelper.MergeTextObjectsWithComma(list, includeAnd: false);
+	}
+
+	public static TextObject PrintRegularTroopCategories(TroopRoster roster)
+	{
+		int num = 0;
+		int num2 = 0;
+		int num3 = 0;
+		int num4 = 0;
+		for (int i = 0; i < roster.Count; i++)
+		{
+			TroopRosterElement elementCopyAtIndex = roster.GetElementCopyAtIndex(i);
+			CharacterObject character = elementCopyAtIndex.Character;
+			if (character.IsHero || elementCopyAtIndex.Number == 0)
 			{
-				return null;
+				continue;
 			}
-			if (party.LeaderHero != null)
+			if (character.IsInfantry)
 			{
-				return party.LeaderHero.CharacterObject;
+				num += elementCopyAtIndex.Number;
 			}
+			else if (character.IsRanged)
+			{
+				if (character.IsMounted)
+				{
+					num4 += elementCopyAtIndex.Number;
+				}
+				else
+				{
+					num2 += elementCopyAtIndex.Number;
+				}
+			}
+			else if (character.IsMounted)
+			{
+				num3 += elementCopyAtIndex.Number;
+			}
+		}
+		Dictionary<string, int> dictionary = new Dictionary<string, int>();
+		if (num != 0)
+		{
+			dictionary.Add("Infantry", num);
+		}
+		if (num2 != 0)
+		{
+			dictionary.Add("Ranged", num2);
+		}
+		if (num3 != 0)
+		{
+			dictionary.Add("Cavalry", num3);
+		}
+		if (num4 != 0)
+		{
+			dictionary.Add("HorseArcher", num4);
+		}
+		List<TextObject> list = new List<TextObject>();
+		foreach (KeyValuePair<string, int> item in dictionary)
+		{
+			TextObject textObject = new TextObject("{=ksTDGuXs}{TROOP_TYPE_COUNT} {TROOP_TYPE} {?TROOP_TYPE_COUNT>1}troops{?}troop{\\?}");
+			textObject.SetTextVariable("TROOP_TYPE_COUNT", item.Value);
+			textObject.SetTextVariable("TROOP_TYPE", GameTexts.FindText("str_troop_type_name", item.Key));
+			list.Add(textObject);
+		}
+		return GameTexts.GameTextHelper.MergeTextObjectsWithComma(list, includeAnd: true);
+	}
+
+	public static CharacterObject GetVisualPartyLeader(PartyBase party)
+	{
+		if (party == null)
+		{
+			return null;
+		}
+		if (party.LeaderHero == null)
+		{
 			TroopRoster memberRoster = party.MemberRoster;
 			if (memberRoster == null || memberRoster.TotalManCount <= 0)
 			{
@@ -370,43 +352,46 @@ namespace Helpers
 			}
 			return party.MemberRoster.GetCharacterAtIndex(0);
 		}
+		return party.LeaderHero.CharacterObject;
+	}
 
-		// Token: 0x0600007D RID: 125 RVA: 0x0000761C File Offset: 0x0000581C
-		public static int GetSpeedLimitation(ItemRoster partyItemRoster, out ItemObject speedLimitationItem)
+	public static int GetSpeedLimitation(ItemRoster partyItemRoster, out ItemObject speedLimitationItem)
+	{
+		speedLimitationItem = null;
+		int num = 100;
+		foreach (ItemRosterElement item in partyItemRoster)
 		{
-			speedLimitationItem = null;
-			int num = 100;
-			foreach (ItemRosterElement itemRosterElement in partyItemRoster)
+			if (item.EquipmentElement.Item != null && item.EquipmentElement.Item.IsAnimal && num > item.EquipmentElement.GetModifiedMountSpeed(in EquipmentElement.Invalid))
 			{
-				if (itemRosterElement.EquipmentElement.Item != null && itemRosterElement.EquipmentElement.Item.IsAnimal && num > itemRosterElement.EquipmentElement.GetModifiedMountSpeed(EquipmentElement.Invalid))
-				{
-					num = itemRosterElement.EquipmentElement.GetModifiedMountSpeed(EquipmentElement.Invalid);
-					speedLimitationItem = itemRosterElement.EquipmentElement.Item;
-				}
+				num = item.EquipmentElement.GetModifiedMountSpeed(in EquipmentElement.Invalid);
+				speedLimitationItem = item.EquipmentElement.Item;
 			}
-			return num;
 		}
+		return num;
+	}
 
-		// Token: 0x0600007E RID: 126 RVA: 0x000076C8 File Offset: 0x000058C8
-		public static bool HasFeat(PartyBase party, FeatObject feat)
+	public static bool HasFeat(PartyBase party, FeatObject feat)
+	{
+		if (party == null)
 		{
-			if (party == null)
-			{
-				return false;
-			}
-			if (party.LeaderHero != null)
-			{
-				return party.LeaderHero.Culture.HasFeat(feat);
-			}
-			if (party.Culture != null)
-			{
-				return party.Culture.HasFeat(feat);
-			}
-			if (party.Owner != null)
-			{
-				return party.Owner.Culture.HasFeat(feat);
-			}
-			return party.Settlement != null && party.Settlement.Culture.HasFeat(feat);
+			return false;
 		}
+		if (party.LeaderHero != null)
+		{
+			return party.LeaderHero.Culture.HasFeat(feat);
+		}
+		if (party.Culture != null)
+		{
+			return party.Culture.HasFeat(feat);
+		}
+		if (party.Owner != null)
+		{
+			return party.Owner.Culture.HasFeat(feat);
+		}
+		if (party.Settlement != null)
+		{
+			return party.Settlement.Culture.HasFeat(feat);
+		}
+		return false;
 	}
 }

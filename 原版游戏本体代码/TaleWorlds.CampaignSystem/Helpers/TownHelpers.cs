@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using TaleWorlds.CampaignSystem;
@@ -8,133 +8,133 @@ using TaleWorlds.CampaignSystem.Settlements;
 using TaleWorlds.Core;
 using TaleWorlds.Library;
 
-namespace Helpers
-{
-	// Token: 0x02000007 RID: 7
-	public static class TownHelpers
-	{
-		// Token: 0x06000021 RID: 33 RVA: 0x0000378C File Offset: 0x0000198C
-		public static ValueTuple<int, int> GetTownFoodAndMarketStocks(Town town)
-		{
-			float num = ((town != null) ? town.FoodStocks : 0f);
-			float num2 = 0f;
-			if (town != null && town.IsTown)
-			{
-				for (int i = town.Owner.ItemRoster.Count - 1; i >= 0; i--)
-				{
-					ItemRosterElement elementCopyAtIndex = town.Owner.ItemRoster.GetElementCopyAtIndex(i);
-					if (elementCopyAtIndex.EquipmentElement.Item != null && elementCopyAtIndex.EquipmentElement.Item.ItemCategory.Properties == ItemCategory.Property.BonusToFoodStores)
-					{
-						num2 += (float)elementCopyAtIndex.Amount;
-					}
-				}
-			}
-			return new ValueTuple<int, int>((int)num, (int)num2);
-		}
+namespace Helpers;
 
-		// Token: 0x06000022 RID: 34 RVA: 0x00003830 File Offset: 0x00001A30
-		public static bool IsThereAnyoneToMeetInTown(Settlement settlement)
+public static class TownHelpers
+{
+	public static (int, int) GetTownFoodAndMarketStocks(Town town)
+	{
+		float num = town?.FoodStocks ?? 0f;
+		float num2 = 0f;
+		if (town != null && town.IsTown)
 		{
-			foreach (MobileParty mobileParty in settlement.Parties.Where(new Func<MobileParty, bool>(TownHelpers.RequestAMeetingPartyCondition)))
+			for (int num3 = town.Owner.ItemRoster.Count - 1; num3 >= 0; num3--)
 			{
-				using (List<TroopRosterElement>.Enumerator enumerator2 = mobileParty.MemberRoster.GetTroopRoster().GetEnumerator())
+				ItemRosterElement elementCopyAtIndex = town.Owner.ItemRoster.GetElementCopyAtIndex(num3);
+				if (elementCopyAtIndex.EquipmentElement.Item != null && elementCopyAtIndex.EquipmentElement.Item.ItemCategory.Properties == ItemCategory.Property.BonusToFoodStores)
 				{
-					while (enumerator2.MoveNext())
-					{
-						if (enumerator2.Current.Character.IsHero)
-						{
-							return true;
-						}
-					}
+					num2 += (float)elementCopyAtIndex.Amount;
 				}
 			}
-			using (IEnumerator<Hero> enumerator3 = settlement.HeroesWithoutParty.Where(new Func<Hero, bool>(TownHelpers.RequestAMeetingHeroWithoutPartyCondition)).GetEnumerator())
+		}
+		return ((int)num, (int)num2);
+	}
+
+	public static bool IsThereAnyoneToMeetInTown(Settlement settlement)
+	{
+		foreach (MobileParty item in settlement.Parties.Where(RequestAMeetingPartyCondition))
+		{
+			foreach (TroopRosterElement item2 in item.MemberRoster.GetTroopRoster())
 			{
-				if (enumerator3.MoveNext())
+				if (item2.Character.IsHero)
 				{
-					Hero hero = enumerator3.Current;
 					return true;
 				}
 			}
-			return false;
 		}
-
-		// Token: 0x06000023 RID: 35 RVA: 0x00003924 File Offset: 0x00001B24
-		public static List<Hero> GetHeroesToMeetInTown(Settlement settlement)
+		using (IEnumerator<Hero> enumerator3 = settlement.HeroesWithoutParty.Where(RequestAMeetingHeroWithoutPartyCondition).GetEnumerator())
 		{
-			List<Hero> list = new List<Hero>();
-			foreach (MobileParty mobileParty in settlement.Parties.Where(new Func<MobileParty, bool>(TownHelpers.RequestAMeetingPartyCondition)))
+			if (enumerator3.MoveNext())
 			{
-				foreach (TroopRosterElement troopRosterElement in mobileParty.MemberRoster.GetTroopRoster())
+				_ = enumerator3.Current;
+				return true;
+			}
+		}
+		return false;
+	}
+
+	public static List<Hero> GetHeroesToMeetInTown(Settlement settlement)
+	{
+		List<Hero> list = new List<Hero>();
+		foreach (MobileParty item in settlement.Parties.Where(RequestAMeetingPartyCondition))
+		{
+			foreach (TroopRosterElement item2 in item.MemberRoster.GetTroopRoster())
+			{
+				if (item2.Character.IsHero)
 				{
-					if (troopRosterElement.Character.IsHero)
-					{
-						list.Add(troopRosterElement.Character.HeroObject);
-					}
+					list.Add(item2.Character.HeroObject);
 				}
 			}
-			foreach (Hero item in settlement.HeroesWithoutParty.Where(new Func<Hero, bool>(TownHelpers.RequestAMeetingHeroWithoutPartyCondition)))
-			{
-				list.Add(item);
-			}
-			return list;
 		}
-
-		// Token: 0x06000024 RID: 36 RVA: 0x00003A34 File Offset: 0x00001C34
-		public static MBList<Hero> GetHeroesInSettlement(Settlement settlement, Predicate<Hero> predicate = null)
+		foreach (Hero item3 in settlement.HeroesWithoutParty.Where(RequestAMeetingHeroWithoutPartyCondition))
 		{
-			MBList<Hero> mblist = new MBList<Hero>();
-			foreach (MobileParty mobileParty in settlement.Parties)
+			list.Add(item3);
+		}
+		return list;
+	}
+
+	public static MBList<Hero> GetHeroesInSettlement(Settlement settlement, Predicate<Hero> predicate = null)
+	{
+		MBList<Hero> mBList = new MBList<Hero>();
+		foreach (MobileParty party in settlement.Parties)
+		{
+			foreach (TroopRosterElement item in party.MemberRoster.GetTroopRoster())
 			{
-				foreach (TroopRosterElement troopRosterElement in mobileParty.MemberRoster.GetTroopRoster())
+				if (item.Character.IsHero && (predicate == null || predicate(item.Character.HeroObject)))
 				{
-					if (troopRosterElement.Character.IsHero && (predicate == null || predicate(troopRosterElement.Character.HeroObject)))
-					{
-						mblist.Add(troopRosterElement.Character.HeroObject);
-					}
+					mBList.Add(item.Character.HeroObject);
 				}
 			}
-			foreach (Hero hero in settlement.HeroesWithoutParty)
+		}
+		foreach (Hero item2 in settlement.HeroesWithoutParty)
+		{
+			if (predicate == null || predicate(item2))
 			{
-				if (predicate == null || predicate(hero))
-				{
-					mblist.Add(hero);
-				}
+				mBList.Add(item2);
 			}
-			return mblist;
 		}
+		return mBList;
+	}
 
-		// Token: 0x06000025 RID: 37 RVA: 0x00003B4C File Offset: 0x00001D4C
-		public static bool RequestAMeetingPartyCondition(MobileParty party)
+	public static bool RequestAMeetingPartyCondition(MobileParty party)
+	{
+		if (party.IsLordParty && !party.IsMainParty)
 		{
-			return party.IsLordParty && !party.IsMainParty && (party.Army == null || party.Army != MobileParty.MainParty.Army);
-		}
-
-		// Token: 0x06000026 RID: 38 RVA: 0x00003B7F File Offset: 0x00001D7F
-		public static bool RequestAMeetingHeroWithoutPartyCondition(Hero hero)
-		{
-			return hero.CharacterObject.Occupation == Occupation.Lord && !hero.IsPrisoner && hero.Age >= (float)Campaign.Current.Models.AgeModel.HeroComesOfAge;
-		}
-
-		// Token: 0x06000027 RID: 39 RVA: 0x00003BBC File Offset: 0x00001DBC
-		public static float CalculatePriceDeviationRatio(Town town, EquipmentElement equipmentElement)
-		{
-			int itemPrice = town.GetItemPrice(equipmentElement, null, false);
-			float num = 0f;
-			float result = 1f;
-			if (Town.AllTowns != null)
+			if (party.Army != null)
 			{
-				foreach (Town town2 in Town.AllTowns)
-				{
-					num += (float)town2.GetItemPrice(equipmentElement, null, false);
-				}
-				if (num != 0f)
-				{
-					float num2 = num / (float)Town.AllTowns.Count;
-					result = ((float)itemPrice - num2) / num2;
-				}
+				return party.Army != MobileParty.MainParty.Army;
 			}
-			return result;
+			return true;
 		}
+		return false;
+	}
+
+	public static bool RequestAMeetingHeroWithoutPartyCondition(Hero hero)
+	{
+		if (hero.CharacterObject.Occupation == Occupation.Lord && !hero.IsPrisoner)
+		{
+			return hero.Age >= (float)Campaign.Current.Models.AgeModel.HeroComesOfAge;
+		}
+		return false;
+	}
+
+	public static float CalculatePriceDeviationRatio(Town town, EquipmentElement equipmentElement)
+	{
+		int itemPrice = town.GetItemPrice(equipmentElement);
+		float num = 0f;
+		float result = 1f;
+		if (Town.AllTowns != null)
+		{
+			foreach (Town allTown in Town.AllTowns)
+			{
+				num += (float)allTown.GetItemPrice(equipmentElement);
+			}
+			if (num != 0f)
+			{
+				float num2 = num / (float)Town.AllTowns.Count;
+				result = ((float)itemPrice - num2) / num2;
+			}
+		}
+		return result;
 	}
 }

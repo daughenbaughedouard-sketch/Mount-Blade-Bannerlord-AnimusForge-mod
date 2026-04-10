@@ -1,4 +1,3 @@
-﻿using System;
 using System.Collections.Generic;
 using TaleWorlds.CampaignSystem;
 using TaleWorlds.CampaignSystem.CharacterDevelopment;
@@ -8,217 +7,255 @@ using TaleWorlds.Core;
 using TaleWorlds.Library;
 using TaleWorlds.Localization;
 
-namespace Helpers
+namespace Helpers;
+
+public static class PerkHelper
 {
-	// Token: 0x0200001A RID: 26
-	public static class PerkHelper
+	public const float NavalMultiplier = 0.5f;
+
+	public static void ClearPerksForSkill(Hero hero, SkillObject skill)
 	{
-		// Token: 0x060000F0 RID: 240 RVA: 0x0000C674 File Offset: 0x0000A874
-		public static IEnumerable<PerkObject> GetCaptainPerksForTroopUsages(TroopUsageFlags troopUsageFlags)
+		foreach (PerkObject item in PerkObject.All)
 		{
-			List<PerkObject> list = new List<PerkObject>();
-			foreach (PerkObject perkObject in PerkObject.All)
+			if (item.Skill == skill)
 			{
-				bool flag = perkObject.PrimaryTroopUsageMask != TroopUsageFlags.Undefined && troopUsageFlags.HasAllFlags(perkObject.PrimaryTroopUsageMask);
-				bool flag2 = perkObject.SecondaryTroopUsageMask != TroopUsageFlags.Undefined && troopUsageFlags.HasAllFlags(perkObject.SecondaryTroopUsageMask);
-				if (flag || flag2)
-				{
-					list.Add(perkObject);
-				}
-			}
-			return list;
-		}
-
-		// Token: 0x060000F1 RID: 241 RVA: 0x0000C70C File Offset: 0x0000A90C
-		public static bool PlayerHasAnyItemDonationPerk()
-		{
-			return MobileParty.MainParty.HasPerk(DefaultPerks.Steward.GivingHands, false) || MobileParty.MainParty.HasPerk(DefaultPerks.Steward.PaidInPromise, true);
-		}
-
-		// Token: 0x060000F2 RID: 242 RVA: 0x0000C734 File Offset: 0x0000A934
-		public static void AddPerkBonusForParty(PerkObject perk, MobileParty party, bool isPrimaryBonus, ref ExplainedNumber stat, bool shouldApplyNavalMultiplier = false)
-		{
-			if (party != null && party.HasPerk(perk, !isPrimaryBonus))
-			{
-				float num = (isPrimaryBonus ? perk.PrimaryBonus : perk.SecondaryBonus);
-				if (shouldApplyNavalMultiplier)
-				{
-					num *= 0.5f;
-				}
-				EffectIncrementType effectIncrementType = (isPrimaryBonus ? perk.PrimaryIncrementType : perk.SecondaryIncrementType);
-				PerkHelper.AddToStat(ref stat, effectIncrementType, num, perk.Name);
+				ClearPermanentBonusesIfExists(hero, item);
+				hero.SetPerkValueInternal(item, value: false);
 			}
 		}
+		PartyBase.MainParty.MemberRoster.UpdateVersion();
+		hero.HitPoints = MathF.Min(hero.HitPoints, hero.MaxHitPoints);
+	}
 
-		// Token: 0x060000F3 RID: 243 RVA: 0x0000C78F File Offset: 0x0000A98F
-		private static void AddToStat(ref ExplainedNumber stat, EffectIncrementType effectIncrementType, float number, TextObject text)
+	private static void ClearPermanentBonusesIfExists(Hero hero, PerkObject perk)
+	{
+		if (hero.GetPerkValue(perk))
 		{
-			if (effectIncrementType == EffectIncrementType.Add)
+			if (perk == DefaultPerks.Crafting.VigorousSmith)
 			{
-				stat.Add(number, text, null);
-				return;
+				hero.HeroDeveloper.RemoveAttribute(DefaultCharacterAttributes.Vigor, 1);
 			}
-			if (effectIncrementType == EffectIncrementType.AddFactor)
+			else if (perk == DefaultPerks.Crafting.StrongSmith)
 			{
-				stat.AddFactor(number, text);
+				hero.HeroDeveloper.RemoveAttribute(DefaultCharacterAttributes.Control, 1);
+			}
+			else if (perk == DefaultPerks.Crafting.EnduringSmith)
+			{
+				hero.HeroDeveloper.RemoveAttribute(DefaultCharacterAttributes.Endurance, 1);
+			}
+			else if (perk == DefaultPerks.Crafting.WeaponMasterSmith)
+			{
+				hero.HeroDeveloper.RemoveFocus(DefaultSkills.OneHanded, 1);
+				hero.HeroDeveloper.RemoveFocus(DefaultSkills.TwoHanded, 1);
+			}
+			else if (perk == DefaultPerks.Athletics.Durable)
+			{
+				hero.HeroDeveloper.RemoveAttribute(DefaultCharacterAttributes.Endurance, 1);
+			}
+			else if (perk == DefaultPerks.Athletics.Steady)
+			{
+				hero.HeroDeveloper.RemoveAttribute(DefaultCharacterAttributes.Control, 1);
+			}
+			else if (perk == DefaultPerks.Athletics.Strong)
+			{
+				hero.HeroDeveloper.RemoveAttribute(DefaultCharacterAttributes.Vigor, 1);
 			}
 		}
+	}
 
-		// Token: 0x060000F4 RID: 244 RVA: 0x0000C7AC File Offset: 0x0000A9AC
-		public static void AddPerkBonusForCharacter(PerkObject perk, CharacterObject character, bool isPrimaryBonus, ref ExplainedNumber bonuses, bool shouldApplyNavalMultiplier = false)
+	public static IEnumerable<PerkObject> GetCaptainPerksForTroopUsages(TroopUsageFlags troopUsageFlags)
+	{
+		List<PerkObject> list = new List<PerkObject>();
+		foreach (PerkObject item in PerkObject.All)
 		{
-			float num = (shouldApplyNavalMultiplier ? 0.5f : 1f);
-			if (isPrimaryBonus && perk.PrimaryRole == PartyRole.Personal)
+			bool num = item.PrimaryTroopUsageMask != TroopUsageFlags.Undefined && troopUsageFlags.HasAllFlags(item.PrimaryTroopUsageMask);
+			bool flag = item.SecondaryTroopUsageMask != TroopUsageFlags.Undefined && troopUsageFlags.HasAllFlags(item.SecondaryTroopUsageMask);
+			if (num || flag)
 			{
-				if (character.GetPerkValue(perk))
-				{
-					PerkHelper.AddToStat(ref bonuses, perk.PrimaryIncrementType, perk.PrimaryBonus * num, perk.Name);
-				}
-			}
-			else if (!isPrimaryBonus && perk.SecondaryRole == PartyRole.Personal && character.GetPerkValue(perk))
-			{
-				PerkHelper.AddToStat(ref bonuses, perk.SecondaryIncrementType, perk.SecondaryBonus * num, perk.Name);
-			}
-			if (isPrimaryBonus && perk.PrimaryRole == PartyRole.ClanLeader)
-			{
-				if (character.IsHero)
-				{
-					Clan clan = character.HeroObject.Clan;
-					if (((clan != null) ? clan.Leader : null) != null && character.HeroObject.Clan.Leader.GetPerkValue(perk))
-					{
-						PerkHelper.AddToStat(ref bonuses, perk.PrimaryIncrementType, perk.PrimaryBonus * num, perk.Name);
-						return;
-					}
-				}
-			}
-			else if (!isPrimaryBonus && perk.SecondaryRole == PartyRole.ClanLeader && character.IsHero && character.HeroObject.Clan.Leader != null && character.HeroObject.Clan.Leader.GetPerkValue(perk))
-			{
-				PerkHelper.AddToStat(ref bonuses, perk.SecondaryIncrementType, perk.SecondaryBonus * num, perk.Name);
+				list.Add(item);
 			}
 		}
+		return list;
+	}
 
-		// Token: 0x060000F5 RID: 245 RVA: 0x0000C8EC File Offset: 0x0000AAEC
-		public static void AddEpicPerkBonusForCharacter(PerkObject perk, CharacterObject character, SkillObject skillType, bool applyPrimaryBonus, ref ExplainedNumber bonuses, int skillRequired, bool shouldApplyNavalMultiplier = false)
+	public static bool PlayerHasAnyItemDonationPerk()
+	{
+		if (!MobileParty.MainParty.HasPerk(DefaultPerks.Steward.GivingHands))
+		{
+			return MobileParty.MainParty.HasPerk(DefaultPerks.Steward.PaidInPromise, checkSecondaryRole: true);
+		}
+		return true;
+	}
+
+	public static void AddPerkBonusForParty(PerkObject perk, MobileParty party, bool isPrimaryBonus, ref ExplainedNumber stat, bool shouldApplyNavalMultiplier = false)
+	{
+		if (party != null && party.HasPerk(perk, !isPrimaryBonus))
+		{
+			float num = (isPrimaryBonus ? perk.PrimaryBonus : perk.SecondaryBonus);
+			if (shouldApplyNavalMultiplier)
+			{
+				num *= 0.5f;
+			}
+			EffectIncrementType effectIncrementType = (isPrimaryBonus ? perk.PrimaryIncrementType : perk.SecondaryIncrementType);
+			AddToStat(ref stat, effectIncrementType, num, perk.Name);
+		}
+	}
+
+	private static void AddToStat(ref ExplainedNumber stat, EffectIncrementType effectIncrementType, float number, TextObject text)
+	{
+		switch (effectIncrementType)
+		{
+		case EffectIncrementType.Add:
+			stat.Add(number, text);
+			break;
+		case EffectIncrementType.AddFactor:
+			stat.AddFactor(number, text);
+			break;
+		}
+	}
+
+	public static void AddPerkBonusForCharacter(PerkObject perk, CharacterObject character, bool isPrimaryBonus, ref ExplainedNumber bonuses, bool shouldApplyNavalMultiplier = false)
+	{
+		float num = (shouldApplyNavalMultiplier ? 0.5f : 1f);
+		if (isPrimaryBonus && perk.PrimaryRole == PartyRole.Personal)
 		{
 			if (character.GetPerkValue(perk))
 			{
-				int skillValue = character.GetSkillValue(skillType);
-				if (skillValue > skillRequired)
-				{
-					float num = (shouldApplyNavalMultiplier ? 0.5f : 1f);
-					if (applyPrimaryBonus)
-					{
-						PerkHelper.AddToStat(ref bonuses, perk.PrimaryIncrementType, perk.PrimaryBonus * (float)(skillValue - skillRequired) * num, perk.Name);
-						return;
-					}
-					PerkHelper.AddToStat(ref bonuses, perk.SecondaryIncrementType, perk.SecondaryBonus * (float)(skillValue - skillRequired) * num, perk.Name);
-				}
+				AddToStat(ref bonuses, perk.PrimaryIncrementType, perk.PrimaryBonus * num, perk.Name);
 			}
 		}
-
-		// Token: 0x060000F6 RID: 246 RVA: 0x0000C968 File Offset: 0x0000AB68
-		public static void AddPerkBonusFromCaptain(PerkObject perk, CharacterObject captainCharacter, ref ExplainedNumber bonuses)
+		else if (!isPrimaryBonus && perk.SecondaryRole == PartyRole.Personal && character.GetPerkValue(perk))
 		{
-			if (perk.PrimaryRole == PartyRole.Captain)
-			{
-				if (captainCharacter != null && captainCharacter.GetPerkValue(perk))
-				{
-					PerkHelper.AddToStat(ref bonuses, perk.PrimaryIncrementType, perk.PrimaryBonus, perk.Name);
-					return;
-				}
-			}
-			else if (perk.SecondaryRole == PartyRole.Captain && captainCharacter != null && captainCharacter.GetPerkValue(perk))
-			{
-				PerkHelper.AddToStat(ref bonuses, perk.SecondaryIncrementType, perk.SecondaryBonus, perk.Name);
-			}
+			AddToStat(ref bonuses, perk.SecondaryIncrementType, perk.SecondaryBonus * num, perk.Name);
 		}
-
-		// Token: 0x060000F7 RID: 247 RVA: 0x0000C9D4 File Offset: 0x0000ABD4
-		public static void AddPerkBonusForTown(PerkObject perk, Town town, ref ExplainedNumber bonuses)
+		if (isPrimaryBonus && perk.PrimaryRole == PartyRole.ClanLeader)
 		{
-			bool flag = perk.PrimaryRole == PartyRole.Governor;
-			bool flag2 = perk.SecondaryRole == PartyRole.Governor;
-			if (flag || flag2)
+			if (character.IsHero && character.HeroObject.Clan?.Leader != null && character.HeroObject.Clan.Leader.GetPerkValue(perk))
 			{
-				Hero governor = town.Governor;
-				if (governor != null && governor.GetPerkValue(perk) && governor.CurrentSettlement != null && governor.CurrentSettlement == town.Settlement)
-				{
-					if (flag)
-					{
-						PerkHelper.AddToStat(ref bonuses, perk.PrimaryIncrementType, perk.PrimaryBonus, perk.Name);
-						return;
-					}
-					PerkHelper.AddToStat(ref bonuses, perk.SecondaryIncrementType, perk.SecondaryBonus, perk.Name);
-				}
+				AddToStat(ref bonuses, perk.PrimaryIncrementType, perk.PrimaryBonus * num, perk.Name);
 			}
 		}
-
-		// Token: 0x060000F8 RID: 248 RVA: 0x0000CA58 File Offset: 0x0000AC58
-		public static bool GetPerkValueForTown(PerkObject perk, Town town)
+		else if (!isPrimaryBonus && perk.SecondaryRole == PartyRole.ClanLeader && character.IsHero && character.HeroObject.Clan.Leader != null && character.HeroObject.Clan.Leader.GetPerkValue(perk))
 		{
-			if (perk.PrimaryRole == PartyRole.ClanLeader || perk.SecondaryRole == PartyRole.ClanLeader)
-			{
-				Clan ownerClan = town.Owner.Settlement.OwnerClan;
-				Hero hero = ((ownerClan != null) ? ownerClan.Leader : null);
-				if (hero != null && hero.GetPerkValue(perk))
-				{
-					return true;
-				}
-			}
-			if (perk.PrimaryRole == PartyRole.Governor || perk.SecondaryRole == PartyRole.Governor)
-			{
-				Hero governor = town.Governor;
-				if (governor != null && governor.GetPerkValue(perk) && governor.CurrentSettlement != null && governor.CurrentSettlement == town.Settlement)
-				{
-					return true;
-				}
-			}
-			return false;
+			AddToStat(ref bonuses, perk.SecondaryIncrementType, perk.SecondaryBonus * num, perk.Name);
 		}
+	}
 
-		// Token: 0x060000F9 RID: 249 RVA: 0x0000CAE0 File Offset: 0x0000ACE0
-		public static List<PerkObject> GetGovernorPerksForHero(Hero hero)
+	public static void AddEpicPerkBonusForCharacter(PerkObject perk, CharacterObject character, SkillObject skillType, bool applyPrimaryBonus, ref ExplainedNumber bonuses, int skillRequired, bool shouldApplyNavalMultiplier = false)
+	{
+		if (!character.GetPerkValue(perk))
 		{
-			List<PerkObject> list = new List<PerkObject>();
-			foreach (PerkObject perkObject in PerkObject.All)
-			{
-				if ((perkObject.PrimaryRole == PartyRole.Governor || perkObject.SecondaryRole == PartyRole.Governor) && hero.GetPerkValue(perkObject))
-				{
-					list.Add(perkObject);
-				}
-			}
-			return list;
+			return;
 		}
-
-		// Token: 0x060000FA RID: 250 RVA: 0x0000CB54 File Offset: 0x0000AD54
-		public static ValueTuple<TextObject, TextObject> GetGovernorEngineeringSkillEffectForHero(Hero governor)
+		int skillValue = character.GetSkillValue(skillType);
+		if (skillValue > skillRequired)
 		{
-			if (governor != null && governor.GetSkillValue(DefaultSkills.Engineering) > 0)
+			float num = (shouldApplyNavalMultiplier ? 0.5f : 1f);
+			if (applyPrimaryBonus)
 			{
-				SkillEffect townProjectBuildingBonus = DefaultSkillEffects.TownProjectBuildingBonus;
-				int skillValue = governor.GetSkillValue(townProjectBuildingBonus.EffectedSkill);
-				TextObject effectDescriptionForSkillLevel = SkillHelper.GetEffectDescriptionForSkillLevel(townProjectBuildingBonus, skillValue);
-				return new ValueTuple<TextObject, TextObject>(DefaultSkills.Engineering.Name, effectDescriptionForSkillLevel);
+				AddToStat(ref bonuses, perk.PrimaryIncrementType, perk.PrimaryBonus * (float)(skillValue - skillRequired) * num, perk.Name);
 			}
-			return new ValueTuple<TextObject, TextObject>(TextObject.GetEmpty(), new TextObject("{=0rBsbw1T}No effect", null));
+			else
+			{
+				AddToStat(ref bonuses, perk.SecondaryIncrementType, perk.SecondaryBonus * (float)(skillValue - skillRequired) * num, perk.Name);
+			}
 		}
+	}
 
-		// Token: 0x060000FB RID: 251 RVA: 0x0000CBB4 File Offset: 0x0000ADB4
-		public static int AvailablePerkCountOfHero(Hero hero)
+	public static void AddPerkBonusFromCaptain(PerkObject perk, CharacterObject captainCharacter, ref ExplainedNumber bonuses)
+	{
+		if (perk.PrimaryRole == PartyRole.Captain)
 		{
-			MBList<PerkObject> mblist = new MBList<PerkObject>();
-			foreach (PerkObject perkObject in PerkObject.All)
+			if (captainCharacter != null && captainCharacter.GetPerkValue(perk))
 			{
-				SkillObject skill = perkObject.Skill;
-				if ((float)hero.GetSkillValue(skill) >= perkObject.RequiredSkillValue && !hero.GetPerkValue(perkObject) && (perkObject.AlternativePerk == null || !hero.GetPerkValue(perkObject.AlternativePerk)) && !mblist.Contains(perkObject.AlternativePerk))
-				{
-					mblist.Add(perkObject);
-				}
+				AddToStat(ref bonuses, perk.PrimaryIncrementType, perk.PrimaryBonus, perk.Name);
 			}
-			return mblist.Count;
 		}
+		else if (perk.SecondaryRole == PartyRole.Captain && captainCharacter != null && captainCharacter.GetPerkValue(perk))
+		{
+			AddToStat(ref bonuses, perk.SecondaryIncrementType, perk.SecondaryBonus, perk.Name);
+		}
+	}
 
-		// Token: 0x04000004 RID: 4
-		public const float NavalMultiplier = 0.5f;
+	public static void AddPerkBonusForTown(PerkObject perk, Town town, ref ExplainedNumber bonuses)
+	{
+		bool flag = perk.PrimaryRole == PartyRole.Governor;
+		bool flag2 = perk.SecondaryRole == PartyRole.Governor;
+		if (!(flag || flag2))
+		{
+			return;
+		}
+		Hero governor = town.Governor;
+		if (governor != null && governor.GetPerkValue(perk) && governor.CurrentSettlement != null && governor.CurrentSettlement == town.Settlement)
+		{
+			if (flag)
+			{
+				AddToStat(ref bonuses, perk.PrimaryIncrementType, perk.PrimaryBonus, perk.Name);
+			}
+			else
+			{
+				AddToStat(ref bonuses, perk.SecondaryIncrementType, perk.SecondaryBonus, perk.Name);
+			}
+		}
+	}
+
+	public static bool GetPerkValueForTown(PerkObject perk, Town town)
+	{
+		if (perk.PrimaryRole == PartyRole.ClanLeader || perk.SecondaryRole == PartyRole.ClanLeader)
+		{
+			Hero hero = town.Owner.Settlement.OwnerClan?.Leader;
+			if (hero != null && hero.GetPerkValue(perk))
+			{
+				return true;
+			}
+		}
+		if (perk.PrimaryRole == PartyRole.Governor || perk.SecondaryRole == PartyRole.Governor)
+		{
+			Hero governor = town.Governor;
+			if (governor != null && governor.GetPerkValue(perk) && governor.CurrentSettlement != null && governor.CurrentSettlement == town.Settlement)
+			{
+				return true;
+			}
+		}
+		return false;
+	}
+
+	public static List<PerkObject> GetGovernorPerksForHero(Hero hero)
+	{
+		List<PerkObject> list = new List<PerkObject>();
+		foreach (PerkObject item in PerkObject.All)
+		{
+			if ((item.PrimaryRole == PartyRole.Governor || item.SecondaryRole == PartyRole.Governor) && hero.GetPerkValue(item))
+			{
+				list.Add(item);
+			}
+		}
+		return list;
+	}
+
+	public static (TextObject, TextObject) GetGovernorEngineeringSkillEffectForHero(Hero governor)
+	{
+		if (governor != null && governor.GetSkillValue(DefaultSkills.Engineering) > 0)
+		{
+			SkillEffect townProjectBuildingBonus = DefaultSkillEffects.TownProjectBuildingBonus;
+			int skillValue = governor.GetSkillValue(townProjectBuildingBonus.EffectedSkill);
+			TextObject effectDescriptionForSkillLevel = SkillHelper.GetEffectDescriptionForSkillLevel(townProjectBuildingBonus, skillValue);
+			return (DefaultSkills.Engineering.Name, effectDescriptionForSkillLevel);
+		}
+		return (TextObject.GetEmpty(), new TextObject("{=0rBsbw1T}No effect"));
+	}
+
+	public static int AvailablePerkCountOfHero(Hero hero)
+	{
+		MBList<PerkObject> mBList = new MBList<PerkObject>();
+		foreach (PerkObject item in PerkObject.All)
+		{
+			SkillObject skill = item.Skill;
+			if ((float)hero.GetSkillValue(skill) >= item.RequiredSkillValue && !hero.GetPerkValue(item) && (item.AlternativePerk == null || !hero.GetPerkValue(item.AlternativePerk)) && !mBList.Contains(item.AlternativePerk))
+			{
+				mBList.Add(item);
+			}
+		}
+		return mBList.Count;
 	}
 }

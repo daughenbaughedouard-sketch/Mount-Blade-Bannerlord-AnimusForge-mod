@@ -1,0 +1,123 @@
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using StoryMode.StoryModeObjects;
+using TaleWorlds.CampaignSystem;
+using TaleWorlds.CampaignSystem.Party;
+using TaleWorlds.Core;
+using TaleWorlds.Library;
+using TaleWorlds.Localization;
+
+namespace StoryMode.Quests.SecondPhase;
+
+public abstract class ConspiracyQuestBase : QuestBase
+{
+	public abstract TextObject SideNotificationText { get; }
+
+	public abstract TextObject StartMessageLogFromMentor { get; }
+
+	public abstract TextObject StartLog { get; }
+
+	public abstract float ConspiracyStrengthDecreaseAmount { get; }
+
+	public Hero Mentor
+	{
+		get
+		{
+			if (!StoryModeManager.Current.MainStoryLine.IsOnImperialQuestLine)
+			{
+				return StoryModeHeroes.AntiImperialMentor;
+			}
+			return StoryModeHeroes.ImperialMentor;
+		}
+	}
+
+	public override bool IsRemainingTimeHidden => false;
+
+	public override string SpecialQuestType => "MainStoryline";
+
+	protected ConspiracyQuestBase(string questId, Hero questGiver)
+		: base(questId, questGiver, CampaignTime.DaysFromNow(21f), 0)
+	{
+		//IL_0008: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0019: Unknown result type (might be due to invalid IL or missing references)
+		((QuestBase)this).ChangeQuestDueTime(CampaignTime.DaysFromNow(21f));
+	}
+
+	protected override void RegisterEvents()
+	{
+		StoryModeEvents.OnConspiracyActivatedEvent.AddNonSerializedListener((object)this, (Action)OnConspiracyActivated);
+	}
+
+	private void OnConspiracyActivated()
+	{
+		((QuestBase)this).CompleteQuestWithFail((TextObject)null);
+	}
+
+	protected override void OnStartQuest()
+	{
+		((QuestBase)this).OnStartQuest();
+		Campaign.Current.CampaignInformationManager.NewMapNoticeAdded((InformationData)(object)new ConspiracyQuestMapNotification((QuestBase)(object)this, SideNotificationText));
+		((QuestBase)this).AddLog(StartMessageLogFromMentor, false);
+		((QuestBase)this).AddLog(StartLog, false);
+	}
+
+	protected override void OnCompleteWithSuccess()
+	{
+		((QuestBase)this).OnCompleteWithSuccess();
+		StoryModeManager.Current.MainStoryLine.SecondPhase.DecreaseConspiracyStrength(ConspiracyStrengthDecreaseAmount);
+	}
+
+	protected void DistributeConspiracyRaiderTroopsByLevel(PartyTemplateObject raiderTemplate, PartyBase partyToFill, int troopCountLimit)
+	{
+		//IL_003c: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0041: Unknown result type (might be due to invalid IL or missing references)
+		//IL_004c: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0089: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0176: Unknown result type (might be due to invalid IL or missing references)
+		//IL_017b: Unknown result type (might be due to invalid IL or missing references)
+		//IL_0186: Unknown result type (might be due to invalid IL or missing references)
+		//IL_01f4: Unknown result type (might be due to invalid IL or missing references)
+		List<KeyValuePair<int, List<CharacterObject>>> list = new List<KeyValuePair<int, List<CharacterObject>>>();
+		foreach (PartyTemplateStack item in ((IEnumerable<PartyTemplateStack>)raiderTemplate.Stacks).OrderBy((PartyTemplateStack t) => ((BasicCharacterObject)t.Character).Level))
+		{
+			int key = ((BasicCharacterObject)item.Character).Level;
+			if (!list.Exists((KeyValuePair<int, List<CharacterObject>> t) => t.Key == key))
+			{
+				list.Add(new KeyValuePair<int, List<CharacterObject>>(key, new List<CharacterObject>()));
+			}
+			CharacterObject character = item.Character;
+			KeyValuePair<int, List<CharacterObject>> keyValuePair = list.Find((KeyValuePair<int, List<CharacterObject>> t) => t.Key == key);
+			if (keyValuePair.Value != null && !keyValuePair.Value.Contains(character))
+			{
+				keyValuePair.Value.Add(character);
+			}
+		}
+		int num = list.Sum((KeyValuePair<int, List<CharacterObject>> t) => t.Key);
+		List<KeyValuePair<int, int>> list2 = new List<KeyValuePair<int, int>>();
+		foreach (KeyValuePair<int, List<CharacterObject>> item2 in list)
+		{
+			list2.Add(new KeyValuePair<int, int>(item2.Key, MathF.Floor((float)item2.Key / (float)num * (float)troopCountLimit)));
+		}
+		foreach (PartyTemplateStack item3 in (List<PartyTemplateStack>)(object)raiderTemplate.Stacks)
+		{
+			int level = ((BasicCharacterObject)item3.Character).Level;
+			int num2 = list2.FindIndex((KeyValuePair<int, int> t) => t.Key == level);
+			int index = list2.Count - 1 - num2;
+			int num3 = MathF.Floor((float)list2[index].Value / (float)list[num2].Value.Count);
+			if (num3 != 0)
+			{
+				partyToFill.MemberRoster.AddToCounts(item3.Character, num3, false, 0, 0, true, -1);
+			}
+		}
+		if (partyToFill.MemberRoster.TotalManCount < troopCountLimit)
+		{
+			partyToFill.MemberRoster.AddToCounts(list[0].Value[0], troopCountLimit - partyToFill.MemberRoster.TotalManCount, false, 0, 0, true, -1);
+		}
+	}
+
+	protected override void AutoGeneratedInstanceCollectObjects(List<object> collectedObjects)
+	{
+		((QuestBase)this).AutoGeneratedInstanceCollectObjects(collectedObjects);
+	}
+}

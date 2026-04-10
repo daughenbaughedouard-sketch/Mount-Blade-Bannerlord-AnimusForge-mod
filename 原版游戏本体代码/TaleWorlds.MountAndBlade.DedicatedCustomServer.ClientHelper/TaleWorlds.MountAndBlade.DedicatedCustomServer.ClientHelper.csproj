@@ -1,0 +1,33 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <AssemblyName>TaleWorlds.MountAndBlade.DedicatedCustomServer.ClientHelper</AssemblyName>
+    <GenerateAssemblyInfo>False</GenerateAssemblyInfo>
+    <TargetFramework>netstandard2.0</TargetFramework>
+    <PlatformTarget>x64</PlatformTarget>
+  </PropertyGroup>
+  <PropertyGroup>
+    <LangVersion>12.0</LangVersion>
+    <AllowUnsafeBlocks>True</AllowUnsafeBlocks>
+  </PropertyGroup>
+  <PropertyGroup />
+  <ItemGroup />
+  <ItemGroup>
+    <Reference Include="TaleWorlds.Library" />
+    <Reference Include="TaleWorlds.Core.ViewModelCollection" />
+    <Reference Include="TaleWorlds.Engine.GauntletUI" />
+    <Reference Include="TaleWorlds.MountAndBlade.Diamond" />
+    <Reference Include="TaleWorlds.Localization" />
+    <Reference Include="TaleWorlds.MountAndBlade.Multiplayer">
+      <HintPath>..\..\..\SteamLibrary\steamapps\common\Mount &amp; Blade II Bannerlord\Modules\Multiplayer\bin\Win64_Shipping_Client\TaleWorlds.MountAndBlade.Multiplayer.dll</HintPath>
+    </Reference>
+    <Reference Include="TaleWorlds.MountAndBlade" />
+    <Reference Include="TaleWorlds.Core" />
+    <Reference Include="TaleWorlds.Engine" />
+    <Reference Include="TaleWorlds.ScreenSystem" />
+    <Reference Include="TaleWorlds.MountAndBlade.Multiplayer.GauntletUI">
+      <HintPath>..\..\..\SteamLibrary\steamapps\common\Mount &amp; Blade II Bannerlord\Modules\Multiplayer\bin\Win64_Shipping_Client\TaleWorlds.MountAndBlade.Multiplayer.GauntletUI.dll</HintPath>
+    </Reference>
+    <Reference Include="TaleWorlds.ModuleManager" />
+    <Reference Include="Newtonsoft.Json" />
+  </ItemGroup>
+</Project>

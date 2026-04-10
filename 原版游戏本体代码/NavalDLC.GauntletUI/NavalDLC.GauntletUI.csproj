@@ -1,0 +1,50 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <AssemblyName>NavalDLC.GauntletUI</AssemblyName>
+    <GenerateAssemblyInfo>False</GenerateAssemblyInfo>
+    <TargetFramework>netstandard2.0</TargetFramework>
+    <PlatformTarget>x64</PlatformTarget>
+  </PropertyGroup>
+  <PropertyGroup>
+    <LangVersion>12.0</LangVersion>
+    <AllowUnsafeBlocks>True</AllowUnsafeBlocks>
+  </PropertyGroup>
+  <PropertyGroup />
+  <ItemGroup />
+  <ItemGroup>
+    <Reference Include="TaleWorlds.MountAndBlade.GauntletUI" />
+    <Reference Include="TaleWorlds.MountAndBlade" />
+    <Reference Include="TaleWorlds.TwoDimension" />
+    <Reference Include="SandBox.GauntletUI" />
+    <Reference Include="StoryMode.GauntletUI" />
+    <Reference Include="SandBox.ViewModelCollection" />
+    <Reference Include="TaleWorlds.CampaignSystem" />
+    <Reference Include="NavalDLC">
+      <HintPath>..\..\..\SteamLibrary\steamapps\common\Mount &amp; Blade II Bannerlord\Modules\NavalDLC\bin\Win64_Shipping_Client\NavalDLC.dll</HintPath>
+    </Reference>
+    <Reference Include="TaleWorlds.Core" />
+    <Reference Include="NavalDLC.View">
+      <HintPath>..\..\..\SteamLibrary\steamapps\common\Mount &amp; Blade II Bannerlord\Modules\NavalDLC\bin\Win64_Shipping_Client\NavalDLC.View.dll</HintPath>
+    </Reference>
+    <Reference Include="TaleWorlds.Library" />
+    <Reference Include="TaleWorlds.Engine" />
+    <Reference Include="TaleWorlds.MountAndBlade.View" />
+    <Reference Include="TaleWorlds.ScreenSystem" />
+    <Reference Include="SandBox.View" />
+    <Reference Include="TaleWorlds.Engine.GauntletUI" />
+    <Reference Include="NavalDLC.ViewModelCollection">
+      <HintPath>..\..\..\SteamLibrary\steamapps\common\Mount &amp; Blade II Bannerlord\Modules\NavalDLC\bin\Win64_Shipping_Client\NavalDLC.ViewModelCollection.dll</HintPath>
+    </Reference>
+    <Reference Include="TaleWorlds.InputSystem" />
+    <Reference Include="TaleWorlds.CampaignSystem.ViewModelCollection" />
+    <Reference Include="SandBox" />
+    <Reference Include="TaleWorlds.Localization" />
+    <Reference Include="TaleWorlds.MountAndBlade.ViewModelCollection" />
+    <Reference Include="TaleWorlds.DotNet" />
+    <Reference Include="TaleWorlds.ObjectSystem" />
+    <Reference Include="TaleWorlds.GauntletUI" />
+    <Reference Include="System.Numerics.Vectors">
+      <HintPath>C:\Program Files\dotnet\shared\Microsoft.NETCore.App\6.0.24\System.Numerics.Vectors.dll</HintPath>
+    </Reference>
+  </ItemGroup>
+</Project>

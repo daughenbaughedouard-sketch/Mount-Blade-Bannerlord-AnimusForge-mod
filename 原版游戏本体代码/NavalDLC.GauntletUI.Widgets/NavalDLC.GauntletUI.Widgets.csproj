@@ -1,0 +1,24 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <AssemblyName>NavalDLC.GauntletUI.Widgets</AssemblyName>
+    <GenerateAssemblyInfo>False</GenerateAssemblyInfo>
+    <TargetFramework>netstandard2.0</TargetFramework>
+    <PlatformTarget>x64</PlatformTarget>
+  </PropertyGroup>
+  <PropertyGroup>
+    <LangVersion>12.0</LangVersion>
+    <AllowUnsafeBlocks>True</AllowUnsafeBlocks>
+  </PropertyGroup>
+  <PropertyGroup />
+  <ItemGroup />
+  <ItemGroup>
+    <Reference Include="TaleWorlds.GauntletUI" />
+    <Reference Include="TaleWorlds.TwoDimension" />
+    <Reference Include="System.Numerics.Vectors">
+      <HintPath>C:\Program Files\dotnet\shared\Microsoft.NETCore.App\6.0.24\System.Numerics.Vectors.dll</HintPath>
+    </Reference>
+    <Reference Include="TaleWorlds.InputSystem" />
+    <Reference Include="TaleWorlds.Library" />
+    <Reference Include="TaleWorlds.GauntletUI.ExtraWidgets" />
+  </ItemGroup>
+</Project>

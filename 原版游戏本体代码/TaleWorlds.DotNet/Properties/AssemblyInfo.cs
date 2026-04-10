@@ -1,4 +1,3 @@
-﻿using System;
 using System.Diagnostics;
 using System.Reflection;
 using System.Runtime.CompilerServices;
@@ -6,7 +5,6 @@ using System.Runtime.Versioning;
 using TaleWorlds.DotNet;
 using TaleWorlds.Library;
 
-[assembly: AssemblyVersion("1.0.0.0")]
 [assembly: DefineAsEngineStruct(typeof(Vec2), "rglVec2::Plain_vec", false, null, null)]
 [assembly: DefineAsEngineStruct(typeof(Vec2i), "rglInt_vec2", false, null, null)]
 [assembly: DefineAsEngineStruct(typeof(Vec3), "rglVec3::Plain_vec", false, null, null)]
@@ -60,3 +58,4 @@ using TaleWorlds.Library;
 [assembly: AssemblyInformationalVersion("1.0.0")]
 [assembly: AssemblyProduct("TaleWorlds.DotNet")]
 [assembly: AssemblyTitle("TaleWorlds.DotNet")]
+[assembly: AssemblyVersion("1.0.0.0")]

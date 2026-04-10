@@ -1,4 +1,3 @@
-﻿using System;
 using System.Diagnostics;
 using System.Reflection;
 using System.Runtime.CompilerServices;
@@ -7,7 +6,6 @@ using TaleWorlds.DotNet;
 using TaleWorlds.InputSystem;
 using TaleWorlds.Library;
 
-[assembly: AssemblyVersion("1.0.0.0")]
 [assembly: DefineAsEngineStruct(typeof(AtmosphereInfo), "rglAtmosphere_info", false, null, null)]
 [assembly: DefineAsEngineStruct(typeof(SunInformation), "sun_information", false, null, null)]
 [assembly: DefineAsEngineStruct(typeof(RainInformation), "rain_information", false, null, null)]
@@ -37,3 +35,4 @@ using TaleWorlds.Library;
 [assembly: AssemblyInformationalVersion("1.0.0")]
 [assembly: AssemblyProduct("TaleWorlds.Engine")]
 [assembly: AssemblyTitle("TaleWorlds.Engine")]
+[assembly: AssemblyVersion("1.0.0.0")]

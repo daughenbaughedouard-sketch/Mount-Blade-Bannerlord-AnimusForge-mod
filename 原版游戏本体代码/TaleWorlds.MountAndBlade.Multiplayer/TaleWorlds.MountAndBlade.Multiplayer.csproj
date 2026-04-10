@@ -1,0 +1,32 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <AssemblyName>TaleWorlds.MountAndBlade.Multiplayer</AssemblyName>
+    <GenerateAssemblyInfo>False</GenerateAssemblyInfo>
+    <TargetFramework>netstandard2.0</TargetFramework>
+    <PlatformTarget>x64</PlatformTarget>
+  </PropertyGroup>
+  <PropertyGroup>
+    <LangVersion>12.0</LangVersion>
+    <AllowUnsafeBlocks>True</AllowUnsafeBlocks>
+  </PropertyGroup>
+  <PropertyGroup />
+  <ItemGroup />
+  <ItemGroup>
+    <Reference Include="TaleWorlds.Core" />
+    <Reference Include="TaleWorlds.MountAndBlade" />
+    <Reference Include="TaleWorlds.MountAndBlade.Diamond" />
+    <Reference Include="TaleWorlds.Localization" />
+    <Reference Include="TaleWorlds.PlayerServices" />
+    <Reference Include="TaleWorlds.PlatformService" />
+    <Reference Include="TaleWorlds.Library" />
+    <Reference Include="TaleWorlds.Engine" />
+    <Reference Include="TaleWorlds.Diamond" />
+    <Reference Include="TaleWorlds.ObjectSystem" />
+    <Reference Include="Newtonsoft.Json" />
+    <Reference Include="TaleWorlds.ModuleManager" />
+    <Reference Include="TaleWorlds.DotNet" />
+    <Reference Include="TaleWorlds.AchievementSystem" />
+    <Reference Include="TaleWorlds.ServiceDiscovery.Client" />
+    <Reference Include="TaleWorlds.Diamond.AccessProvider.Test" />
+  </ItemGroup>
+</Project>
