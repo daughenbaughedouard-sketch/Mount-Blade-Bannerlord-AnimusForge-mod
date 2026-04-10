@@ -1532,7 +1532,7 @@ public class DuelBehavior : CampaignBehaviorBase
 		}
 		try
 		{
-			targetAgent.WieldInitialWeapons(Agent.WeaponWieldActionType.InstantAfterPickUp, Equipment.InitialWeaponEquipPreference.MeleeForMainHand);
+			AgentWeaponCompat.TryWieldInitialWeapons(targetAgent, Agent.WeaponWieldActionType.InstantAfterPickUp, Equipment.InitialWeaponEquipPreference.MeleeForMainHand, "DuelBehavior.ReleaseFormalDuelTarget");
 		}
 		catch
 		{
@@ -1591,7 +1591,7 @@ public class DuelBehavior : CampaignBehaviorBase
 			}
 			try
 			{
-				targetAgent.WieldInitialWeapons(Agent.WeaponWieldActionType.InstantAfterPickUp, Equipment.InitialWeaponEquipPreference.MeleeForMainHand);
+				AgentWeaponCompat.TryWieldInitialWeapons(targetAgent, Agent.WeaponWieldActionType.InstantAfterPickUp, Equipment.InitialWeaponEquipPreference.MeleeForMainHand, "DuelBehavior.KeepFormalDuelTargetFocusedOnPlayer");
 			}
 			catch
 			{

@@ -8094,25 +8094,7 @@ public class MyBehavior : CampaignBehaviorBase
 		{
 			return null;
 		}
-		try
-		{
-			ItemObject item = Agent.Main.SpawnEquipment[index].Item;
-			if (item != null)
-			{
-				return item;
-			}
-		}
-		catch
-		{
-		}
-		try
-		{
-			return Agent.Main.Equipment[index].Item;
-		}
-		catch
-		{
-			return null;
-		}
+		return MissionEquipmentCompat.TryGetAgentItem(Agent.Main, index, out var itemObject) ? itemObject : null;
 	}
 
 	private static ItemObject TryGetHeroEquipmentItemForPrompt(Hero hero, EquipmentIndex index, bool useCivilianEquipment)

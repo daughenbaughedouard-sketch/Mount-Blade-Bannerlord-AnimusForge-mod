@@ -271,7 +271,7 @@ public class LordEncounterBehavior : CampaignBehaviorBase
 		bool flag5 = false;
 		try
 		{
-			flag5 = PlayerEncounter.CampaignBattleResult != null;
+			flag5 = PlayerEncounterCompat.HasCampaignBattleResult();
 		}
 		catch
 		{
@@ -286,7 +286,7 @@ public class LordEncounterBehavior : CampaignBehaviorBase
 			{
 				try
 				{
-					flag7 = PlayerEncounter.Battle != null || PlayerEncounter.EncounteredBattle != null || MapEvent.PlayerMapEvent != null;
+					flag7 = PlayerEncounterCompat.HasEncounterBattleContext();
 				}
 				catch
 				{
@@ -433,7 +433,7 @@ public class LordEncounterBehavior : CampaignBehaviorBase
 				}
 				try
 				{
-					flag3 = PlayerEncounter.Battle != null || PlayerEncounter.EncounteredBattle != null || MapEvent.PlayerMapEvent != null;
+					flag3 = PlayerEncounterCompat.HasEncounterBattleContext();
 				}
 				catch
 				{
@@ -441,7 +441,7 @@ public class LordEncounterBehavior : CampaignBehaviorBase
 				}
 				try
 				{
-					flag4 = PlayerEncounter.CampaignBattleResult != null;
+					flag4 = PlayerEncounterCompat.HasCampaignBattleResult();
 				}
 				catch
 				{
@@ -485,7 +485,7 @@ public class LordEncounterBehavior : CampaignBehaviorBase
 		}
 		try
 		{
-			flag7 = PlayerEncounter.Battle != null || PlayerEncounter.EncounteredBattle != null || MapEvent.PlayerMapEvent != null;
+			flag7 = PlayerEncounterCompat.HasEncounterBattleContext();
 		}
 		catch
 		{
@@ -493,7 +493,7 @@ public class LordEncounterBehavior : CampaignBehaviorBase
 		}
 		try
 		{
-			flag8 = PlayerEncounter.CampaignBattleResult != null;
+			flag8 = PlayerEncounterCompat.HasCampaignBattleResult();
 		}
 		catch
 		{
@@ -676,7 +676,7 @@ public class LordEncounterBehavior : CampaignBehaviorBase
 		}
 		try
 		{
-			flag2 = PlayerEncounter.Battle != null || PlayerEncounter.EncounteredBattle != null || MapEvent.PlayerMapEvent != null;
+			flag2 = PlayerEncounterCompat.HasEncounterBattleContext();
 		}
 		catch
 		{
@@ -920,7 +920,7 @@ public class LordEncounterBehavior : CampaignBehaviorBase
 		}
 		try
 		{
-			flag2 = PlayerEncounter.Battle != null || PlayerEncounter.EncounteredBattle != null || MapEvent.PlayerMapEvent != null;
+			flag2 = PlayerEncounterCompat.HasEncounterBattleContext();
 		}
 		catch
 		{
@@ -1343,7 +1343,10 @@ public class LordEncounterBehavior : CampaignBehaviorBase
 			}
 			try
 			{
-				PlayerEncounter.CampaignBattleResult = CampaignBattleResult.GetResult(winnerSide);
+				if (!PlayerEncounterCompat.TrySetCampaignBattleResult(CampaignBattleResult.GetResult(winnerSide)))
+				{
+					throw new InvalidOperationException("PlayerEncounter.Current is null.");
+				}
 			}
 			catch (Exception ex2)
 			{
@@ -1449,7 +1452,7 @@ public class LordEncounterBehavior : CampaignBehaviorBase
 		}
 		try
 		{
-			if (PlayerEncounter.Battle == null && PlayerEncounter.EncounteredBattle == null && MapEvent.PlayerMapEvent == null)
+			if (!PlayerEncounterCompat.HasEncounterBattleContext())
 			{
 				PlayerEncounter.StartBattle();
 			}
@@ -1492,7 +1495,7 @@ public class LordEncounterBehavior : CampaignBehaviorBase
 	{
 		try
 		{
-			CampaignBattleResult campaignBattleResult = PlayerEncounter.CampaignBattleResult;
+			CampaignBattleResult campaignBattleResult = PlayerEncounterCompat.GetCampaignBattleResultSafe();
 			if (campaignBattleResult == null)
 			{
 				return false;
@@ -1624,7 +1627,7 @@ public class LordEncounterBehavior : CampaignBehaviorBase
 				Logger.Log("MeetingBattle", "Peaceful meeting exit detected. Clearing temporary encounter-battle state.");
 				try
 				{
-					PlayerEncounter.CampaignBattleResult = null;
+					PlayerEncounterCompat.TrySetCampaignBattleResult(null);
 				}
 				catch
 				{
@@ -1667,7 +1670,7 @@ public class LordEncounterBehavior : CampaignBehaviorBase
 				bool flag = false;
 				try
 				{
-					flag = PlayerEncounter.Battle != null || PlayerEncounter.EncounteredBattle != null || MapEvent.PlayerMapEvent != null;
+					flag = PlayerEncounterCompat.HasEncounterBattleContext();
 				}
 				catch
 				{
@@ -1842,7 +1845,7 @@ public class LordEncounterBehavior : CampaignBehaviorBase
 				}
 				try
 				{
-					flag2 = PlayerEncounter.CampaignBattleResult != null;
+					flag2 = PlayerEncounterCompat.HasCampaignBattleResult();
 				}
 				catch
 				{
@@ -1879,7 +1882,7 @@ public class LordEncounterBehavior : CampaignBehaviorBase
 			bool flag7 = false;
 			try
 			{
-				flag4 = PlayerEncounter.Battle != null || PlayerEncounter.EncounteredBattle != null || MapEvent.PlayerMapEvent != null;
+				flag4 = PlayerEncounterCompat.HasEncounterBattleContext();
 			}
 			catch
 			{
@@ -1887,7 +1890,7 @@ public class LordEncounterBehavior : CampaignBehaviorBase
 			}
 			try
 			{
-				flag5 = PlayerEncounter.CampaignBattleResult != null;
+				flag5 = PlayerEncounterCompat.HasCampaignBattleResult();
 			}
 			catch
 			{
@@ -2177,7 +2180,7 @@ public class LordEncounterBehavior : CampaignBehaviorBase
 		}
 		try
 		{
-			flag3 = PlayerEncounter.CampaignBattleResult != null;
+			flag3 = PlayerEncounterCompat.HasCampaignBattleResult();
 		}
 		catch
 		{
@@ -2306,7 +2309,7 @@ public class LordEncounterBehavior : CampaignBehaviorBase
 		CampaignBattleResult campaignBattleResult = null;
 		try
 		{
-			campaignBattleResult = PlayerEncounter.CampaignBattleResult;
+			campaignBattleResult = PlayerEncounterCompat.GetCampaignBattleResultSafe();
 		}
 		catch
 		{
@@ -2577,7 +2580,7 @@ public class LordEncounterBehavior : CampaignBehaviorBase
 		}
 		try
 		{
-			if (PlayerEncounter.Battle == null && PlayerEncounter.EncounteredBattle == null && MapEvent.PlayerMapEvent == null)
+			if (!PlayerEncounterCompat.HasEncounterBattleContext())
 			{
 				PlayerEncounter.StartBattle();
 			}
@@ -2589,7 +2592,10 @@ public class LordEncounterBehavior : CampaignBehaviorBase
 		try
 		{
 			BattleState winnerSide = ((!PlayerEncounter.PlayerIsAttacker) ? BattleState.DefenderVictory : BattleState.AttackerVictory);
-			PlayerEncounter.CampaignBattleResult = CampaignBattleResult.GetResult(winnerSide);
+			if (!PlayerEncounterCompat.TrySetCampaignBattleResult(CampaignBattleResult.GetResult(winnerSide)))
+			{
+				throw new InvalidOperationException("PlayerEncounter.Current is null.");
+			}
 		}
 		catch (Exception ex4)
 		{
@@ -3198,14 +3204,7 @@ public class LordEncounterBehavior : CampaignBehaviorBase
 
 	private static MapEvent TryGetCurrentEncounterBattle()
 	{
-		try
-		{
-			return PlayerEncounter.Battle ?? PlayerEncounter.EncounteredBattle ?? MapEvent.PlayerMapEvent;
-		}
-		catch
-		{
-			return null;
-		}
+		return PlayerEncounterCompat.GetCurrentMapEventSafe();
 	}
 
 	private static void OpenBattleMissionFallbackFromEncounter()
@@ -3260,7 +3259,7 @@ public class LordEncounterBehavior : CampaignBehaviorBase
 		Vec2 result = new Vec2(1f, 0f);
 		try
 		{
-			MapEvent mapEvent = PlayerEncounter.Battle ?? PlayerEncounter.EncounteredBattle;
+			MapEvent mapEvent = PlayerEncounterCompat.GetBattleOrEncounteredBattleSafe();
 			if (mapEvent != null && mapEvent.AttackerSide?.LeaderParty != null && mapEvent.DefenderSide?.LeaderParty != null)
 			{
 				Vec2 vec = mapEvent.AttackerSide.LeaderParty.Position.ToVec2();

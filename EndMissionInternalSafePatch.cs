@@ -47,7 +47,7 @@ public static class EndMissionInternalSafePatch
 	{
 		try
 		{
-			if (PlayerEncounter.Current != null && (PlayerEncounter.Battle != null || PlayerEncounter.EncounteredBattle != null || MapEvent.PlayerMapEvent != null))
+			if (PlayerEncounter.Current != null && PlayerEncounterCompat.HasEncounterBattleContext())
 			{
 				LordEncounterRedirectGuard.SuppressForSeconds(1f);
 			}

@@ -13,7 +13,6 @@ using TaleWorlds.Engine;
 using TaleWorlds.Library;
 using TaleWorlds.Localization;
 using TaleWorlds.MountAndBlade;
-using TaleWorlds.MountAndBlade.View.MissionViews;
 
 namespace AnimusForge;
 
@@ -30,6 +29,16 @@ public class MeetingBattleLockMissionBehavior : MissionBehavior
 	private const float StartupLoadingFadeRetryTimeoutSeconds = 6f;
 
 	private readonly Hero _targetHero;
+
+	private static Type _missionCameraFadeViewType;
+
+	private static bool _missionCameraFadeViewTypeResolved;
+
+	private static MethodInfo _missionGetMissionBehaviorGenericMethod;
+
+	private static PropertyInfo _missionCameraFadeViewFadeStateProperty;
+
+	private static MethodInfo _missionCameraFadeViewBeginFadeOutAndInMethod;
 
 	private Agent _mainAgent;
 
@@ -767,8 +776,10 @@ public class MeetingBattleLockMissionBehavior : MissionBehavior
 				}
 				try
 				{
-					agent.WieldInitialWeapons(Agent.WeaponWieldActionType.InstantAfterPickUp, Equipment.InitialWeaponEquipPreference.Any);
-					num2++;
+					if (AgentWeaponCompat.TryWieldInitialWeapons(agent, Agent.WeaponWieldActionType.InstantAfterPickUp, Equipment.InitialWeaponEquipPreference.Any, "MeetingBattle.RefreshCombatReadinessAfterEscalation"))
+					{
+						num2++;
+					}
 				}
 				catch
 				{
@@ -845,16 +856,16 @@ public class MeetingBattleLockMissionBehavior : MissionBehavior
 			return;
 		}
 		_startupLoadingFadeElapsed += dt;
-		MissionCameraFadeView missionCameraFadeView = null;
+		object obj = null;
 		try
 		{
-			missionCameraFadeView = base.Mission.GetMissionBehavior<MissionCameraFadeView>();
+			obj = TryGetMissionCameraFadeViewCompat();
 		}
 		catch
 		{
-			missionCameraFadeView = null;
+			obj = null;
 		}
-		if (missionCameraFadeView == null)
+		if (obj == null)
 		{
 			if (_startupLoadingFadeElapsed >= 6f)
 			{
@@ -865,9 +876,10 @@ public class MeetingBattleLockMissionBehavior : MissionBehavior
 		}
 		try
 		{
-			if (missionCameraFadeView.FadeState == MissionCameraFadeView.CameraFadeState.White)
+			string text = _missionCameraFadeViewFadeStateProperty?.GetValue(obj, null)?.ToString();
+			if (string.Equals(text, "White", StringComparison.Ordinal))
 			{
-				missionCameraFadeView.BeginFadeOutAndIn(0.08f, 4f, 0.22f);
+				_missionCameraFadeViewBeginFadeOutAndInMethod?.Invoke(obj, new object[3] { 0.08f, 4f, 0.22f });
 				_startupLoadingFadeApplied = true;
 				Logger.Log("MeetingBattle", $"Applied startup loading delay. BlackTime={4f:0.0}s");
 				return;
@@ -884,6 +896,70 @@ public class MeetingBattleLockMissionBehavior : MissionBehavior
 			_startupLoadingFadeAborted = true;
 			Logger.Log("MeetingBattle", "Startup loading delay skipped: camera fade state never reached White.");
 		}
+	}
+
+	private object TryGetMissionCameraFadeViewCompat()
+	{
+		try
+		{
+			if (!EnsureMissionCameraFadeViewCompatResolved())
+			{
+				return null;
+			}
+			return _missionGetMissionBehaviorGenericMethod.MakeGenericMethod(_missionCameraFadeViewType).Invoke(base.Mission, null);
+		}
+		catch (Exception ex)
+		{
+			_startupLoadingFadeAborted = true;
+			Logger.Log("MeetingBattle", "Startup loading delay compatibility lookup failed: " + ex.Message);
+			return null;
+		}
+	}
+
+	private static bool EnsureMissionCameraFadeViewCompatResolved()
+	{
+		if (_missionCameraFadeViewTypeResolved)
+		{
+			return _missionCameraFadeViewType != null && _missionGetMissionBehaviorGenericMethod != null && _missionCameraFadeViewFadeStateProperty != null && _missionCameraFadeViewBeginFadeOutAndInMethod != null;
+		}
+		_missionCameraFadeViewTypeResolved = true;
+		try
+		{
+			Assembly[] assemblies = AppDomain.CurrentDomain.GetAssemblies();
+			foreach (Assembly assembly in assemblies)
+			{
+				try
+				{
+					_missionCameraFadeViewType = assembly.GetType("TaleWorlds.MountAndBlade.View.MissionViews.MissionCameraFadeView", throwOnError: false);
+					if (_missionCameraFadeViewType == null)
+					{
+						_missionCameraFadeViewType = assembly.GetType("SandBox.View.Missions.MissionCameraFadeView", throwOnError: false);
+					}
+					if (_missionCameraFadeViewType != null)
+					{
+						break;
+					}
+				}
+				catch
+				{
+				}
+			}
+			_missionGetMissionBehaviorGenericMethod = typeof(Mission).GetMethods(BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic).FirstOrDefault((MethodInfo m) => m.Name == "GetMissionBehavior" && m.IsGenericMethodDefinition && m.GetParameters().Length == 0);
+			if (_missionCameraFadeViewType != null)
+			{
+				_missionCameraFadeViewFadeStateProperty = _missionCameraFadeViewType.GetProperty("FadeState", BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic);
+				_missionCameraFadeViewBeginFadeOutAndInMethod = _missionCameraFadeViewType.GetMethod("BeginFadeOutAndIn", BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic, null, new Type[3]
+				{
+					typeof(float),
+					typeof(float),
+					typeof(float)
+				}, null);
+			}
+		}
+		catch
+		{
+		}
+		return _missionCameraFadeViewType != null && _missionGetMissionBehaviorGenericMethod != null && _missionCameraFadeViewFadeStateProperty != null && _missionCameraFadeViewBeginFadeOutAndInMethod != null;
 	}
 
 	private void TrySkipDeploymentPhaseForMeeting()
@@ -1073,7 +1149,7 @@ public class MeetingBattleLockMissionBehavior : MissionBehavior
 					targetAgent.SetWatchState(Agent.WatchState.Alarmed);
 					try
 					{
-						targetAgent.WieldInitialWeapons(Agent.WeaponWieldActionType.InstantAfterPickUp, Equipment.InitialWeaponEquipPreference.MeleeForMainHand);
+						AgentWeaponCompat.TryWieldInitialWeapons(targetAgent, Agent.WeaponWieldActionType.InstantAfterPickUp, Equipment.InitialWeaponEquipPreference.MeleeForMainHand, "MeetingBattle.ToggleFormalDuelTargetPause");
 					}
 					catch
 					{
@@ -2146,6 +2222,13 @@ public class MeetingBattleLockMissionBehavior : MissionBehavior
 		catch
 		{
 		}
+		try
+		{
+			SuppressTargetLordCombatReadiness();
+		}
+		catch
+		{
+		}
 	}
 
 	private void EnsureTargetLordNeutralized()
@@ -2173,6 +2256,7 @@ public class MeetingBattleLockMissionBehavior : MissionBehavior
 			EnsureTargetLordControllerSuppressed();
 			ForceLockTargetLordInPlace();
 			TrySheathWeapons(_targetAgent);
+			SuppressTargetLordCombatReadiness();
 		}
 	}
 
@@ -2182,6 +2266,7 @@ public class MeetingBattleLockMissionBehavior : MissionBehavior
 		{
 			return;
 		}
+		RestoreTargetLordCombatCapability();
 		RestoreTargetLordControllerForCombat();
 		TrySetAgentController(_targetAgent, "AI");
 		EnsureAgentFreeMovement(_targetAgent);
@@ -2271,6 +2356,7 @@ public class MeetingBattleLockMissionBehavior : MissionBehavior
 		{
 			if (_targetAgent != null && _targetAgent.IsActive())
 			{
+				RestoreTargetLordCombatCapability();
 				TrySetAgentController(_targetAgent, "AI");
 			}
 			if (_targetMountControllerSuppressed)
@@ -2287,6 +2373,56 @@ public class MeetingBattleLockMissionBehavior : MissionBehavior
 		}
 		_targetControllerSuppressed = false;
 		_targetMountControllerSuppressed = false;
+	}
+
+	private void SuppressTargetLordCombatReadiness()
+	{
+		if (_targetAgent == null || !_targetAgent.IsActive() || !_targetAgent.IsHuman)
+		{
+			return;
+		}
+		try
+		{
+			AgentFlag agentFlags = _targetAgent.GetAgentFlags();
+			agentFlags &= ~AgentFlag.CanGetAlarmed;
+			agentFlags &= ~AgentFlag.CanWieldWeapon;
+			_targetAgent.SetAgentFlags(agentFlags);
+		}
+		catch
+		{
+		}
+		try
+		{
+			_targetAgent.SetAlarmState(Agent.AIStateFlag.None);
+		}
+		catch
+		{
+		}
+		try
+		{
+			_targetAgent.SetWatchState(Agent.WatchState.Patrolling);
+		}
+		catch
+		{
+		}
+	}
+
+	private void RestoreTargetLordCombatCapability()
+	{
+		if (_targetAgent == null || !_targetAgent.IsActive() || !_targetAgent.IsHuman)
+		{
+			return;
+		}
+		try
+		{
+			AgentFlag agentFlags = _targetAgent.GetAgentFlags();
+			agentFlags |= AgentFlag.CanGetAlarmed;
+			agentFlags |= AgentFlag.CanWieldWeapon;
+			_targetAgent.SetAgentFlags(agentFlags);
+		}
+		catch
+		{
+		}
 	}
 
 	private void TrySetAgentController(Agent agent, string controllerType)
@@ -2501,7 +2637,7 @@ public class MeetingBattleLockMissionBehavior : MissionBehavior
 		PartyBase partyBase = null;
 		try
 		{
-			partyBase = (PlayerEncounter.Battle ?? PlayerEncounter.EncounteredBattle ?? MapEvent.PlayerMapEvent)?.GetLeaderParty(PartyBase.MainParty.OpponentSide);
+			partyBase = PlayerEncounterCompat.GetCurrentMapEventSafe()?.GetLeaderParty(PartyBase.MainParty.OpponentSide);
 		}
 		catch
 		{
@@ -3819,14 +3955,7 @@ public class MeetingBattleLockMissionBehavior : MissionBehavior
 
 	private MapEvent GetCurrentEncounterBattleSafe()
 	{
-		try
-		{
-			return PlayerEncounter.Battle ?? PlayerEncounter.EncounteredBattle ?? MapEvent.PlayerMapEvent;
-		}
-		catch
-		{
-			return null;
-		}
+		return PlayerEncounterCompat.GetCurrentMapEventSafe();
 	}
 
 	private void TrySpawnFallbackEscortsForBothSides(int desiredCount, Team playerTeam, Team targetTeam, Vec3 playerAnchor, Vec3 playerForward, Vec3 targetAnchor, Vec3 targetForward, int existingPlayerEscorts, int existingTargetEscorts, bool allowPlayerSpawn, bool allowTargetSpawn)
@@ -4222,14 +4351,7 @@ public class MeetingBattleLockMissionBehavior : MissionBehavior
 		{
 			ItemObject itemObject = null;
 			WeaponComponentData weaponComponentData = null;
-			try
-			{
-				itemObject = agent.Equipment[equipmentIndex].Item;
-			}
-			catch
-			{
-				itemObject = null;
-			}
+			itemObject = MissionEquipmentCompat.TryGetItem(agent, equipmentIndex, out var resolvedItemObject) ? resolvedItemObject : null;
 			if (itemObject == null)
 			{
 				continue;
@@ -4317,7 +4439,7 @@ public class MeetingBattleLockMissionBehavior : MissionBehavior
 		{
 			try
 			{
-				ItemObject item = agent.Equipment[equipmentIndex2.Value].Item;
+				ItemObject item = MissionEquipmentCompat.TryGetItem(agent, equipmentIndex2.Value, out var resolvedItemObject2) ? resolvedItemObject2 : null;
 				if (this.CanUseMeetingEscortWeaponWithShield(item))
 				{
 					agent.TryToWieldWeaponInSlot(shieldSlot.Value, Agent.WeaponWieldActionType.Instant, isWieldedOnSpawn: false);

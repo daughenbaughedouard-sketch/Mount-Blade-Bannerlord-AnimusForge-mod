@@ -116,57 +116,43 @@ internal static class VanillaIssueOfferBridge
 
 	private static readonly Regex QuestTurnInRegex = new Regex("\\[ACTION:QUEST_TURN_IN\\]", RegexOptions.IgnoreCase | RegexOptions.Compiled);
 
-	private static readonly MethodInfo CheckPreconditionsMethod = AccessTools.Method(typeof(IssueBase), "CheckPreconditions");
+	private static readonly FieldInfo SentencesField = ConversationManagerCompat.SentencesField;
 
-	private static readonly PropertyInfo RewardGoldProperty = typeof(IssueBase).GetProperty("RewardGold", BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic);
+	private static readonly FieldInfo StateMapField = ConversationManagerCompat.StateMapField;
 
-	private static readonly FieldInfo SentencesField = AccessTools.Field(typeof(ConversationManager), "_sentences");
+	private static readonly FieldInfo NumberOfStateIndicesField = ConversationManagerCompat.NumberOfStateIndicesField;
 
-	private static readonly FieldInfo StateMapField = AccessTools.Field(typeof(ConversationManager), "stateMap");
+	private static readonly FieldInfo AutoIdField = ConversationManagerCompat.AutoIdField;
 
-	private static readonly FieldInfo NumberOfStateIndicesField = AccessTools.Field(typeof(ConversationManager), "_numberOfStateIndices");
+	private static readonly FieldInfo AutoTokenField = ConversationManagerCompat.AutoTokenField;
 
-	private static readonly FieldInfo AutoIdField = AccessTools.Field(typeof(ConversationManager), "_autoId");
+	private static readonly FieldInfo UsedIndicesField = ConversationManagerCompat.UsedIndicesField;
 
-	private static readonly FieldInfo AutoTokenField = AccessTools.Field(typeof(ConversationManager), "_autoToken");
+	private static readonly FieldInfo CurrentSentenceField = ConversationManagerCompat.CurrentSentenceField;
 
-	private static readonly FieldInfo UsedIndicesField = AccessTools.Field(typeof(ConversationManager), "_usedIndices");
+	private static readonly FieldInfo CurrentSentenceTextField = ConversationManagerCompat.CurrentSentenceTextField;
 
-	private static readonly FieldInfo CurrentSentenceField = AccessTools.Field(typeof(ConversationManager), "_currentSentence");
+	private static readonly FieldInfo LastSelectedDialogObjectField = ConversationManagerCompat.LastSelectedDialogObjectField;
 
-	private static readonly FieldInfo CurrentSentenceTextField = AccessTools.Field(typeof(ConversationManager), "_currentSentenceText");
+	private static readonly FieldInfo CurrentRepeatedDialogSetIndexField = ConversationManagerCompat.CurrentRepeatedDialogSetIndexField;
 
-	private static readonly FieldInfo LastSelectedDialogObjectField = AccessTools.Field(typeof(ConversationManager), "_lastSelectedDialogObject");
+	private static readonly FieldInfo CurrentRepeatIndexField = ConversationManagerCompat.CurrentRepeatIndexField;
 
-	private static readonly FieldInfo CurrentRepeatedDialogSetIndexField = AccessTools.Field(typeof(ConversationManager), "_currentRepeatedDialogSetIndex");
+	private static readonly FieldInfo DialogRepeatObjectsField = ConversationManagerCompat.DialogRepeatObjectsField;
 
-	private static readonly FieldInfo CurrentRepeatIndexField = AccessTools.Field(typeof(ConversationManager), "_currentRepeatIndex");
+	private static readonly FieldInfo DialogRepeatLinesField = ConversationManagerCompat.DialogRepeatLinesField;
 
-	private static readonly FieldInfo DialogRepeatObjectsField = AccessTools.Field(typeof(ConversationManager), "_dialogRepeatObjects");
+	private static readonly FieldInfo IsActiveField = ConversationManagerCompat.IsActiveField;
 
-	private static readonly FieldInfo DialogRepeatLinesField = AccessTools.Field(typeof(ConversationManager), "_dialogRepeatLines");
+	private static readonly FieldInfo MainAgentField = ConversationManagerCompat.MainAgentField;
 
-	private static readonly FieldInfo IsActiveField = AccessTools.Field(typeof(ConversationManager), "_isActive");
+	private static readonly FieldInfo SpeakerAgentField = ConversationManagerCompat.SpeakerAgentField;
 
-	private static readonly FieldInfo MainAgentField = AccessTools.Field(typeof(ConversationManager), "_mainAgent");
+	private static readonly FieldInfo ListenerAgentField = ConversationManagerCompat.ListenerAgentField;
 
-	private static readonly FieldInfo SpeakerAgentField = AccessTools.Field(typeof(ConversationManager), "_speakerAgent");
+	private static readonly FieldInfo ConversationAgentsField = ConversationManagerCompat.ConversationAgentsField;
 
-	private static readonly FieldInfo ListenerAgentField = AccessTools.Field(typeof(ConversationManager), "_listenerAgent");
-
-	private static readonly FieldInfo ConversationAgentsField = AccessTools.Field(typeof(ConversationManager), "_conversationAgents");
-
-	private static readonly FieldInfo ConversationPartyField = AccessTools.Field(typeof(ConversationManager), "_conversationParty");
-
-	private static readonly PropertyInfo CurOptionsProperty = AccessTools.Property(typeof(ConversationManager), "CurOptions");
-
-	private static readonly MethodInfo ProcessPartnerSentenceMethod = AccessTools.Method(typeof(ConversationManager), "ProcessPartnerSentence");
-
-	private static readonly MethodInfo ProcessSentenceMethod = AccessTools.Method(typeof(ConversationManager), "ProcessSentence");
-
-	private static readonly MethodInfo ResetRepeatedDialogSystemMethod = AccessTools.Method(typeof(ConversationManager), "ResetRepeatedDialogSystem");
-
-	private static readonly FieldInfo DiscussDialogFlowField = AccessTools.Field(typeof(QuestBase), "DiscussDialogFlow");
+	private static readonly FieldInfo ConversationPartyField = ConversationManagerCompat.ConversationPartyField;
 
 	private static PendingAlternativeDispatch _pendingAlternativeDispatch;
 
@@ -269,7 +255,7 @@ internal static class VanillaIssueOfferBridge
 	private static string BuildInProgressPromptBlock(Hero targetHero, IssueBase issue)
 	{
 		QuestBase issueQuest = issue?.IssueQuest;
-		if (targetHero == null || issue == null || issueQuest == null || !issueQuest.IsOngoing)
+		if (targetHero == null || issue == null || issueQuest == null || !IssueQuestCompat.IsQuestOngoingSafe(issueQuest))
 		{
 			return "";
 		}
@@ -627,7 +613,7 @@ internal static class VanillaIssueOfferBridge
 	private static bool TryGetInProgressIssue(Hero targetHero, out IssueBase issue)
 	{
 		issue = targetHero?.Issue;
-		return issue != null && issue.IssueOwner == targetHero && issue.IssueQuest != null && issue.IssueQuest.IsOngoing;
+		return issue != null && issue.IssueOwner == targetHero && issue.IssueQuest != null && IssueQuestCompat.IsQuestOngoingSafe(issue.IssueQuest);
 	}
 
 	private static bool TryGetReadyToTurnInIssue(Hero targetHero, out IssueBase issue, out TurnInProbeResult probe)
@@ -707,13 +693,8 @@ internal static class VanillaIssueOfferBridge
 		}
 		try
 		{
-			if (CheckPreconditionsMethod == null)
-			{
-				return true;
-			}
-			object[] array = new object[2] { giver, null };
-			bool flag = (bool)CheckPreconditionsMethod.Invoke(issue, array);
-			failureReason = NormalizePromptText(GetText(array[1] as TextObject));
+			bool flag = IssueQuestCompat.TryCheckPreconditions(issue, giver, out var textObject);
+			failureReason = NormalizePromptText(GetText(textObject));
 			return flag;
 		}
 		catch (Exception ex)
@@ -737,16 +718,16 @@ internal static class VanillaIssueOfferBridge
 			bool flag = TryInvokeQuestAcceptHook(issueQuest, "QuestAcceptedConsequences");
 			flag = TryInvokeQuestAcceptHook(issueQuest, "OnQuestAccepted") || flag;
 			flag = TryInvokeQuestAcceptHook(issueQuest, "OfferDialogFlowConsequence") || flag;
-			if (!issueQuest.IsOngoing)
+			if (!IssueQuestCompat.IsQuestOngoingSafe(issueQuest))
 			{
 				issueQuest.StartQuest();
 			}
-			if (!issueQuest.IsOngoing)
+			if (!IssueQuestCompat.IsQuestOngoingSafe(issueQuest))
 			{
 				error = "任务没有进入进行中状态。";
 				return false;
 			}
-			Logger.Log("Logic", "[IssueOffer] 经典任务接受收尾完成 quest=" + (issueQuest.StringId ?? "") + " hook=" + flag + " logs=" + issueQuest.JournalEntries.Count);
+			Logger.Log("Logic", "[IssueOffer] 经典任务接受收尾完成 quest=" + (issueQuest.StringId ?? "") + " hook=" + flag + " logs=" + IssueQuestCompat.GetJournalEntryCountSafe(issueQuest));
 			return true;
 		}
 		catch (Exception ex)
@@ -927,14 +908,7 @@ internal static class VanillaIssueOfferBridge
 
 	private static int GetIssueRewardGold(IssueBase issue)
 	{
-		try
-		{
-			return ((issue != null && RewardGoldProperty != null) ? Convert.ToInt32(RewardGoldProperty.GetValue(issue, null)) : 0);
-		}
-		catch
-		{
-			return 0;
-		}
+		return IssueQuestCompat.GetRewardGoldSafe(issue);
 	}
 
 	private static string GetSafeIssueTitle(IssueBase issue)
@@ -1049,7 +1023,7 @@ internal static class VanillaIssueOfferBridge
 		probe = null;
 		error = "";
 		QuestBase issueQuest = issue?.IssueQuest;
-		if (giver == null || issue == null || issueQuest == null || !issueQuest.IsOngoing)
+		if (giver == null || issue == null || issueQuest == null || !IssueQuestCompat.IsQuestOngoingSafe(issueQuest))
 		{
 			error = "当前没有进行中的原版任务。";
 			return false;
@@ -1218,7 +1192,7 @@ internal static class VanillaIssueOfferBridge
 			return false;
 		}
 		int num = 0;
-		while (quest.IsOngoing && num++ < 12)
+		while (IssueQuestCompat.IsQuestOngoingSafe(quest) && num++ < 12)
 		{
 			List<ConversationSentenceOption> list = conversationManager.CurOptions ?? new List<ConversationSentenceOption>();
 			ConversationSentenceOption? conversationSentenceOption = null;
@@ -1261,15 +1235,15 @@ internal static class VanillaIssueOfferBridge
 			{
 				break;
 			}
-			ProcessSentenceMethod?.Invoke(conversationManager, new object[1] { conversationSentenceOption.Value });
-			if (!quest.IsOngoing)
+			ConversationManagerCompat.TryInvokeProcessSentence(conversationManager, conversationSentenceOption.Value);
+			if (!IssueQuestCompat.IsQuestOngoingSafe(quest))
 			{
 				break;
 			}
-			ProcessPartnerSentenceMethod?.Invoke(conversationManager, null);
+			ConversationManagerCompat.TryInvokeProcessPartnerSentence(conversationManager);
 			conversationManager.GetPlayerSentenceOptions();
 		}
-		if (!quest.IsOngoing)
+		if (!IssueQuestCompat.IsQuestOngoingSafe(quest))
 		{
 			return true;
 		}
@@ -1302,12 +1276,9 @@ internal static class VanillaIssueOfferBridge
 		}
 		SetConversationCurrentOptions(conversationManager, new List<ConversationSentenceOption>());
 		conversationManager.AddDialogFlow(dialogFlow, relatedObject);
-		if (ResetRepeatedDialogSystemMethod != null)
-		{
-			ResetRepeatedDialogSystemMethod.Invoke(conversationManager, null);
-		}
+		ConversationManagerCompat.TryResetRepeatedDialogSystem(conversationManager);
 		conversationManager.ActiveToken = conversationManager.GetStateIndex(startToken);
-		ProcessPartnerSentenceMethod?.Invoke(conversationManager, null);
+		ConversationManagerCompat.TryInvokeProcessPartnerSentence(conversationManager);
 		conversationManager.GetPlayerSentenceOptions();
 	}
 
@@ -1386,14 +1357,7 @@ internal static class VanillaIssueOfferBridge
 
 	private static DialogFlow GetDiscussDialogFlow(QuestBase quest)
 	{
-		try
-		{
-			return DiscussDialogFlowField?.GetValue(quest) as DialogFlow;
-		}
-		catch
-		{
-			return null;
-		}
+		return IssueQuestCompat.GetDiscussDialogFlowSafe(quest);
 	}
 
 	private static Agent FindAgentForHeroInMission(Hero hero)
@@ -1529,7 +1493,10 @@ internal static class VanillaIssueOfferBridge
 	{
 		try
 		{
-			CurOptionsProperty?.SetValue(conversationManager, options, null);
+			if (!ConversationManagerCompat.TrySetCurOptions(conversationManager, options))
+			{
+				conversationManager?.ClearCurrentOptions();
+			}
 		}
 		catch
 		{

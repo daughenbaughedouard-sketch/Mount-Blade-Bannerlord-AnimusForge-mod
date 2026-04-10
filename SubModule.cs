@@ -101,6 +101,22 @@ public class SubModule : MBSubModuleBase
 			}
 			try
 			{
+				PlayerEncounterPropertySafePatch.EnsurePatched();
+			}
+			catch (Exception ex8a)
+			{
+				Logger.LogTrace("SubModule", ">>> PlayerEncounterPropertySafePatch init failed: " + ex8a.Message);
+			}
+			try
+			{
+				Patch_Conversation_Start_Intercept.ManualPatch(harmony);
+			}
+			catch (Exception ex8b)
+			{
+				Logger.LogTrace("SubModule", ">>> Manual conversation start intercept patch failed: " + ex8b.Message);
+			}
+			try
+			{
 				Patch_ConversationManager_OpenMapConversation.ManualPatch(harmony);
 			}
 			catch (Exception ex9)
@@ -186,6 +202,14 @@ public class SubModule : MBSubModuleBase
 		catch (Exception ex19)
 		{
 			Logger.LogTrace("SubModule", ">>> TTS engine initialization failed (non-fatal): " + ex19.Message);
+		}
+		try
+		{
+			CompatibilityAudit.RunStartupAudit();
+		}
+		catch (Exception ex20)
+		{
+			Logger.LogCompatibilityAudit("CompatAudit", "Startup compatibility audit failed: " + ex20.Message);
 		}
 	}
 

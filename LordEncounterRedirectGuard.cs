@@ -31,8 +31,8 @@ internal static class LordEncounterRedirectGuard
 		try
 		{
 			bool isMeetingActive = MeetingBattleRuntime.IsMeetingActive;
-			bool flag = PlayerEncounter.Battle != null || PlayerEncounter.EncounteredBattle != null;
-			bool flag2 = PlayerEncounter.CampaignBattleResult != null;
+			bool flag = PlayerEncounterCompat.HasBattleOrEncounteredBattle();
+			bool flag2 = PlayerEncounterCompat.HasCampaignBattleResult();
 			if (!isMeetingActive && !flag && !flag2)
 			{
 				return false;

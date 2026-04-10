@@ -1796,14 +1796,6 @@ public class SceneTauntBehavior : CampaignBehaviorBase
 
 public class SceneTauntMissionBehavior : MissionBehavior
 {
-	private static readonly FieldInfo PlayerSideOldTeamDataField = AccessTools.Field(typeof(MissionFightHandler), "_playerSideAgentsOldTeamData");
-
-	private static readonly FieldInfo OpponentSideOldTeamDataField = AccessTools.Field(typeof(MissionFightHandler), "_opponentSideAgentsOldTeamData");
-
-	private static readonly FieldInfo OpponentSideAgentsField = AccessTools.Field(typeof(MissionFightHandler), "_opponentSideAgents");
-
-	private static readonly FieldInfo FinishTimerField = AccessTools.Field(typeof(MissionFightHandler), "_finishTimer");
-
 	private const float SceneTauntNativeFightAutoEndDelaySeconds = 3600f;
 
 	private const float ArmedBystanderReactionRefreshIntervalSeconds = 0.5f;
@@ -1961,7 +1953,7 @@ public class SceneTauntMissionBehavior : MissionBehavior
 
 	public override void OnBehaviorInitialize()
 	{
-		_fightHandler = Mission.Current?.GetMissionBehavior<MissionFightHandler>();
+		_fightHandler = MissionFightHandlerCompat.GetMissionBehaviorSafe(Mission.Current);
 	}
 
 	public override void OnMissionTick(float dt)
@@ -2484,7 +2476,7 @@ public class SceneTauntMissionBehavior : MissionBehavior
 		{
 			return false;
 		}
-		_fightHandler = _fightHandler ?? Mission.Current?.GetMissionBehavior<MissionFightHandler>();
+		_fightHandler = _fightHandler ?? MissionFightHandlerCompat.GetMissionBehaviorSafe(Mission.Current);
 		if (_fightHandler == null || !_fightHandler.IsThereActiveFight())
 		{
 			return false;
@@ -2519,7 +2511,7 @@ public class SceneTauntMissionBehavior : MissionBehavior
 
 	internal bool CanStartConflict(Hero targetHero, CharacterObject targetCharacter, int targetAgentIndex)
 	{
-		_fightHandler = _fightHandler ?? Mission.Current?.GetMissionBehavior<MissionFightHandler>();
+		_fightHandler = _fightHandler ?? MissionFightHandlerCompat.GetMissionBehaviorSafe(Mission.Current);
 		if (_conflictActive || Mission.Current == null || _fightHandler == null || Settlement.CurrentSettlement == null)
 		{
 			return false;
@@ -2536,7 +2528,7 @@ public class SceneTauntMissionBehavior : MissionBehavior
 	{
 		try
 		{
-			_fightHandler = _fightHandler ?? Mission.Current?.GetMissionBehavior<MissionFightHandler>();
+			_fightHandler = _fightHandler ?? MissionFightHandlerCompat.GetMissionBehaviorSafe(Mission.Current);
 			if (!CanStartConflict(targetHero, targetCharacter, targetAgentIndex))
 			{
 				return false;
@@ -2920,13 +2912,13 @@ public class SceneTauntMissionBehavior : MissionBehavior
 			{
 				return weaponName;
 			}
-			for (EquipmentIndex equipmentIndex = EquipmentIndex.WeaponItemBeginSlot; equipmentIndex < EquipmentIndex.NumAllWeaponSlots; equipmentIndex++)
+			foreach (EquipmentIndex equipmentIndex in MissionEquipmentCompat.EnumerateWeaponSlots())
 			{
-				if (!IsMissionWeaponRealWeapon(agent.Equipment[equipmentIndex]))
+				if (!MissionEquipmentCompat.TryGetMissionWeapon(agent, equipmentIndex, out var missionWeapon) || !IsMissionWeaponRealWeapon(missionWeapon))
 				{
 					continue;
 				}
-				string text3 = agent.Equipment[equipmentIndex].Item?.Name?.ToString();
+				string text3 = missionWeapon.Item?.Name?.ToString();
 				if (!string.IsNullOrWhiteSpace(text3))
 				{
 					return text3.Trim();
@@ -2948,7 +2940,7 @@ public class SceneTauntMissionBehavior : MissionBehavior
 			{
 				return false;
 			}
-			string text = agent.Equipment[equipmentIndex].Item?.Name?.ToString();
+			string text = MissionEquipmentCompat.TryGetItem(agent, equipmentIndex, out var itemObject) ? itemObject?.Name?.ToString() : null;
 			if (string.IsNullOrWhiteSpace(text))
 			{
 				return false;
@@ -3586,20 +3578,6 @@ public class SceneTauntMissionBehavior : MissionBehavior
 				Logger.Log("SceneTaunt", "Native criminal conflict start skipped because alley context is unavailable.");
 				return false;
 			}
-			Type type = AccessTools.TypeByName("SandBox.Missions.MissionLogics.MissionAlleyHandler");
-			MethodInfo methodInfo = typeof(Mission).GetMethods(BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic).FirstOrDefault((MethodInfo m) => m.Name == "GetMissionBehavior" && m.IsGenericMethodDefinition && m.GetParameters().Length == 0);
-			MethodInfo methodInfo2 = AccessTools.Method(type, "StartCommonAreaBattle");
-			if (type == null || methodInfo == null || methodInfo2 == null)
-			{
-				Logger.Log("SceneTaunt", "Native criminal conflict start skipped because alley handler reflection failed.");
-				return false;
-			}
-			object obj = methodInfo.MakeGenericMethod(type).Invoke(Mission.Current, null);
-			if (obj == null)
-			{
-				Logger.Log("SceneTaunt", "Native criminal conflict start skipped because MissionAlleyHandler was not found.");
-				return false;
-			}
 			try
 			{
 				Campaign.Current?.ConversationManager?.EndConversation();
@@ -3608,7 +3586,11 @@ public class SceneTauntMissionBehavior : MissionBehavior
 			{
 			}
 			TryTriggerNativeCriminalConflictReaction(targetAgent, reason);
-			methodInfo2.Invoke(obj, new object[1] { alley });
+			if (!MissionAlleyHandlerCompat.TryStartCommonAreaBattle(Mission.Current, alley, out var failureReason))
+			{
+				Logger.Log("SceneTaunt", "Native criminal conflict start skipped because alley handler reflection failed: " + failureReason);
+				return false;
+			}
 			Logger.Log("SceneTaunt", $"Redirected criminal conflict to native alley flow. Reason={reason}, Target={targetAgent?.Name}, Alley={alley?.Name}");
 			return true;
 		}
@@ -4039,10 +4021,7 @@ public class SceneTauntMissionBehavior : MissionBehavior
 	{
 		try
 		{
-			if (_fightHandler != null && FinishTimerField != null)
-			{
-				FinishTimerField.SetValue(_fightHandler, null);
-			}
+			MissionFightHandlerCompat.TryClearFinishTimer(_fightHandler);
 		}
 		catch (Exception ex)
 		{
@@ -4352,7 +4331,7 @@ public class SceneTauntMissionBehavior : MissionBehavior
 			MissionEquipment missionEquipment = new MissionEquipment();
 			missionEquipment.FillFrom(agent.Equipment);
 			_cachedUnarmedConflictEquipment[agent.Index] = missionEquipment;
-			for (EquipmentIndex equipmentIndex = EquipmentIndex.WeaponItemBeginSlot; equipmentIndex < EquipmentIndex.NumAllWeaponSlots; equipmentIndex++)
+			foreach (EquipmentIndex equipmentIndex in MissionEquipmentCompat.EnumerateWeaponSlots())
 			{
 				try
 				{
@@ -4377,12 +4356,14 @@ public class SceneTauntMissionBehavior : MissionBehavior
 			{
 				return;
 			}
-			for (EquipmentIndex equipmentIndex = EquipmentIndex.WeaponItemBeginSlot; equipmentIndex < EquipmentIndex.NumAllWeaponSlots; equipmentIndex++)
+			foreach (EquipmentIndex equipmentIndex in MissionEquipmentCompat.EnumerateWeaponSlots())
 			{
 				try
 				{
-					MissionWeapon missionWeapon = value[equipmentIndex];
-					agent.EquipWeaponWithNewEntity(equipmentIndex, ref missionWeapon);
+					if (MissionEquipmentCompat.TryGetMissionWeapon(value, equipmentIndex, out var missionWeapon))
+					{
+						agent.EquipWeaponWithNewEntity(equipmentIndex, ref missionWeapon);
+					}
 				}
 				catch
 				{
@@ -4428,9 +4409,9 @@ public class SceneTauntMissionBehavior : MissionBehavior
 			{
 				return false;
 			}
-			for (EquipmentIndex equipmentIndex = EquipmentIndex.WeaponItemBeginSlot; equipmentIndex < EquipmentIndex.NumAllWeaponSlots; equipmentIndex++)
+			foreach (EquipmentIndex equipmentIndex in MissionEquipmentCompat.EnumerateWeaponSlots())
 			{
-				if (IsMissionWeaponRealWeapon(value[equipmentIndex]))
+				if (MissionEquipmentCompat.TryGetMissionWeapon(value, equipmentIndex, out var missionWeapon) && IsMissionWeaponRealWeapon(missionWeapon))
 				{
 					return true;
 				}
@@ -4570,8 +4551,8 @@ public class SceneTauntMissionBehavior : MissionBehavior
 			{
 				return false;
 			}
-			List<Agent> list = OpponentSideAgentsField?.GetValue(_fightHandler) as List<Agent>;
-			Dictionary<Agent, Team> dictionary = OpponentSideOldTeamDataField?.GetValue(_fightHandler) as Dictionary<Agent, Team>;
+			List<Agent> list = MissionFightHandlerCompat.GetOpponentSideAgents(_fightHandler);
+			Dictionary<Agent, Team> dictionary = MissionFightHandlerCompat.GetSideOldTeamData(_fightHandler, isPlayerSide: false);
 			if (list == null || !list.Remove(agent))
 			{
 				return false;
@@ -4747,13 +4728,7 @@ public class SceneTauntMissionBehavior : MissionBehavior
 	{
 		try
 		{
-			FieldInfo fieldInfo = (isPlayerSide ? PlayerSideOldTeamDataField : OpponentSideOldTeamDataField);
-			Dictionary<Agent, Team> dictionary = fieldInfo?.GetValue(_fightHandler) as Dictionary<Agent, Team>;
-			if (dictionary == null || agent == null || originalTeam == null)
-			{
-				return;
-			}
-			dictionary[agent] = originalTeam;
+			MissionFightHandlerCompat.TryRememberOriginalTeam(_fightHandler, agent, originalTeam, isPlayerSide);
 		}
 		catch
 		{
@@ -5322,9 +5297,9 @@ public class SceneTauntMissionBehavior : MissionBehavior
 		}
 		try
 		{
-			for (EquipmentIndex equipmentIndex = EquipmentIndex.WeaponItemBeginSlot; equipmentIndex < EquipmentIndex.NumAllWeaponSlots; equipmentIndex++)
+			foreach (EquipmentIndex equipmentIndex in MissionEquipmentCompat.EnumerateWeaponSlots())
 			{
-				if (IsMissionWeaponRealWeapon(agent.Equipment[equipmentIndex]))
+				if (MissionEquipmentCompat.TryGetMissionWeapon(agent, equipmentIndex, out var missionWeapon) && IsMissionWeaponRealWeapon(missionWeapon))
 				{
 					return true;
 				}
@@ -5530,7 +5505,7 @@ public class SceneTauntMissionBehavior : MissionBehavior
 		}
 		try
 		{
-			agent.WieldInitialWeapons(Agent.WeaponWieldActionType.InstantAfterPickUp, Equipment.InitialWeaponEquipPreference.Any);
+			AgentWeaponCompat.TryWieldInitialWeapons(agent, Agent.WeaponWieldActionType.InstantAfterPickUp, Equipment.InitialWeaponEquipPreference.Any, "SceneTauntBehavior.TryArmAgent");
 		}
 		catch
 		{
@@ -5610,16 +5585,16 @@ public class SceneTauntMissionBehavior : MissionBehavior
 	{
 		try
 		{
-			for (EquipmentIndex equipmentIndex = EquipmentIndex.WeaponItemBeginSlot; equipmentIndex < EquipmentIndex.NumAllWeaponSlots; equipmentIndex++)
+			foreach (EquipmentIndex equipmentIndex in MissionEquipmentCompat.EnumerateWeaponSlots())
 			{
-				if (agent.Equipment[equipmentIndex].IsEmpty)
+				if (!MissionEquipmentCompat.TryGetMissionWeapon(agent, equipmentIndex, out var missionWeapon) || missionWeapon.IsEmpty)
 				{
 					return equipmentIndex;
 				}
 			}
-			for (EquipmentIndex equipmentIndex2 = EquipmentIndex.WeaponItemBeginSlot; equipmentIndex2 < EquipmentIndex.NumAllWeaponSlots; equipmentIndex2++)
+			foreach (EquipmentIndex equipmentIndex2 in MissionEquipmentCompat.EnumerateWeaponSlots())
 			{
-				if (!IsMissionWeaponRealWeapon(agent.Equipment[equipmentIndex2]))
+				if (!MissionEquipmentCompat.TryGetMissionWeapon(agent, equipmentIndex2, out var missionWeapon2) || !IsMissionWeaponRealWeapon(missionWeapon2))
 				{
 					return equipmentIndex2;
 				}
@@ -5664,11 +5639,11 @@ public class SceneTauntMissionBehavior : MissionBehavior
 	{
 		try
 		{
-			if (agent == null || equipmentIndex == EquipmentIndex.None || equipmentIndex < EquipmentIndex.WeaponItemBeginSlot || equipmentIndex >= EquipmentIndex.NumAllWeaponSlots)
+			if (agent == null || equipmentIndex == EquipmentIndex.None || !MissionEquipmentCompat.IsValidWeaponSlot(equipmentIndex))
 			{
 				return false;
 			}
-			return IsMissionWeaponRealWeapon(agent.Equipment[equipmentIndex]);
+			return MissionEquipmentCompat.TryGetMissionWeapon(agent, equipmentIndex, out var missionWeapon) && IsMissionWeaponRealWeapon(missionWeapon);
 		}
 		catch
 		{
@@ -6306,8 +6281,6 @@ public static class SceneTauntFightAutoEndDelayPatch
 {
 	private static bool _patched;
 
-	private static readonly FieldInfo FinishTimerField = AccessTools.Field(typeof(MissionFightHandler), "_finishTimer");
-
 	public static void EnsurePatched()
 	{
 		if (_patched)
@@ -6316,7 +6289,7 @@ public static class SceneTauntFightAutoEndDelayPatch
 		}
 		try
 		{
-			MethodInfo method = AccessTools.Method(typeof(MissionFightHandler), "OnMissionTick");
+			MethodInfo method = MissionFightHandlerCompat.OnMissionTickMethod;
 			MethodInfo method2 = typeof(SceneTauntFightAutoEndDelayPatch).GetMethod("Prefix", BindingFlags.Static | BindingFlags.Public);
 			if (method == null || method2 == null)
 			{
@@ -6342,10 +6315,10 @@ public static class SceneTauntFightAutoEndDelayPatch
 			{
 				return true;
 			}
-			BasicMissionTimer basicMissionTimer = FinishTimerField?.GetValue(__instance) as BasicMissionTimer;
+			BasicMissionTimer basicMissionTimer = MissionFightHandlerCompat.GetFinishTimer(__instance);
 			if (__instance != null && mission != null && mission.CurrentTime > __instance.MinMissionEndTime && basicMissionTimer != null && basicMissionTimer.ElapsedTime > 3600f)
 			{
-				FinishTimerField?.SetValue(__instance, null);
+				MissionFightHandlerCompat.TryClearFinishTimer(__instance);
 				__instance.EndFight(false);
 			}
 			return false;
@@ -6373,29 +6346,22 @@ public static class SceneTauntNativeConversationBlockPatch
 		{
 			Harmony harmony = new Harmony("AnimusForge.scene.taunt.nativeconversationblock");
 			int num = 0;
-			Type type = AccessTools.TypeByName("SandBox.Conversation.MissionLogics.MissionConversationLogic");
-			MethodInfo method = AccessTools.Method(type, "StartConversation", new Type[3]
-			{
-				typeof(Agent),
-				typeof(bool),
-				typeof(bool)
-			});
+			MethodInfo method = MissionAlleyHandlerCompat.MissionConversationStartConversationMethod;
 			MethodInfo method2 = typeof(SceneTauntNativeConversationBlockPatch).GetMethod("StartConversationPrefix", BindingFlags.Static | BindingFlags.Public);
-			if (type != null && method != null && method2 != null)
+			if (MissionAlleyHandlerCompat.MissionConversationLogicType != null && method != null && method2 != null)
 			{
 				harmony.Patch(method, prefix: new HarmonyMethod(method2));
 				num++;
 			}
-			Type type2 = AccessTools.TypeByName("SandBox.Missions.MissionLogics.MissionAlleyHandler");
-			MethodInfo method3 = AccessTools.Method(type2, "CheckAndTriggerConversationWithRivalThug");
-			MethodInfo method4 = AccessTools.Method(type2, "StartCommonAreaBattle");
+			MethodInfo method3 = MissionAlleyHandlerCompat.CheckAndTriggerConversationWithRivalThugMethod;
+			MethodInfo method4 = MissionAlleyHandlerCompat.StartCommonAreaBattleMethod;
 			MethodInfo method5 = typeof(SceneTauntNativeConversationBlockPatch).GetMethod("AlleyPrefix", BindingFlags.Static | BindingFlags.Public);
-			if (type2 != null && method3 != null && method5 != null)
+			if (MissionAlleyHandlerCompat.MissionAlleyHandlerType != null && method3 != null && method5 != null)
 			{
 				harmony.Patch(method3, prefix: new HarmonyMethod(method5));
 				num++;
 			}
-			if (type2 != null && method4 != null && method5 != null)
+			if (MissionAlleyHandlerCompat.MissionAlleyHandlerType != null && method4 != null && method5 != null)
 			{
 				harmony.Patch(method4, prefix: new HarmonyMethod(method5));
 				num++;

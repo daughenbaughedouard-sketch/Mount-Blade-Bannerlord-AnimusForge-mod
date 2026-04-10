@@ -1,0 +1,87 @@
+﻿AnimusForge Native API Diff Report
+Generated: 2026-04-11 01:56:11
+RepoRoot: F:\my mod\myaimod
+OldSourceRoot: F:\my mod\myaimod\原版游戏本体代码
+BannerlordBin: F:\SteamLibrary\steamapps\common\Mount & Blade II Bannerlord\bin\Win64_Shipping_Client
+
+## Summary
+Scanned references: 103
+Resolved native type groups: 43
+Missing referenced types in current DLLs: 4
+Missing referenced members in current DLLs: 0
+
+## Missing Referenced Types
+- SandBox.View.Missions.MissionCameraFadeView
+- TaleWorlds.MountAndBlade.View.MissionViews.MissionCameraFadeView
+- TaleWorlds.MountAndBlade.View.Screens.MissionScreen
+- TaleWorlds.MountAndBlade.View.Screens.MissionScreen
+
+## Missing Referenced Members
+None
+
+## Top Type Deltas
+- TaleWorlds.CampaignSystem.Issues.IssueBase | refs=1 delta=37
+  current-only methods: GetAlternativeSolutionSkill
+  current-only properties: AlternativeSolutionEndLogDefault, AlternativeSolutionHasCasualties, AlternativeSolutionHasFailureRisk, AlternativeSolutionHasScaledDuration, AlternativeSolutionHasScaledRequiredTroops, AlternativeSolutionHero, AlternativeSolutionScaleFlags, IsOngoingWithoutQuest, IsSolvingWithAlternative, IsSolvingWithLordSolution, IsSolvingWithQuest, IssueAlternativeSolutionAcceptByPlayer
+  current-only fields: IssueRelatedConversationPriority
+- TaleWorlds.CampaignSystem.Encounters.PlayerEncounter | refs=4 delta=35
+  old-only methods: DoLootParty, GetBattleRewardsInternal
+  current-only methods: <DoCaptureHeroes>b__206_1, CheckIfBattleShouldContinueAfterBattleMissionInternal, DoLootMembersAndPrisonersOfParty, OnPlayerLootMembersAndPrisonerEnd, OnPlayerLootShipEnd, SetEncounterMenuTexts
+  current-only properties: Battle, BattleChallenge, BattleState, CampaignBattleResult, CapturedShipsInEncounter, Current, CurrentBattleSimulation, EncounteredBattle, EncounteredMobileParty, EncounteredParty, EncounterSettlement, EncounterState
+- TaleWorlds.CampaignSystem.Conversation.ConversationManager | refs=29 delta=26
+  current-only methods: GetPersuasionChosenOptions
+  current-only properties: ConversationAgents, ConversationCharacters, ConversationParty, CurrentSentenceText, DialogRepeatCount, IsConversationFlowActive, ListenerAgent, OneToOneConversationAgent, OneToOneConversationCharacter, OneToOneConversationHero, SpeakerAgent
+  old-only fields: ChoiceTags, FacialAnimation, Text
+  current-only fields: _tags, ClickableConditionRunned, ConditionRunned, ConsequenceRunned, ConversationBegin, ConversationContinued, ConversationEnd, ConversationEndOneShot, ConversationSetup, DetailedDebugLog, stateMap
+- TaleWorlds.Core.GameStateManager | refs=2 delta=11
+  current-only methods: CreateState, GetListenerOfType, LastOrDefault
+  current-only properties: ActiveState, ActiveStateDisabledByUser, Current, GameStates, Listeners
+  old-only fields: GameState, Job, PopLevel
+- TaleWorlds.GauntletUI.BaseTypes.ButtonWidget | refs=1 delta=11
+  current-only methods: OnMouseAlternatePressed, OnMouseAlternateReleased, OnMousePressed, OnMouseReleased
+  current-only properties: ButtonType, DominantSelectedState, IsRadio, IsSelected, IsToggle, ToggleIndicator
+  current-only fields: _maxDoubleClickDeltaTimeInSeconds
+- TaleWorlds.CampaignSystem.QuestBase | refs=1 delta=10
+  current-only properties: IsFinalized, IsOngoing, IsSpecialQuest, IsThereDiscussDialogFlow, JournalEntries, QuestGiver, SpecialQuestType, TargetHeroDiedLogText, TargetHeroDisappearedLogText, TaskList
+- SandBox.Missions.MissionLogics.MissionAgentHandler | refs=2 delta=9
+  current-only methods: FindUnusedUsablePointCount, GetAgentSettlementColors
+  current-only properties: DisabledPassages, TownPassageProps, UsablePoints
+  current-only fields: _pairedUsablePoints, _spawnTimers, _usablePoints, PassageUsageDeltaTime
+- SandBox.Missions.MissionLogics.MissionAlleyHandler | refs=1 delta=7
+  current-only methods: CanPlayerOccupyTheCurrentAlley
+  current-only properties: CanThugConversationBeTriggered
+  current-only fields: _conversationTriggeredAlleys, _rivalThugAgentsAndAgentNavigators, ConstantForInitiatingConversation, DistanceForEndingAlleyFight, GuardAgentSafeZone
+- SandBox.Objects.PassageUsePoint | refs=1 delta=7
+  current-only properties: DisableCombatActionsOnUse, FocusableObjectType, HasAIMovingTo, MovingAgent, MovingAgents, ToLocation
+  current-only fields: InteractionDistanceForAI
+- SandBox.Conversation.MissionLogics.MissionConversationLogic | refs=1 delta=7
+  current-only properties: Current, IsReadyForConversation
+  current-only fields: _conversationPoints, CenterConversationPointMappingTag, MaxDistanceThresholdToOpenConversation, MinDistanceThresholdToOpenConversation, StartingConversationFromBehindAngleThresholdInDegrees
+- SandBox.Missions.MissionLogics.MissionFightHandler | refs=8 delta=6
+  current-only properties: _current, IsPlayerSideWon, OpponentSideAgents, PlayerSideAgents
+  current-only fields: _opponentSideAgentsOldTeamData, _playerSideAgentsOldTeamData
+- SandBox.BoardGames.MissionLogics.MissionBoardGameLogic | refs=1 delta=6
+  current-only properties: BoardGameFinalState, IsOpposingAgentMovingToPlayingChair
+  current-only fields: BoardGameEntityTag, GameEnded, GameStarted, SpecialTargetGamblerNpcTag
+- TaleWorlds.CampaignSystem.CampaignGameStarter | refs=1 delta=5
+  current-only methods: GetModel, RemoveBehavior, RemoveBehaviors
+  current-only properties: CampaignBehaviors, Models
+- TaleWorlds.CampaignSystem.GameMenus.GameMenu | refs=1 delta=4
+  current-only properties: CurrentRepeatableObject, IsEmpty, MenuItemAmount, MenuOptions
+- TaleWorlds.CampaignSystem.Actions.BeHostileAction | refs=1 delta=3
+  current-only fields: EncounterValue, MajorCoercionValue, MinorCoercionValue
+- SandBox.Missions.MissionLogics.BattleAgentLogic | refs=1 delta=3
+  current-only properties: _troopUpgradeTracker
+  current-only fields: XpShareForDamage, XpShareForKill
+- TaleWorlds.CampaignSystem.BarterSystem.BarterManager | refs=1 delta=2
+  current-only properties: Instance
+  current-only fields: _barteredHeroes
+- SandBox.View.Missions.MissionConversationCameraView | refs=1 delta=2
+  current-only properties: IsCameraOverridden
+  current-only fields: CustomCameraMultiAgentTag
+- SandBox.Missions.MissionLogics.LeaveMissionLogic | refs=1 delta=0
+- TaleWorlds.CampaignSystem.Actions.DeclareWarAction | refs=1 delta=0
+- TaleWorlds.CampaignSystem.Actions.ChangeRelationAction | refs=1 delta=0
+- SandBox.View.Missions.NameMarkers.DefaultMissionNameMarkerHandler | refs=1 delta=0
+- SandBox.GameComponents.SandboxMissionDifficultyModel | refs=1 delta=0
+- SandBox.View.Missions.MissionSingleplayerViewHandler | refs=1 delta=0

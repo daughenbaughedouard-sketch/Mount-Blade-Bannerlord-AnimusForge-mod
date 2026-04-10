@@ -4995,11 +4995,7 @@ public class RewardSystemBehavior : CampaignBehaviorBase
 		EquipmentIndex[] array2 = array;
 		foreach (EquipmentIndex index in array2)
 		{
-			ItemObject item = agent.SpawnEquipment[index].Item;
-			if (item == null)
-			{
-				item = agent.Equipment[index].Item;
-			}
+			ItemObject item = (MissionEquipmentCompat.TryGetAgentItem(agent, index, out var resolvedItemObject) ? resolvedItemObject : null);
 			if (item != null)
 			{
 				list.Add(new RewardItemInfo

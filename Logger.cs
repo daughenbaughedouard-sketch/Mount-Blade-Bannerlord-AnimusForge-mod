@@ -103,6 +103,8 @@ public static class Logger
 
 	private static string _eventLogsPath;
 
+	private static string _compatibilityAuditPath;
+
 	private static readonly object _fileLock;
 
 	private static readonly AsyncLocal<TraceScopeState> _traceState;
@@ -164,12 +166,14 @@ public static class Logger
 			_hitRatePath = System.IO.Path.Combine(text, "HitRate_Stats.txt");
 			_tokenStatsPath = System.IO.Path.Combine(text, "Token_Stats.txt");
 			_eventLogsPath = System.IO.Path.Combine(text, "Event_Logs.txt");
+			_compatibilityAuditPath = System.IO.Path.Combine(text, "Compatibility_Audit.txt");
 			EnsureUtf8Bom(_modLogPath);
 			EnsureUtf8Bom(_gameTracePath);
 			EnsureUtf8Bom(_obsLogPath);
 			EnsureUtf8Bom(_hitRatePath);
 			EnsureUtf8Bom(_tokenStatsPath);
 			EnsureUtf8Bom(_eventLogsPath);
+			EnsureUtf8Bom(_compatibilityAuditPath);
 			string contents = $"\n\n====== 游戏启动 {DateTime.Now:yyyy-MM-dd HH:mm:ss} ======\n";
 			if (IsPathEnabled(_modLogPath))
 			{
@@ -190,6 +194,10 @@ public static class Logger
 			if (IsPathEnabled(_eventLogsPath))
 			{
 				AppendUtf8(_eventLogsPath, contents);
+			}
+			if (IsPathEnabled(_compatibilityAuditPath))
+			{
+				AppendUtf8(_compatibilityAuditPath, contents);
 			}
 			if (IsPathEnabled(_obsLogPath))
 			{
@@ -248,6 +256,11 @@ public static class Logger
 	public static void LogTrace(string source, string message)
 	{
 		WriteHumanLine(_gameTracePath, source, message);
+	}
+
+	public static void LogCompatibilityAudit(string source, string message)
+	{
+		WriteHumanLine(_compatibilityAuditPath, source, message);
 	}
 
 	public static void LogEventPromptExchange(string targetLabel, string requestText, string replyText)

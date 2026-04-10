@@ -1628,26 +1628,7 @@ public class ShoutBehavior : CampaignBehaviorBase
 			for (int i = 0; i < array2.Length; i++)
 			{
 				EquipmentIndex equipmentIndex = array2[i];
-				ItemObject itemObject = null;
-				try
-				{
-					itemObject = agent.SpawnEquipment[equipmentIndex].Item;
-				}
-				catch
-				{
-					itemObject = null;
-				}
-				if (itemObject == null)
-				{
-					try
-					{
-						itemObject = agent.Equipment[equipmentIndex].Item;
-					}
-					catch
-					{
-						itemObject = null;
-					}
-				}
+				ItemObject itemObject = (MissionEquipmentCompat.TryGetAgentItem(agent, equipmentIndex, out var resolvedItemObject) ? resolvedItemObject : null);
 				if (itemObject == null)
 				{
 					continue;
@@ -4756,13 +4737,13 @@ private static string NormalizeScenePlayerHistoryLine(string text, string target
 			{
 				return weaponName;
 			}
-			for (EquipmentIndex equipmentIndex = EquipmentIndex.WeaponItemBeginSlot; equipmentIndex < EquipmentIndex.NumAllWeaponSlots; equipmentIndex++)
+			foreach (EquipmentIndex equipmentIndex in MissionEquipmentCompat.EnumerateWeaponSlots())
 			{
-				if (!IsRealWeaponMissionWeaponForPassiveReaction(agent.Equipment[equipmentIndex]))
+				if (!MissionEquipmentCompat.TryGetMissionWeapon(agent, equipmentIndex, out var missionWeapon) || !IsRealWeaponMissionWeaponForPassiveReaction(missionWeapon))
 				{
 					continue;
 				}
-				string text3 = agent.Equipment[equipmentIndex].Item?.Name?.ToString();
+				string text3 = missionWeapon.Item?.Name?.ToString();
 				if (!string.IsNullOrWhiteSpace(text3))
 				{
 					return text3.Trim();
@@ -4877,24 +4858,10 @@ private static string NormalizeScenePlayerHistoryLine(string text, string target
 				return false;
 			}
 			string text = null;
-			try
-			{
-				text = agent.Equipment[equipmentIndex].Item?.Name?.ToString();
-			}
-			catch
-			{
-				text = null;
-			}
+			text = MissionEquipmentCompat.TryGetItem(agent, equipmentIndex, out var itemObject) ? itemObject?.Name?.ToString() : null;
 			if (string.IsNullOrWhiteSpace(text))
 			{
-				try
-				{
-					text = agent.SpawnEquipment[equipmentIndex].Item?.Name?.ToString();
-				}
-				catch
-				{
-					text = null;
-				}
+				text = (MissionEquipmentCompat.TryGetSpawnWeapon(agent, equipmentIndex, out var equipmentElement) ? equipmentElement.Item?.Name?.ToString() : null);
 			}
 			if (string.IsNullOrWhiteSpace(text))
 			{
@@ -4913,22 +4880,15 @@ private static string NormalizeScenePlayerHistoryLine(string text, string target
 	{
 		try
 		{
-			if (agent == null || equipmentIndex == EquipmentIndex.None || equipmentIndex < EquipmentIndex.WeaponItemBeginSlot || equipmentIndex >= EquipmentIndex.NumAllWeaponSlots)
+			if (agent == null || equipmentIndex == EquipmentIndex.None || !MissionEquipmentCompat.IsValidWeaponSlot(equipmentIndex))
 			{
 				return false;
 			}
-			if (IsRealWeaponMissionWeaponForPassiveReaction(agent.Equipment[equipmentIndex]))
+			if (MissionEquipmentCompat.TryGetMissionWeapon(agent, equipmentIndex, out var missionWeapon) && IsRealWeaponMissionWeaponForPassiveReaction(missionWeapon))
 			{
 				return true;
 			}
-			try
-			{
-				return IsRealWeaponEquipmentElementForPassiveReaction(agent.SpawnEquipment[equipmentIndex]);
-			}
-			catch
-			{
-				return false;
-			}
+			return MissionEquipmentCompat.TryGetSpawnWeapon(agent, equipmentIndex, out var equipmentElement) && IsRealWeaponEquipmentElementForPassiveReaction(equipmentElement);
 		}
 		catch
 		{
