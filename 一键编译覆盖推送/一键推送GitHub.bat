@@ -64,6 +64,12 @@ if not defined BRANCH (
     pause
     exit /b 1
 )
+if /I not "%BRANCH%"=="1.4.0" (
+    echo [ERROR] This 1.4.x toolchain only allows pushes from branch "1.4.0".
+    echo Current branch: "%BRANCH%"
+    pause
+    exit /b 1
+)
 
 for /f "delims=" %%U in ('git remote get-url origin 2^>nul') do set "ORIGIN_URL=%%U"
 if not defined ORIGIN_URL (
