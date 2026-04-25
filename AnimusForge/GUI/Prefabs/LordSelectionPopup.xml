@@ -1,0 +1,81 @@
+<Prefab>
+  <Window>
+    <Widget WidthSizePolicy="StretchToParent" HeightSizePolicy="StretchToParent" Sprite="BlankWhiteSquare_9" Color="#6F000000">
+      <Children>
+        <Widget WidthSizePolicy="Fixed" HeightSizePolicy="Fixed" SuggestedWidth="900" SuggestedHeight="680" HorizontalAlignment="Center" VerticalAlignment="Center">
+          <Children>
+            <Widget WidthSizePolicy="StretchToParent" HeightSizePolicy="StretchToParent" Sprite="StdAssets\Popup\canvas" />
+            <Widget WidthSizePolicy="StretchToParent" HeightSizePolicy="StretchToParent" Sprite="StdAssets\Popup\canvas_gradient" IsEnabled="false" />
+            <Widget WidthSizePolicy="StretchToParent" HeightSizePolicy="StretchToParent" Sprite="frame_9" ExtendLeft="18" ExtendTop="18" ExtendRight="18" ExtendBottom="18" IsEnabled="false" />
+
+            <Widget WidthSizePolicy="StretchToParent" HeightSizePolicy="StretchToParent" MarginLeft="28" MarginRight="28" MarginTop="20" MarginBottom="20">
+              <Children>
+                <Widget WidthSizePolicy="StretchToParent" HeightSizePolicy="Fixed" SuggestedHeight="84" VerticalAlignment="Top" Sprite="General\CharacterCreation\character_creation_background_gradient" AlphaFactor="0.35" Color="#000000FF">
+                  <Children>
+                    <TextWidget DoNotAcceptEvents="true" WidthSizePolicy="StretchToParent" HeightSizePolicy="Fixed" SuggestedHeight="34" VerticalAlignment="Center" MarginLeft="24" MarginRight="24" Brush="Popup.Title.Text" Brush.FontSize="28" Brush.TextHorizontalAlignment="Center" Text="@TitleText" />
+                  </Children>
+                </Widget>
+
+                <Widget WidthSizePolicy="StretchToParent" HeightSizePolicy="Fixed" SuggestedHeight="15" VerticalAlignment="Top" MarginTop="90" Sprite="StdAssets\Popup\divider" />
+                <TextWidget DoNotAcceptEvents="true" WidthSizePolicy="StretchToParent" HeightSizePolicy="Fixed" SuggestedHeight="32" VerticalAlignment="Top" MarginTop="112" MarginLeft="10" MarginRight="10" Brush="Popup.Description.Text" Brush.FontSize="18" Brush.TextHorizontalAlignment="Center" Text="@DescriptionText" />
+
+                <Widget WidthSizePolicy="StretchToParent" HeightSizePolicy="Fixed" SuggestedHeight="405" VerticalAlignment="Top" MarginTop="158" Sprite="BlankWhiteSquare_9" Color="#000000FF" AlphaFactor="0.18">
+                  <Children>
+                    <Widget WidthSizePolicy="StretchToParent" HeightSizePolicy="StretchToParent" Sprite="frame_9" ExtendLeft="5" ExtendTop="5" ExtendRight="5" ExtendBottom="5" AlphaFactor="0.25" IsEnabled="false" />
+                    <ScrollablePanel WidthSizePolicy="StretchToParent" HeightSizePolicy="StretchToParent" ClipRect="LordListClip" InnerPanel="LordListClip\LordListInner" MarginLeft="12" MarginRight="22" MarginTop="12" MarginBottom="12" AutoHideScrollBars="true" VerticalScrollbar="..\LordListScrollbar\Scrollbar">
+                      <Children>
+                        <Widget Id="LordListClip" WidthSizePolicy="StretchToParent" HeightSizePolicy="StretchToParent" ClipContents="true">
+                          <Children>
+                            <ListPanel Id="LordListInner" DataSource="{AvailableLords}" WidthSizePolicy="StretchToParent" HeightSizePolicy="CoverChildren" LayoutImp.LayoutMethod="VerticalTopToBottom">
+                              <ItemTemplate>
+                                <ButtonWidget DoNotPassEventsToChildren="true" WidthSizePolicy="StretchToParent" HeightSizePolicy="Fixed" SuggestedHeight="54" MarginBottom="6" Brush="Popup.Cancel.Button" Command.Click="ExecuteToggleSelection" UpdateChildrenStates="true" IsSelected="@IsSelected">
+                                  <Children>
+                                    <TextWidget DoNotAcceptEvents="true" WidthSizePolicy="Fixed" HeightSizePolicy="StretchToParent" SuggestedWidth="74" HorizontalAlignment="Left" VerticalAlignment="Center" MarginLeft="20" Brush="Popup.Button.Text" Brush.FontSize="20" Brush.TextHorizontalAlignment="Left" Text="@SelectionMark" />
+                                    <TextWidget DoNotAcceptEvents="true" WidthSizePolicy="StretchToParent" HeightSizePolicy="StretchToParent" MarginLeft="104" MarginRight="20" VerticalAlignment="Center" Brush="Popup.Button.Text" Brush.FontSize="22" Brush.TextHorizontalAlignment="Left" Text="@Name" />
+                                  </Children>
+                                </ButtonWidget>
+                              </ItemTemplate>
+                            </ListPanel>
+                          </Children>
+                        </Widget>
+                      </Children>
+                    </ScrollablePanel>
+                    <Standard.VerticalScrollbar Id="LordListScrollbar" HeightSizePolicy="StretchToParent" HorizontalAlignment="Right" VerticalAlignment="Bottom" MarginTop="12" MarginBottom="12" MarginRight="4" />
+                  </Children>
+                </Widget>
+
+                <ListPanel WidthSizePolicy="CoverChildren" HeightSizePolicy="Fixed" SuggestedHeight="55" HorizontalAlignment="Center" VerticalAlignment="Bottom" MarginBottom="8" LayoutImp.LayoutMethod="HorizontalLeftToRight">
+                  <Children>
+                    <ButtonWidget DoNotPassEventsToChildren="true" WidthSizePolicy="Fixed" HeightSizePolicy="Fixed" SuggestedWidth="150" SuggestedHeight="55" Brush="Popup.Cancel.Button" Command.Click="ExecuteSelectAll" UpdateChildrenStates="true">
+                      <Children>
+                        <TextWidget DoNotAcceptEvents="true" WidthSizePolicy="StretchToParent" HeightSizePolicy="Fixed" SuggestedHeight="24" VerticalAlignment="Center" MarginLeft="20" MarginRight="20" Brush="Popup.Button.Text" Brush.FontSize="18" Brush.TextHorizontalAlignment="Center" Text="全选" />
+                      </Children>
+                    </ButtonWidget>
+                    <Widget WidthSizePolicy="Fixed" HeightSizePolicy="Fixed" SuggestedWidth="16" SuggestedHeight="1" />
+                    <ButtonWidget DoNotPassEventsToChildren="true" WidthSizePolicy="Fixed" HeightSizePolicy="Fixed" SuggestedWidth="150" SuggestedHeight="55" Brush="Popup.Cancel.Button" Command.Click="ExecuteDeselectAll" UpdateChildrenStates="true">
+                      <Children>
+                        <TextWidget DoNotAcceptEvents="true" WidthSizePolicy="StretchToParent" HeightSizePolicy="Fixed" SuggestedHeight="24" VerticalAlignment="Center" MarginLeft="20" MarginRight="20" Brush="Popup.Button.Text" Brush.FontSize="18" Brush.TextHorizontalAlignment="Center" Text="全不选" />
+                      </Children>
+                    </ButtonWidget>
+                    <Widget WidthSizePolicy="Fixed" HeightSizePolicy="Fixed" SuggestedWidth="34" SuggestedHeight="1" />
+                    <ButtonWidget DoNotPassEventsToChildren="true" WidthSizePolicy="Fixed" HeightSizePolicy="Fixed" SuggestedWidth="170" SuggestedHeight="55" Brush="Popup.Done.Button" Command.Click="ExecuteConfirm" UpdateChildrenStates="true">
+                      <Children>
+                        <TextWidget DoNotAcceptEvents="true" WidthSizePolicy="StretchToParent" HeightSizePolicy="Fixed" SuggestedHeight="24" VerticalAlignment="Center" MarginLeft="20" MarginRight="20" Brush="Popup.Button.Text" Brush.FontSize="18" Brush.TextHorizontalAlignment="Center" Text="@ConfirmText" />
+                      </Children>
+                    </ButtonWidget>
+                    <Widget WidthSizePolicy="Fixed" HeightSizePolicy="Fixed" SuggestedWidth="16" SuggestedHeight="1" />
+                    <ButtonWidget DoNotPassEventsToChildren="true" WidthSizePolicy="Fixed" HeightSizePolicy="Fixed" SuggestedWidth="170" SuggestedHeight="55" Brush="Popup.Cancel.Button" Command.Click="ExecuteCancel" UpdateChildrenStates="true">
+                      <Children>
+                        <TextWidget DoNotAcceptEvents="true" WidthSizePolicy="StretchToParent" HeightSizePolicy="Fixed" SuggestedHeight="24" VerticalAlignment="Center" MarginLeft="20" MarginRight="20" Brush="Popup.Button.Text" Brush.FontSize="18" Brush.TextHorizontalAlignment="Center" Text="@CancelText" />
+                      </Children>
+                    </ButtonWidget>
+                  </Children>
+                </ListPanel>
+              </Children>
+            </Widget>
+          </Children>
+        </Widget>
+      </Children>
+    </Widget>
+  </Window>
+</Prefab>
