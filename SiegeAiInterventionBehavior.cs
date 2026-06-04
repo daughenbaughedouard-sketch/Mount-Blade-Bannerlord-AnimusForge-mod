@@ -153,7 +153,7 @@ public class SiegeAiInterventionBehavior : CampaignBehaviorBase
 	private const float CivilianSpeechRallySettleTolerance = 0.8f;
 	private const float CivilianGatherTalkMinSeconds = 1.0f;
 	private const float CivilianGatherTalkMaxSeconds = 3.0f;
-	private const float CivilianGatherFallbackSeconds = 120.0f;
+	private const float CivilianGatherFallbackSeconds = 75.0f;
 	private const float CivilianGatherApproachDistance = 3.2f;
 	private const float CivilianGatherFollowRefreshSeconds = 1.25f;
 	private const float CivilianGatherFormationSettleDistance = 5.5f;
@@ -3929,6 +3929,7 @@ public class SiegeAiInterventionBehavior : CampaignBehaviorBase
 				Agent target = mission.Agents.FirstOrDefault(a => a != null && a.Index == interaction.TargetAgentIndex);
 				if (!IsCivilianGatherMessengerAgent(messenger) || !IsEligibleCivilianAgent(target, includeHeroes: true) || CivilianGatherFollowerAgentIndexes.Contains(target.Index))
 				{
+					ReleaseGatherMessengerFromCurrentTarget(messenger, "gather_interaction_invalid_or_target_already_c");
 					ActiveCivilianGatherInteractions.Remove(interaction.TargetAgentIndex);
 					continue;
 				}
@@ -3952,11 +3953,13 @@ public class SiegeAiInterventionBehavior : CampaignBehaviorBase
 					if (now - interaction.TalkStartedAt >= interaction.TalkSeconds)
 					{
 						MarkCivilianAsGatherFollower(target, "gather_fake_talk");
+						ReleaseGatherMessengerFromCurrentTarget(messenger, "gather_target_became_c");
 						ActiveCivilianGatherInteractions.Remove(interaction.TargetAgentIndex);
 					}
 				}
 				else if (now - interaction.StartedAt > 18f)
 				{
+					ReleaseGatherMessengerFromCurrentTarget(messenger, "gather_interaction_timeout");
 					ActiveCivilianGatherInteractions.Remove(interaction.TargetAgentIndex);
 				}
 			}
@@ -4007,7 +4010,73 @@ public class SiegeAiInterventionBehavior : CampaignBehaviorBase
 			}
 			messenger.SetWatchState(Agent.WatchState.Patrolling);
 			messenger.SetMaximumSpeedLimit(CivilianGatherMessengerMoveSpeedLimit, false);
-			messenger.SetTargetPosition(target.Position.AsVec2);
+			ClearAgentLookTarget(messenger);
+			if (!TryGuideGatherMessengerToTargetAgent(messenger, target))
+			{
+				messenger.SetTargetPosition(target.Position.AsVec2);
+			}
+		}
+		catch
+		{
+		}
+	}
+
+	private static bool TryGuideGatherMessengerToTargetAgent(Agent messenger, Agent target)
+	{
+		try
+		{
+			if (messenger == null || target == null || !messenger.IsActive() || !target.IsActive() || messenger == target)
+			{
+				return false;
+			}
+			ScriptBehavior.AddAgentTarget(messenger, target);
+			return true;
+		}
+		catch (Exception ex)
+		{
+			Logger.Log("SiegeAiIntervention", "TryGuideGatherMessengerToTargetAgent failed: " + ex.Message);
+			return false;
+		}
+	}
+
+	private static void ReleaseGatherMessengerFromCurrentTarget(Agent messenger, string reason)
+	{
+		try
+		{
+			if (messenger == null || !messenger.IsActive())
+			{
+				return;
+			}
+			ClearGatherMessengerAgentTargetMovement(messenger);
+			messenger.SetMaximumSpeedLimit(-1f, false);
+			if (IsInterventionAlliedSoldierForExternal(messenger, requireActive: true))
+			{
+				AssignAgentToPlayerFormation(messenger, FormationClass.Infantry, refreshFormationOrders: false);
+			}
+			Logger.Log("SiegeAiIntervention", "Released gather messenger target. Reason=" + (reason ?? "N/A") + ", Agent=" + messenger.Index);
+		}
+		catch
+		{
+		}
+	}
+
+	private static void ClearGatherMessengerAgentTargetMovement(Agent messenger)
+	{
+		try
+		{
+			if (messenger == null || !messenger.IsActive())
+			{
+				return;
+			}
+			CampaignAgentComponent component = messenger.GetComponent<CampaignAgentComponent>();
+			DailyBehaviorGroup behaviorGroup = component?.AgentNavigator?.GetBehaviorGroup<DailyBehaviorGroup>();
+			if (behaviorGroup?.ScriptedBehavior is ScriptBehavior)
+			{
+				behaviorGroup.DisableScriptedBehavior();
+			}
+			messenger.DisableScriptedMovement();
+			messenger.ClearTargetFrame();
+			messenger.InvalidateTargetAgent();
 		}
 		catch
 		{
@@ -4024,9 +4093,7 @@ public class SiegeAiInterventionBehavior : CampaignBehaviorBase
 			}
 			try
 			{
-				messenger.DisableScriptedMovement();
-				messenger.ClearTargetFrame();
-				messenger.InvalidateTargetAgent();
+				ClearGatherMessengerAgentTargetMovement(messenger);
 			}
 			catch
 			{
