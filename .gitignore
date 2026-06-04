@@ -1,0 +1,15 @@
+bin/
+obj/
+.vs/
+
+*.user
+*.suo
+*.cache
+*.pdb
+
+*.nupkg
+packages/
+
+*.log
+Logs/
+AnimusForge/ONNX/reranker/
