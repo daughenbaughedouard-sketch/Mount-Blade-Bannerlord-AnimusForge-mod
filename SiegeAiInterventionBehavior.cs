@@ -1165,7 +1165,7 @@ public class SiegeAiInterventionBehavior : CampaignBehaviorBase
 				return;
 			}
 			_soldierAppeasementCheckDone = true;
-			if (MBRandom.RandomFloat >= 0.3f)
+			if (MBRandom.RandomFloat >= 0.5f)
 			{
 				Logger.Log("SiegeAiIntervention", "Soldier appeasement not required this run. Outcome=" + (outcomeName ?? "N/A"));
 				return;
