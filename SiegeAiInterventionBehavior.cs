@@ -265,7 +265,9 @@ public class SiegeAiInterventionBehavior : CampaignBehaviorBase
 	private static int _appliedSharedCivilianReliefGold;
 	private static int _appliedSharedCivilianReliefFoodUnits;
 	private static long _appliedSharedCivilianReliefItemValue;
+	private static bool _sharedCivilianReliefReturned;
 	private static readonly Dictionary<string, int> SharedCivilianReliefItems = new Dictionary<string, int>(StringComparer.OrdinalIgnoreCase);
+	private static readonly Dictionary<string, ItemObject> SharedCivilianReliefItemObjects = new Dictionary<string, ItemObject>(StringComparer.OrdinalIgnoreCase);
 	private static readonly List<string> InterventionMemoryEvents = new List<string>();
 	private static int _desiredCivilianAssemblyCount;
 	private static bool _pendingSummarySwitch;
@@ -1342,7 +1344,7 @@ public class SiegeAiInterventionBehavior : CampaignBehaviorBase
 		{
 			sb.Append(memoryContext);
 		}
-		sb.Append("【救济安抚门槛】“宽恕/不杀不抢/仁慈”属于宽恕，不等于发放救济；只有玩家已经通过AF给予功能交付第纳尔、粮食或物资，并且本轮明确让你或他人把这些东西分发给民众/村民/百姓时，才可把它理解为救济安抚。");
+		sb.Append("【救济安抚分流】若你是玩家己方入城士兵，只有玩家已通过AF给予功能交付第纳尔、粮食或物资，并且本轮明确命令你把这些共享物资分发给民众/村民/百姓时，才可把它理解为救济安抚；若你是战败平民/商人/工匠/镇民，玩家直接用言语承诺保护、维持军纪、安顿民众或安抚恐惧，也可理解为平民对话安抚，不强制要求已有物资。");
 		sb.Append("正文只自然说话，不要解释内部机制，也不要写任何方括号动作标签。每个 NPC 回复后都会由独立后处理器根据玩家这轮话的语义、威胁、上下文和谈判走向选择是否触发宽恕、安抚、发放救济、安民宣抚、召集民众、搜掠、血洗、屠民迁殖或安抚军心等处置；除非玩家语义足够明确，否则不要在正文里把处置说成已经完成。搜掠是可逆的临时处置：若玩家后续明确宽恕、安抚、发放救济、安民宣抚或归心盟誓，可回退为正向处置；血洗和屠民迁殖不可逆，血洗后不能降回搜掠或宽恕，屠民迁殖是最高级且不应轻描淡写。");
 		if (_plunderStarted && !_massacreStarted)
 		{
@@ -1441,7 +1443,7 @@ public class SiegeAiInterventionBehavior : CampaignBehaviorBase
 		return new List<PostprocessRuleEntry>
 		{
 			new PostprocessRuleEntry { Tag = "[ACTION:宽恕]", Description = "如果NPC在<latest_reply>里明确接受或传达玩家对普通民众的宽恕、不追究、不杀不抢，就输出这个；若只是害怕、讨价还价、模糊求饶或玩家没有明确给出处置，就不要输出" },
-			new PostprocessRuleEntry { Tag = "[ACTION:救济]", Description = "只有同时满足两点才输出：1）运行时事实显示玩家已经通过AF给予功能交付了共享第纳尔、粮食或物资；2）<latest_reply>明确接受或传达把这些已交付物资分发给民众/村民/百姓用于救济安抚。单纯说宽恕、仁慈、不杀不抢、安抚民心但没有已交付物资和分发话术时，禁止输出本标签，改用宽恕或其他更准确标签" },
+			new PostprocessRuleEntry { Tag = "[ACTION:救济]", Description = "分两种情况输出：A）当前说话者是玩家己方入城士兵时，必须同时有AF共享第纳尔/粮食/物资，并且<latest_reply>明确接受或传达把这些已交付物资分发给民众；B）当前说话者是战败平民/商人/工匠/镇民时，只要<latest_reply>明确接受玩家的言语安抚、保护承诺、军纪约束或安顿民众安排，也可输出本标签。士兵路线没有物资时不要输出救济，应改用宽恕或其他更准确标签" },
 			new PostprocessRuleEntry { Tag = "[ACTION:宣抚]", Description = "如果NPC在<latest_reply>里明确接受或传达玩家进行安民宣抚、公开演讲安定城心、争取本地人合作，就输出这个；若只是命令己方士兵分发物资或第纳尔，不要输出此标签，改用救济" },
 			new PostprocessRuleEntry { Tag = "[ACTION:盟誓]", Description = "如果NPC在<latest_reply>里明确接受或传达玩家组织公开盟誓、归心效忠、强力争取民众和要人归附，就输出这个；若只是命令己方士兵分发物资或第纳尔，不要输出此标签，改用救济" },
 			new PostprocessRuleEntry { Tag = "[ACTION:安兵]", Description = "只有运行时事实显示已经触发士兵不满待安抚，并且当前说话者是玩家己方入城士兵，且<latest_reply>明确接受玩家对士兵的安抚、补偿承诺、军纪解释或日后战利安排时输出；此标签只安抚军心，不触发民众结算" },
@@ -1483,7 +1485,7 @@ public class SiegeAiInterventionBehavior : CampaignBehaviorBase
 			sb.AppendLine("- 宽恕/安抚/宣抚可覆盖尚未升级为血洗的搜掠；血洗和屠民迁殖不可逆。屠民迁殖可由己方士兵直接触发并启动血洗式屠戮，普通民众不能触发。");
 			sb.AppendLine("- 士兵知识点：胜利方士兵默认期待搜掠战利品；但只有运行时事实显示军心待安抚时，己方士兵才可含蓄不满或劝玩家重想。无论如何必须服从，不能辱骂、抗命、自动攻击或自行升级处置。");
 			sb.AppendLine("- 安兵标签只用于军心待安抚时玩家对己方士兵的安抚/补偿承诺/军纪解释；它不触发民众结算，也不能代替宽恕、救济、宣抚或盟誓。");
-			sb.AppendLine("- [ACTION:救济] 是物资救济标签：必须已经存在AF给予共享物资，并且本轮回复明确把这些物资分发给民众；单纯宽恕、不杀不抢、仁慈或笼统安抚不能输出救济，应输出宽恕。");
+			sb.AppendLine("- [ACTION:救济] 分流：当前说话者是己方士兵时，必须已有AF共享物资且本轮明确分发给民众；当前说话者是战败平民/商人/工匠/镇民时，可以由玩家直接言语安抚、保护承诺、军纪约束或安顿安排触发，不强制要求物资。");
 			sb.AppendLine("- 如果只是让己方士兵分发已交付的共享粮食、物资或第纳尔，最高只输出救济，不输出宣抚或盟誓。");
 			return sb.ToString().Trim();
 		}
@@ -1600,7 +1602,8 @@ public class SiegeAiInterventionBehavior : CampaignBehaviorBase
 			bool containsDestructiveTag = PlunderTagRegex.IsMatch(text) || MassacreTagRegex.IsMatch(text) || RepopulationTagRegex.IsMatch(text);
 			bool canApplyMercyTrack = !containsDestructiveTag && !HasDestructiveOutcomeLocked();
 			bool targetIsAlliedSoldier = targetAgentIndex >= 0 && AlliedAgentIndexes.Contains(targetAgentIndex);
-			bool reliefRequiresMaterialButMissing = ReliefTagRegex.IsMatch(text) && !HasSharedCivilianReliefPool();
+			bool targetIsCivilian = IsCivilianReliefConversationTarget(targetAgentIndex, targetCharacter);
+			bool reliefRequiresMaterialButMissing = targetIsAlliedSoldier && ReliefTagRegex.IsMatch(text) && !HasSharedCivilianReliefPool();
 			if (reliefRequiresMaterialButMissing)
 			{
 				text = ReliefTagRegex.Replace(text, "[ACTION:宽恕]");
@@ -1622,11 +1625,15 @@ public class SiegeAiInterventionBehavior : CampaignBehaviorBase
 			{
 				actionHandled |= ApplyMercyChoice("场景对话宽恕", "玩家通过场景对话选择宽恕普通民众。");
 			}
-			if (canApplyMercyTrack && (ReliefTagRegex.IsMatch(text) || soldierPositiveCapToRelief))
+			if (canApplyMercyTrack && ReliefTagRegex.IsMatch(text))
 			{
-				actionHandled |= soldierPositiveCapToRelief
-					? ApplyReliefChoice("士兵分发安抚", "玩家命令己方士兵分发共享物资安抚民众；士兵分发路线最高按安抚结算。")
-					: ApplyReliefChoice("场景对话安抚", "玩家通过场景对话选择安抚和救济民众。");
+				actionHandled |= targetIsAlliedSoldier
+					? ApplySoldierMaterialReliefChoice(targetAgentIndex, "士兵分发安抚", "玩家命令己方士兵分发共享物资安抚民众；士兵分发路线最高按安抚结算。")
+					: ApplyCivilianVerbalReliefChoice(targetIsCivilian ? "平民对话安抚" : "场景对话安抚", targetIsCivilian ? "玩家直接通过言语安抚战败民众，使其接受宽恕和秩序安排。" : "玩家通过场景对话选择安抚和救济民众。");
+			}
+			if (canApplyMercyTrack && soldierPositiveCapToRelief)
+			{
+				actionHandled |= ApplySoldierMaterialReliefChoice(targetAgentIndex, "士兵分发安抚", "玩家命令己方士兵分发共享物资安抚民众；士兵分发路线最高按安抚结算。");
 			}
 			if (canApplyMercyTrack && !soldierPositiveCapToRelief && InspireTagRegex.IsMatch(text))
 			{
@@ -2588,6 +2595,18 @@ public class SiegeAiInterventionBehavior : CampaignBehaviorBase
 		}
 	}
 
+	internal static bool ShouldCapturePlayerGiveForSharedCivilianReliefForExternal()
+	{
+		try
+		{
+			return IsActiveInCurrentMission() && !_massacreStarted && !_culturalRepopulationRequested;
+		}
+		catch
+		{
+			return false;
+		}
+	}
+
 	internal static bool RecordSharedCivilianReliefTransferForExternal(int targetAgentIndex, int goldAmount, string itemId, int itemAmount, ItemObject item, int unitValue, string source)
 	{
 		try
@@ -2613,6 +2632,10 @@ public class SiegeAiInterventionBehavior : CampaignBehaviorBase
 				{
 					SharedCivilianReliefItems[key] = itemAmount;
 				}
+				if (item != null)
+				{
+					SharedCivilianReliefItemObjects[key] = item;
+				}
 				_sharedCivilianReliefItemTotal += itemAmount;
 				if (item != null && item.IsFood)
 				{
@@ -2627,6 +2650,7 @@ public class SiegeAiInterventionBehavior : CampaignBehaviorBase
 			}
 			if (recorded)
 			{
+				_sharedCivilianReliefReturned = false;
 				string itemText = itemAmount > 0 ? (itemAmount + " 个 " + (item?.Name?.ToString() ?? itemId ?? "物资")) : "";
 				string goldText = goldAmount > 0 ? (goldAmount + " 第纳尔") : "";
 				string joined = string.Join("、", new[] { goldText, itemText }.Where(x => !string.IsNullOrWhiteSpace(x)));
@@ -2674,6 +2698,109 @@ public class SiegeAiInterventionBehavior : CampaignBehaviorBase
 	private static bool HasSharedCivilianReliefPool()
 	{
 		return _sharedCivilianReliefGold > 0 || _sharedCivilianReliefFoodUnits > 0 || _sharedCivilianReliefItemTotal > 0 || _sharedCivilianReliefItemValue > 0;
+	}
+
+	private static bool IsCivilianReliefConversationTarget(int targetAgentIndex, CharacterObject targetCharacter)
+	{
+		try
+		{
+			if (targetAgentIndex >= 0)
+			{
+				Agent agent = TryGetAgent(targetAgentIndex);
+				if (agent != null)
+				{
+					return !AlliedAgentIndexes.Contains(agent.Index) && IsEligibleCivilianAgent(agent, includeHeroes: true, requireActive: false);
+				}
+			}
+			return IsCivilianForIntervention(targetCharacter);
+		}
+		catch
+		{
+			return false;
+		}
+	}
+
+	private static ItemObject ResolveSharedCivilianReliefItem(string itemId)
+	{
+		try
+		{
+			string key = (itemId ?? "").Trim();
+			if (string.IsNullOrWhiteSpace(key))
+			{
+				return null;
+			}
+			if (SharedCivilianReliefItemObjects.TryGetValue(key, out ItemObject cached) && cached != null)
+			{
+				return cached;
+			}
+			return Game.Current?.ObjectManager?.GetObject<ItemObject>(key);
+		}
+		catch
+		{
+			return null;
+		}
+	}
+
+	private static bool ReturnSharedCivilianReliefPoolToPlayerForNegativeOutcome(string reason)
+	{
+		try
+		{
+			if (!HasSharedCivilianReliefPool() || _sharedCivilianReliefReturned)
+			{
+				return false;
+			}
+			int returnedGold = Math.Max(0, _sharedCivilianReliefGold);
+			int returnedItems = 0;
+			List<string> returnedParts = new List<string>();
+			if (returnedGold > 0)
+			{
+				AwardGoldToPlayer(returnedGold, "shared_relief_refund_" + (reason ?? "negative"));
+				returnedParts.Add(returnedGold + " 第纳尔");
+			}
+			MobileParty mainParty = MobileParty.MainParty ?? Hero.MainHero?.PartyBelongedTo;
+			ItemRoster itemRoster = mainParty?.ItemRoster;
+			foreach (KeyValuePair<string, int> pair in SharedCivilianReliefItems.ToList())
+			{
+				int amount = Math.Max(0, pair.Value);
+				if (amount <= 0 || itemRoster == null)
+				{
+					continue;
+				}
+				ItemObject item = ResolveSharedCivilianReliefItem(pair.Key);
+				if (item == null)
+				{
+					Logger.Log("SiegeAiIntervention", "Unable to resolve shared relief item for refund. ItemId=" + (pair.Key ?? ""));
+					continue;
+				}
+				itemRoster.AddToCounts(item, amount);
+				returnedItems += amount;
+				returnedParts.Add(amount + " 个 " + (item.Name?.ToString() ?? pair.Key));
+			}
+			if (returnedGold <= 0 && returnedItems <= 0)
+			{
+				return false;
+			}
+			_sharedCivilianReliefReturned = true;
+			_sharedCivilianReliefGold = 0;
+			_sharedCivilianReliefFoodUnits = 0;
+			_sharedCivilianReliefItemTotal = 0;
+			_sharedCivilianReliefItemValue = 0L;
+			_appliedSharedCivilianReliefGold = 0;
+			_appliedSharedCivilianReliefFoodUnits = 0;
+			_appliedSharedCivilianReliefItemValue = 0L;
+			SharedCivilianReliefItems.Clear();
+			SharedCivilianReliefItemObjects.Clear();
+			string summary = string.Join("、", returnedParts.Where(x => !string.IsNullOrWhiteSpace(x)));
+			InformationManager.DisplayMessage(new InformationMessage("【攻城处置】已触发搜掠/血洗等负面处置，先前交给平民共享的物资已退还给你：" + summary + "。", Color.FromUint(0xFFFFD27Fu)));
+			RecordInterventionMemory("返还", "玩家先前交付的平民共享安抚物资因负面处置被退还；返还内容：" + summary + "。");
+			Logger.Log("SiegeAiIntervention", "Returned shared civilian relief pool to player due to negative outcome. Reason=" + (reason ?? "N/A") + ", Summary=" + summary);
+			return true;
+		}
+		catch (Exception ex)
+		{
+			Logger.Log("SiegeAiIntervention", "ReturnSharedCivilianReliefPoolToPlayerForNegativeOutcome failed (" + (reason ?? "N/A") + "): " + ex.Message);
+			return false;
+		}
 	}
 
 	private static bool ApplySharedCivilianReliefPoolEffects(Settlement settlement, string reason)
@@ -2736,7 +2863,35 @@ public class SiegeAiInterventionBehavior : CampaignBehaviorBase
 		}
 	}
 
-	private static bool ApplyReliefChoice(string triggerSource, string triggerDetail)
+	private static bool ApplySoldierMaterialReliefChoice(int targetAgentIndex, string triggerSource, string triggerDetail)
+	{
+		try
+		{
+			if (targetAgentIndex < 0 || !AlliedAgentIndexes.Contains(targetAgentIndex))
+			{
+				InformationManager.DisplayMessage(new InformationMessage("【攻城处置】命令分发共享物资需要对己方入城士兵进行。", Color.FromUint(0xFFFFD27Fu)));
+				return false;
+			}
+			if (!HasSharedCivilianReliefPool())
+			{
+				InformationManager.DisplayMessage(new InformationMessage("【攻城处置】让士兵分发救济需要先通过AF给予功能交给士兵或在场NPC第纳尔、粮食或物资。", Color.FromUint(0xFFFFD27Fu)));
+				return false;
+			}
+			return ApplyReliefChoiceCore(triggerSource, triggerDetail, requireSharedMaterial: true, civilianVerbalOnly: false);
+		}
+		catch (Exception ex)
+		{
+			Logger.Log("SiegeAiIntervention", "ApplySoldierMaterialReliefChoice failed: " + ex.Message);
+			return false;
+		}
+	}
+
+	private static bool ApplyCivilianVerbalReliefChoice(string triggerSource, string triggerDetail)
+	{
+		return ApplyReliefChoiceCore(triggerSource, triggerDetail, requireSharedMaterial: false, civilianVerbalOnly: !HasSharedCivilianReliefPool());
+	}
+
+	private static bool ApplyReliefChoiceCore(string triggerSource, string triggerDetail, bool requireSharedMaterial, bool civilianVerbalOnly)
 	{
 		try
 		{
@@ -2744,7 +2899,8 @@ public class SiegeAiInterventionBehavior : CampaignBehaviorBase
 			{
 				return false;
 			}
-			if (!HasSharedCivilianReliefPool())
+			bool hasSharedPool = HasSharedCivilianReliefPool();
+			if (requireSharedMaterial && !hasSharedPool)
 			{
 				InformationManager.DisplayMessage(new InformationMessage("【攻城处置】救济安抚需要先通过AF给予功能交给士兵或在场NPC第纳尔、粮食或物资，再明确命令分发给民众。单纯宽恕请按宽恕处置。", Color.FromUint(0xFFFFD27Fu)));
 				return false;
@@ -2752,24 +2908,39 @@ public class SiegeAiInterventionBehavior : CampaignBehaviorBase
 			StopReversiblePlunderForMercyTrack("relief");
 			if (_reliefChoiceApplied)
 			{
-				ApplySharedCivilianReliefPoolEffects(ResolveCurrentSettlement(), "relief_repeat");
-				RecordInterventionMemory("救济", "玩家再次要求把已交付的AF共享物资分发给民众；共享物资状态：" + DescribeSharedCivilianReliefPoolForContext() + "。");
+				if (hasSharedPool)
+				{
+					ApplySharedCivilianReliefPoolEffects(ResolveCurrentSettlement(), "relief_repeat");
+					RecordInterventionMemory("救济", "玩家再次要求把已交付的AF共享物资分发给民众；共享物资状态：" + DescribeSharedCivilianReliefPoolForContext() + "。");
+				}
+				else
+				{
+					RecordInterventionMemory("安抚", "玩家继续通过对话直接安抚战败民众，民众应承认已经得到保护与秩序承诺。");
+				}
 				return true;
 			}
 			_reliefChoiceApplied = true;
 			_activeMode = InterventionMode.MercyRelief;
 			MarkPendingAftermath(SiegeAftermathAction.SiegeAftermath.ShowMercy, triggerSource, triggerDetail);
-			MaybeTriggerSoldierAppeasementNeed("救济");
+			MaybeTriggerSoldierAppeasementNeed(hasSharedPool ? "救济" : "平民安抚");
 			Settlement settlement = ResolveCurrentSettlement();
-			AdjustSettlementAfterRelief(settlement, publicTrustDelta: 8, loyaltyDelta: 3f, securityDelta: 2f);
-			ApplySharedCivilianReliefPoolEffects(settlement, "relief");
-			ShowOutcomeMessageOnce("relief", "【攻城处置】你选择安抚民众；离场后按宽恕处置结算，并小幅恢复忠诚度与治安。", 0xFFB6F7A8u);
-			RecordInterventionMemory("救济", "玩家已命令把通过AF给予交付的第纳尔、粮食或物资分发给民众用于安抚；共享物资状态：" + DescribeSharedCivilianReliefPoolForContext() + "。");
+			AdjustSettlementAfterRelief(settlement, publicTrustDelta: hasSharedPool ? 8 : 5, loyaltyDelta: hasSharedPool ? 3f : 2f, securityDelta: hasSharedPool ? 2f : 1f);
+			if (hasSharedPool)
+			{
+				ApplySharedCivilianReliefPoolEffects(settlement, civilianVerbalOnly ? "civilian_relief_with_pool" : "relief");
+				ShowOutcomeMessageOnce("relief", "【攻城处置】你选择安抚民众并分发共享物资；离场后按宽恕处置结算，并恢复忠诚度与治安。", 0xFFB6F7A8u);
+				RecordInterventionMemory("救济", "玩家已命令把通过AF给予交付的第纳尔、粮食或物资分发给民众用于安抚；共享物资状态：" + DescribeSharedCivilianReliefPoolForContext() + "。");
+			}
+			else
+			{
+				ShowOutcomeMessageOnce("civilian_verbal_relief", "【攻城处置】你通过对话安抚了民众；离场后按宽恕处置结算，并小幅恢复忠诚度与治安。", 0xFFB6F7A8u);
+				RecordInterventionMemory("安抚", "玩家没有分发物资，但通过面对面对话安抚战败平民，承诺保护、军纪或安顿秩序；后续NPC应承认平民已被言语安抚。");
+			}
 			return true;
 		}
 		catch (Exception ex)
 		{
-			Logger.Log("SiegeAiIntervention", "ApplyReliefChoice failed: " + ex.Message);
+			Logger.Log("SiegeAiIntervention", "ApplyReliefChoiceCore failed: " + ex.Message);
 			return false;
 		}
 	}
@@ -7494,6 +7665,10 @@ public class SiegeAiInterventionBehavior : CampaignBehaviorBase
 
 	private static void MarkPendingAftermath(SiegeAftermathAction.SiegeAftermath aftermath, string triggerSource, string triggerDetail)
 	{
+		if (aftermath == SiegeAftermathAction.SiegeAftermath.Pillage || aftermath == SiegeAftermathAction.SiegeAftermath.Devastate)
+		{
+			ReturnSharedCivilianReliefPoolToPlayerForNegativeOutcome(triggerSource ?? aftermath.ToString());
+		}
 		bool canDowngradeReversiblePlunder = aftermath == SiegeAftermathAction.SiegeAftermath.ShowMercy && !_massacreStarted && !_culturalRepopulationRequested && (!_hasPendingAftermath || GetAftermathSeverity(_pendingAftermath) < GetAftermathSeverity(SiegeAftermathAction.SiegeAftermath.Devastate));
 		if (!_hasPendingAftermath || canDowngradeReversiblePlunder || GetAftermathSeverity(aftermath) >= GetAftermathSeverity(_pendingAftermath))
 		{
@@ -7607,6 +7782,10 @@ public class SiegeAiInterventionBehavior : CampaignBehaviorBase
 			}
 			Dictionary<MobileParty, float> contributions = BuildSafePartyContributions(attackerParty);
 			SiegeAftermathAction.SiegeAftermath aftermath = _pendingAftermath;
+			if (aftermath == SiegeAftermathAction.SiegeAftermath.Pillage || aftermath == SiegeAftermathAction.SiegeAftermath.Devastate)
+			{
+				ReturnSharedCivilianReliefPoolToPlayerForNegativeOutcome(reason ?? aftermath.ToString());
+			}
 			float prosperityBefore = settlement.Town.Prosperity;
 			Dictionary<Hero, float> notablePowerBefore = CaptureNotablePowers(settlement);
 			SiegeAftermathAction.ApplyAftermath(attackerParty, settlement, aftermath, previousOwner, contributions);
@@ -8627,7 +8806,9 @@ public class SiegeAiInterventionBehavior : CampaignBehaviorBase
 		_appliedSharedCivilianReliefGold = 0;
 		_appliedSharedCivilianReliefFoodUnits = 0;
 		_appliedSharedCivilianReliefItemValue = 0L;
+		_sharedCivilianReliefReturned = false;
 		SharedCivilianReliefItems.Clear();
+		SharedCivilianReliefItemObjects.Clear();
 		InterventionMemoryEvents.Clear();
 		_interventionMemorySequence = 0;
 		_pendingLootRoster = new ItemRoster();

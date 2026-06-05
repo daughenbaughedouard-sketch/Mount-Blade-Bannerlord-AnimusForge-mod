@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Diagnostics;
@@ -10346,6 +10346,8 @@ private static string NormalizeScenePlayerHistoryLine(string text, string target
 		bool flag = hero == null && characterObject != null && RewardSystemBehavior.Instance != null && RewardSystemBehavior.Instance.TryGetSettlementMerchantKind(characterObject, out settlementMerchantKind);
 		Settlement currentSettlement = Settlement.CurrentSettlement;
 		string text = MyBehavior.BuildRuleTargetKeyForExternal(hero, characterObject, shoutTradeTargetNpc?.AgentIndex ?? (-1));
+		int siegeReliefTargetAgentIndex = shoutTradeTargetNpc?.AgentIndex ?? (-1);
+		bool captureSiegeReliefPool = SiegeAiInterventionBehavior.ShouldCapturePlayerGiveForSharedCivilianReliefForExternal();
 		MobileParty mobileParty = Hero.MainHero?.PartyBelongedTo;
 		for (int i = 0; i < _shoutPendingTradeItems.Count; i++)
 		{
@@ -10384,7 +10386,12 @@ private static string NormalizeScenePlayerHistoryLine(string text, string target
 				shoutPendingTradeItem.Amount = num2;
 				if (num2 > 0)
 				{
-					if (hero != null)
+					if (captureSiegeReliefPool)
+					{
+						GiveGoldAction.ApplyBetweenCharacters(Hero.MainHero, null, num2, disableNotification: true);
+						SiegeAiInterventionBehavior.RecordSharedCivilianReliefTransferForExternal(siegeReliefTargetAgentIndex, num2, null, 0, null, 0, "shout_give_gold");
+					}
+					else if (hero != null)
 					{
 						GiveGoldAction.ApplyBetweenCharacters(Hero.MainHero, hero, num2);
 						try
@@ -10436,7 +10443,12 @@ private static string NormalizeScenePlayerHistoryLine(string text, string target
 				shoutPendingTradeItem.Amount = num3;
 				if (num3 > 0)
 				{
-					if (hero?.PartyBelongedTo != null && itemObject != null)
+					if (captureSiegeReliefPool)
+					{
+						int unitValue = shoutPendingTradeItem.InventoryUnitValue > 0 ? shoutPendingTradeItem.InventoryUnitValue : Math.Max(1, itemObject?.Value ?? shoutPendingTradeItem.Item?.Value ?? 1);
+						SiegeAiInterventionBehavior.RecordSharedCivilianReliefTransferForExternal(siegeReliefTargetAgentIndex, 0, text2, num3, itemObject ?? shoutPendingTradeItem.Item, unitValue, "shout_give_item");
+					}
+					else if (hero?.PartyBelongedTo != null && itemObject != null)
 					{
 						hero.PartyBelongedTo.ItemRoster.AddToCounts(itemObject, num3);
 					}
@@ -10447,7 +10459,7 @@ private static string NormalizeScenePlayerHistoryLine(string text, string target
 						string text3 = RewardSystemBehavior.Instance?.BuildSettlementItemValueFactSuffixForExternal(currentSettlement, itemObject, num3) ?? "";
 						RewardSystemBehavior.Instance?.AppendSettlementMerchantNpcFact(currentSettlement, settlementMerchantKind, $"你已经收下了玩家交来的 {num3} 个 {itemObject.Name?.ToString() ?? text2}{text3}。", characterObject?.Name?.ToString());
 					}
-					if (hero != null)
+					if (!captureSiegeReliefPool && hero != null)
 					{
 						try
 						{
