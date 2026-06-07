@@ -21,3 +21,12 @@ Standalone GCCZ now has a dependency-free source seed under `G:\AFMOD\GCCZ\src\A
 Verification run: `G:\AFMOD\.dotnet-sdk\dotnet.exe build G:\AFMOD\GCCZ\src\AnimusForge.SiegeAftermathIntervention\AnimusForge.SiegeAftermathIntervention.csproj` completed with 0 warnings and 0 errors before generated `bin/obj` cleanup.
 
 No compile-affecting `.cs` file was added to this fused `new-` tree in this step; this is intentionally a standalone isolation seed before AF bridge routing is changed.
+
+## 2026-06-08 outcome-rule seed
+
+Standalone GCCZ now also contains a dependency-free outcome-rule core:
+
+- `SiegeInterventionActionRuleDecision`
+- `SiegeInterventionActionRules`
+
+This mirrors the fused runtime invariant that mercy-track actions can override reversible 搜掠 but cannot downgrade 血洗/殖民, while destructive actions remain policy-gated and 殖民 requires allied-soldier context. No fused runtime `.cs` file was changed in this step.
