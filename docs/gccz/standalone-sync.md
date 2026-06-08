@@ -94,10 +94,10 @@ Follow-up isolation: civilian gather runtime context now lives in mirrored `Sieg
 Follow-up isolation: civilian gather UI/memory now lives in mirrored `SiegeCivilianGatherUiProfile`. The fused tree routes prepared-count, messenger, queue, ready wording, immediate messenger speech prompt, and fallback names through that core while preserving AF-side mission-agent tracking, messenger/formation state, `ShoutBehavior` triggering, and side effects.
 
 
-Follow-up isolation: intervention memory context formatting now lives in mirrored `SiegeInterventionMemoryContextBuilder`. The fused tree routes prompt memory wording through that core while preserving AF-side event collection, de-duplication, trimming, and logging.
+Follow-up isolation: intervention memory context formatting and the max retained memory-event count now live in mirrored `SiegeInterventionMemoryContextBuilder`. The fused tree routes prompt memory wording and the trim limit through that core while preserving AF-side event collection, de-duplication, trim application, and logging.
 
 
-Follow-up isolation: single memory-event formatting now lives in mirrored `SiegeInterventionMemoryEventFormatter`. The fused tree routes kind/detail fallback, action-tag stripping, and whitespace normalization through that core while preserving AF-side sequencing, duplicate checks, trimming, and logging.
+Follow-up isolation: single memory-event formatting now lives in mirrored `SiegeInterventionMemoryEventFormatter`. The fused tree routes kind/detail fallback, action-tag stripping, and whitespace normalization through that core while preserving AF-side sequencing, duplicate checks, trim application, and logging.
 
 
 Follow-up isolation: completed intervention summary now lives in mirrored `SiegeCompletedInterventionSummaryFacts` and `SiegeCompletedInterventionSummaryBuilder`. The fused tree routes completion-summary wording through that core while preserving AF-side fact collection and menu transitions.

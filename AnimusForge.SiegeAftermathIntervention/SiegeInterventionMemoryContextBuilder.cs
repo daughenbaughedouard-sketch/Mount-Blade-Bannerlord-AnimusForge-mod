@@ -4,10 +4,12 @@ namespace AnimusForge.SiegeAftermathIntervention;
 
 /// <summary>
 /// Dependency-free formatter for GCCZ per-scene memory context.
-/// AF adapters still own event collection, de-duplication, and log side effects.
+/// AF adapters still own event collection, de-duplication, trim application, and log side effects.
 /// </summary>
 public static class SiegeInterventionMemoryContextBuilder
 {
+    public const int MaxMemoryEvents = 10;
+
     public static string Build(IReadOnlyList<string> memoryEvents)
     {
         if (memoryEvents == null || memoryEvents.Count == 0)

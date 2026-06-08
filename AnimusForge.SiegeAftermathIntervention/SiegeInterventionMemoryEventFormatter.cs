@@ -4,7 +4,7 @@ namespace AnimusForge.SiegeAftermathIntervention;
 
 /// <summary>
 /// Dependency-free formatter for a single GCCZ memory event.
-/// AF adapters still own sequencing, duplicate checks, max event count, and logging.
+/// AF adapters still own sequencing, duplicate checks, trim application, and logging.
 /// </summary>
 public static class SiegeInterventionMemoryEventFormatter
 {

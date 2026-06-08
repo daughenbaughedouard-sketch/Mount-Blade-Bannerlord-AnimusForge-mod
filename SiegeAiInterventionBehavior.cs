@@ -184,7 +184,7 @@ public class SiegeAiInterventionBehavior : CampaignBehaviorBase
 	private const float SoldierCordonSettleTolerance = 0.45f;
 	private const float SoldierCordonOrderRefreshSeconds = 1.25f;
 	private const float SoldierCordonLookRefreshSeconds = 1.1f;
-	private const int MaxInterventionMemoryEvents = 10;
+	private const int MaxInterventionMemoryEvents = SiegeInterventionMemoryContextBuilder.MaxMemoryEvents;
 
 	private static readonly Regex MercyTagRegex = new Regex(SiegeActionTagCatalog.MercyTagPattern, RegexOptions.IgnoreCase | RegexOptions.Compiled);
 	private static readonly Regex ReliefTagRegex = new Regex(SiegeActionTagCatalog.ReliefTagPattern, RegexOptions.IgnoreCase | RegexOptions.Compiled);

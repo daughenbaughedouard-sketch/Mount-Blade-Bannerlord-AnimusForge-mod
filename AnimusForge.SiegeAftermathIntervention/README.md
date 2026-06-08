@@ -34,3 +34,13 @@ Second extraction slice:
 ## Postprocess context builder
 
 `SiegePostprocessContextBuilder` owns dependency-free formatting for postprocess runtime facts. The AF adapter now only gathers live objects and passes `SiegePostprocessContextFacts`.
+
+
+## Intervention memory context
+
+`SiegeInterventionMemoryContextBuilder` owns dependency-free formatting for the per-scene GCCZ memory context appended to AF prompts plus the max retained memory-event count. AF adapters still own event collection, de-duplication, trim application, and logging.
+
+
+## Intervention memory event formatter
+
+`SiegeInterventionMemoryEventFormatter` owns dependency-free formatting for one GCCZ memory event: kind fallback, detail fallback, action-tag stripping, and whitespace normalization. AF adapters still own sequencing, duplicate checks, trim application, and logging.
