@@ -305,8 +305,7 @@ public class SiegeAiInterventionBehavior : CampaignBehaviorBase
 	private static bool _directPlunderScriptMessageShown;
 	private static int _directPlunderScriptTicks;
 	private static string _directPlunderLastDeferKey = "";
-	private static string _currentOutcomeMessageTrack = "";
-	private static readonly HashSet<string> ShownOutcomeMessageKeys = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+	private static readonly SiegeOutcomeMessageDeduplicator OutcomeMessageDeduplicator = new SiegeOutcomeMessageDeduplicator();
 	private static bool _civilianAssemblyPointReady;
 	private static bool _civilianAssemblyMessageShown;
 	private static bool _civilianAssemblySpawnAttempted;
@@ -7613,26 +7612,19 @@ public class SiegeAiInterventionBehavior : CampaignBehaviorBase
 
 	private static void ResetOutcomeMessageDedup()
 	{
-		_currentOutcomeMessageTrack = "";
-		ShownOutcomeMessageKeys.Clear();
+		OutcomeMessageDeduplicator.Reset();
 	}
 
 	private static void ResetOutcomeMessageDedupForTrack(string track)
 	{
-		string normalized = (track ?? "").Trim();
-		if (!string.Equals(_currentOutcomeMessageTrack, normalized, StringComparison.OrdinalIgnoreCase))
-		{
-			_currentOutcomeMessageTrack = normalized;
-			ShownOutcomeMessageKeys.Clear();
-		}
+		OutcomeMessageDeduplicator.ResetForTrack(track);
 	}
 
 	private static void ShowOutcomeMessageOnce(string key, string message, uint color)
 	{
 		try
 		{
-			string normalized = (key ?? "").Trim();
-			if (string.IsNullOrWhiteSpace(normalized) || !ShownOutcomeMessageKeys.Add(normalized) || string.IsNullOrWhiteSpace(message))
+			if (!OutcomeMessageDeduplicator.ShouldShow(key, message))
 			{
 				return;
 			}
