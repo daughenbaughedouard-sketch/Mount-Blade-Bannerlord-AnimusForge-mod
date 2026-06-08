@@ -2767,12 +2767,12 @@ public class SiegeAiInterventionBehavior : CampaignBehaviorBase
 		{
 			if (targetAgentIndex < 0 || !AlliedAgentIndexes.Contains(targetAgentIndex))
 			{
-				InformationManager.DisplayMessage(new InformationMessage("【攻城处置】命令分发共享物资需要对己方入城士兵进行。", Color.FromUint(0xFFFFD27Fu)));
+				InformationManager.DisplayMessage(new InformationMessage(SiegeReliefChoiceProfile.SoldierMaterialReliefTargetMessage, Color.FromUint(SiegeReliefChoiceProfile.ValidationMessageColor)));
 				return false;
 			}
 			if (!HasSharedCivilianReliefPool())
 			{
-				InformationManager.DisplayMessage(new InformationMessage("【攻城处置】让士兵分发救济需要先通过AF给予功能交给士兵或在场NPC第纳尔、粮食或物资。", Color.FromUint(0xFFFFD27Fu)));
+				InformationManager.DisplayMessage(new InformationMessage(SiegeReliefChoiceProfile.SoldierMaterialReliefMissingPoolMessage, Color.FromUint(SiegeReliefChoiceProfile.ValidationMessageColor)));
 				return false;
 			}
 			return ApplyReliefChoiceCore(triggerSource, triggerDetail, requireSharedMaterial: true, civilianVerbalOnly: false);
@@ -2800,7 +2800,7 @@ public class SiegeAiInterventionBehavior : CampaignBehaviorBase
 			bool hasSharedPool = HasSharedCivilianReliefPool();
 			if (requireSharedMaterial && !hasSharedPool)
 			{
-				InformationManager.DisplayMessage(new InformationMessage("【攻城处置】救济安抚需要先通过AF给予功能交给士兵或在场NPC第纳尔、粮食或物资，再明确命令分发给民众。单纯宽恕请按宽恕处置。", Color.FromUint(0xFFFFD27Fu)));
+				InformationManager.DisplayMessage(new InformationMessage(SiegeReliefChoiceProfile.RequiredSharedMaterialMissingMessage, Color.FromUint(SiegeReliefChoiceProfile.ValidationMessageColor)));
 				return false;
 			}
 			SiegeReliefChoiceProfile reliefProfile = SiegeReliefChoiceProfile.Build(hasSharedPool, civilianVerbalOnly, DescribeSharedCivilianReliefPoolForContext());

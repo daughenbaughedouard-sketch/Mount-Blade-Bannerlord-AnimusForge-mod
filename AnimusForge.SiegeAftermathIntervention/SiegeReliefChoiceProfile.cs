@@ -8,6 +8,14 @@ public sealed class SiegeReliefChoiceProfile
 {
     private const uint PositiveMessageColor = 0xFFB6F7A8u;
 
+    public const uint ValidationMessageColor = 0xFFFFD27Fu;
+
+    public const string SoldierMaterialReliefTargetMessage = "【攻城处置】命令分发共享物资需要对己方入城士兵进行。";
+
+    public const string SoldierMaterialReliefMissingPoolMessage = "【攻城处置】让士兵分发救济需要先通过AF给予功能交给士兵或在场NPC第纳尔、粮食或物资。";
+
+    public const string RequiredSharedMaterialMissingMessage = "【攻城处置】救济安抚需要先通过AF给予功能交给士兵或在场NPC第纳尔、粮食或物资，再明确命令分发给民众。单纯宽恕请按宽恕处置。";
+
     private SiegeReliefChoiceProfile(
         bool hasSharedPool,
         string soldierAppeasementReason,
