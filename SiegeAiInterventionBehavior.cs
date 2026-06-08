@@ -1271,20 +1271,6 @@ public class SiegeAiInterventionBehavior : CampaignBehaviorBase
 		}
 	}
 
-	private static string DescribeMassacreMemorySource(string triggerSource)
-	{
-		string source = triggerSource ?? "";
-		if (source.IndexOf("直接攻击", StringComparison.OrdinalIgnoreCase) >= 0 || source.IndexOf("主动攻击", StringComparison.OrdinalIgnoreCase) >= 0)
-		{
-			return "由玩家亲自攻击NPC或平民触发";
-		}
-		if (source.IndexOf("屠民迁殖", StringComparison.OrdinalIgnoreCase) >= 0 || source.IndexOf("迁殖", StringComparison.OrdinalIgnoreCase) >= 0)
-		{
-			return "由玩家通过己方士兵下达屠民迁殖命令触发";
-		}
-		return "由玩家通过场景对话命令或谈崩触发";
-	}
-
 	internal static string BuildRuntimePromptForAgent(Hero hero, NpcDataPacket npc, int agentIndex)
 	{
 		if (!IsActiveInCurrentMission())
@@ -3062,19 +3048,20 @@ public class SiegeAiInterventionBehavior : CampaignBehaviorBase
 			InformationManager.DisplayMessage(new InformationMessage("【攻城处置】该定居点与你当前阵营文化相同，军纪禁止掠夺。", Color.FromUint(0xFFFFD27Fu)));
 			return false;
 		}
+		SiegeDestructiveChoiceProfile plunderProfile = SiegeDestructiveChoiceProfile.BuildPlunder();
 		_activeMode = InterventionMode.Plunder;
 		if (!_plunderStarted)
 		{
 			_plunderStarted = true;
-			MarkPendingAftermath(SiegeAftermathAction.SiegeAftermath.Pillage, triggerSource, triggerDetail);
+			MarkPendingAftermath(ToNativeAftermathKind(plunderProfile.AftermathKind), triggerSource, triggerDetail);
 			EnsureAlliedTroopsSummoned();
-			MaintainCivilianAssembly(Mission.Current, "plunder_started", force: false);
-			ShowOutcomeMessageOnce("plunder", "【士兵搜掠】搜掠开始：一部分士兵会分散盘问民众并索取财物。若你后续明确宽恕或宣抚，可回退为正向处置；也可升级为血洗。市场金库和物资会在离场后结算。", 0xFFFFC46Bu);
-			RecordInterventionMemory("搜掠", "玩家已下令搜掠或收缴战利品，士兵开始向民众盘问并索取财物；该处置尚可被后续宽恕/救济/宣抚覆盖。");
+			MaintainCivilianAssembly(Mission.Current, plunderProfile.AssemblySource, force: false);
+			ShowOutcomeMessageOnce(plunderProfile.MessageKey, plunderProfile.MessageText, plunderProfile.MessageColor);
+			RecordInterventionMemory(plunderProfile.MemoryTitle, plunderProfile.FirstMemoryText);
 			return true;
 		}
-		MarkPendingAftermath(SiegeAftermathAction.SiegeAftermath.Pillage, triggerSource, triggerDetail);
-		RecordInterventionMemory("搜掠", "玩家继续维持搜掠/收缴财物处置，后续NPC应承认士兵正在执行搜掠。");
+		MarkPendingAftermath(ToNativeAftermathKind(plunderProfile.AftermathKind), triggerSource, triggerDetail);
+		RecordInterventionMemory(plunderProfile.MemoryTitle, plunderProfile.RepeatMemoryText);
 		return false;
 	}
 
@@ -3085,6 +3072,7 @@ public class SiegeAiInterventionBehavior : CampaignBehaviorBase
 			InformationManager.DisplayMessage(new InformationMessage("【攻城处置】该定居点与你当前阵营文化相同，军纪禁止毁坏或血洗。", Color.FromUint(0xFFFFD27Fu)));
 			return false;
 		}
+		SiegeDestructiveChoiceProfile massacreProfile = SiegeDestructiveChoiceProfile.BuildMassacre();
 		_activeMode = InterventionMode.Massacre;
 		_civilianGatherPropagationActive = false;
 		ActiveCivilianGatherInteractions.Clear();
@@ -3095,15 +3083,15 @@ public class SiegeAiInterventionBehavior : CampaignBehaviorBase
 			_lastMassacreRealKillMissionTime = Mission.Current?.CurrentTime ?? 0f;
 			VictoryCheerAgentIndexes.Clear();
 		}
-		MarkPendingAftermath(SiegeAftermathAction.SiegeAftermath.Devastate, triggerSource, triggerDetail);
+		MarkPendingAftermath(ToNativeAftermathKind(massacreProfile.AftermathKind), triggerSource, triggerDetail);
 		EnsureAlliedTroopsSummoned();
 		EnsureInterventionCivilianEnemyTeam(Mission.Current);
-		AdjustSettlementPublicTrustOnly(ResolveCurrentSettlement(), -25, "siege_ai_massacre");
+		AdjustSettlementPublicTrustOnly(ResolveCurrentSettlement(), massacreProfile.PublicTrustDelta, massacreProfile.PublicTrustReason);
 		DriveMassacreCombatState(Mission.Current);
 		if (first)
 		{
-			ShowOutcomeMessageOnce("massacre", "【攻城处置】血洗已触发：士兵将主动追击城内民众；民众不再四散逃跑，都会转为敌对并反抗。本次处置已锁定为毁坏/血洗，可随时按 TAB 离场，市场战利品在离场后结算。", 0xFFFF7777u);
-			RecordInterventionMemory("血洗", DescribeMassacreMemorySource(triggerSource) + "，本次处置已不可逆升级为毁坏/血洗。");
+			ShowOutcomeMessageOnce(massacreProfile.MessageKey, massacreProfile.MessageText, massacreProfile.MessageColor);
+			RecordInterventionMemory(massacreProfile.MemoryTitle, massacreProfile.BuildMassacreMemoryText(triggerSource));
 		}
 		return first;
 	}
@@ -7635,6 +7623,17 @@ public class SiegeAiInterventionBehavior : CampaignBehaviorBase
 			SiegeAftermathAction.SiegeAftermath.Pillage => SiegeAftermathResolutionKind.Pillage,
 			SiegeAftermathAction.SiegeAftermath.ShowMercy => SiegeAftermathResolutionKind.ShowMercy,
 			_ => SiegeAftermathResolutionKind.Unknown
+		};
+	}
+
+	private static SiegeAftermathAction.SiegeAftermath ToNativeAftermathKind(SiegeAftermathResolutionKind aftermath)
+	{
+		return aftermath switch
+		{
+			SiegeAftermathResolutionKind.Devastate => SiegeAftermathAction.SiegeAftermath.Devastate,
+			SiegeAftermathResolutionKind.Pillage => SiegeAftermathAction.SiegeAftermath.Pillage,
+			SiegeAftermathResolutionKind.ShowMercy => SiegeAftermathAction.SiegeAftermath.ShowMercy,
+			_ => SiegeAftermathAction.SiegeAftermath.ShowMercy
 		};
 	}
 
