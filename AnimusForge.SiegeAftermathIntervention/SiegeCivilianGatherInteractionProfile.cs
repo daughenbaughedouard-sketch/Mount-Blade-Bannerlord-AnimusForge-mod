@@ -56,6 +56,12 @@ public static class SiegeCivilianGatherInteractionProfile
 
     public const string GatherMarkSourcePrefix = "gather_mark:";
 
+    public const string GatherSeedSourcePrefix = "gather_seed:";
+
+    public const string GatherFallbackSourcePrefix = "gather_fallback:";
+
+    public const string GatherMessengerReturnSourcePrefix = "gather_messenger_return:";
+
     public const string FormationControlBeginSource = "civilian_formation_control_begin";
 
     public const string FormationControlBatchSource = "formation_control_batch";
@@ -69,5 +75,20 @@ public static class SiegeCivilianGatherInteractionProfile
     public static string BuildGatherMarkSource(string reason)
     {
         return GatherMarkSourcePrefix + (reason ?? UnavailableSourceSuffix);
+    }
+
+    public static string BuildGatherSeedSource(string reason)
+    {
+        return GatherSeedSourcePrefix + (reason ?? UnavailableSourceSuffix);
+    }
+
+    public static string BuildGatherFallbackSource(string reason)
+    {
+        return GatherFallbackSourcePrefix + (reason ?? UnavailableSourceSuffix);
+    }
+
+    public static string BuildGatherMessengerReturnSource(string reason)
+    {
+        return GatherMessengerReturnSourcePrefix + (reason ?? UnavailableSourceSuffix);
     }
 }

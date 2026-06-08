@@ -3560,7 +3560,7 @@ public class SiegeAiInterventionBehavior : CampaignBehaviorBase
 				{
 					seed = mission.Agents.Where(a => IsEligibleCivilianAgent(a, includeHeroes: true)).OrderBy(a => a.Position.DistanceSquared(main.Position)).FirstOrDefault();
 				}
-				if (MarkAgentAsCivilianGatherMessenger(seed, "gather_seed:" + (source ?? "N/A")))
+				if (MarkAgentAsCivilianGatherMessenger(seed, SiegeCivilianGatherInteractionProfile.BuildGatherSeedSource(source)))
 				{
 					addedMessengers++;
 				}
@@ -3568,7 +3568,7 @@ public class SiegeAiInterventionBehavior : CampaignBehaviorBase
 			if (CivilianGatherMessengerAgentIndexes.Count == 0)
 			{
 				Agent fallback = mission.Agents.Where(a => IsEligibleCivilianAgent(a, includeHeroes: true)).OrderBy(a => a.Position.DistanceSquared(main.Position)).FirstOrDefault();
-				if (MarkAgentAsCivilianGatherMessenger(fallback, "gather_fallback:" + (source ?? "N/A")))
+				if (MarkAgentAsCivilianGatherMessenger(fallback, SiegeCivilianGatherInteractionProfile.BuildGatherFallbackSource(source)))
 				{
 					addedMessengers++;
 				}
@@ -4355,7 +4355,7 @@ public class SiegeAiInterventionBehavior : CampaignBehaviorBase
 				}
 				try
 				{
-					RestoreAlliedSoldierFriendlyState(messenger, 0f, "gather_messenger_return:" + (source ?? "N/A"), forceFollow: false, clearTarget: true);
+					RestoreAlliedSoldierFriendlyState(messenger, 0f, SiegeCivilianGatherInteractionProfile.BuildGatherMessengerReturnSource(source), forceFollow: false, clearTarget: true);
 					DisableCompanionStyleFollow(messenger);
 					AssignAgentToPlayerFormation(messenger, FormationClass.Infantry, refreshFormationOrders: false);
 					messenger.DisableScriptedMovement();
