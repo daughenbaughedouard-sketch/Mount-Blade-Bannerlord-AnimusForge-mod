@@ -121,6 +121,9 @@ Follow-up isolation: pending native aftermath selection now lives in mirrored `S
 Follow-up isolation: action-tag routing now lives in mirrored `SiegeActionRoutingFacts`, `SiegeActionRoutingDecision`, and `SiegeActionRoutingPolicy`. The fused tree routes destructive/mercy-track detection plus soldier relief downgrade/capping decisions through that core while preserving AF-side effects.
 
 
+Follow-up isolation: postprocess action effect trigger wording now lives in mirrored `SiegePostprocessActionEffectProfile`. The fused tree routes normalized mercy replacement, gather source, and trigger source/detail strings through that core while preserving AF-side regex matching and live target checks.
+
+
 Follow-up isolation: mercy-track transition UI now lives in mirrored `SiegeMercyTrackTransitionProfile`. The fused tree routes blocked post-destruction action and reversible-plunder-stop wording through the core while preserving AF-side destructive-lock checks, plunder-state clearing, logging, and display side effects.
 
 

@@ -105,6 +105,9 @@ Follow-up isolation: pending native aftermath selection now uses `SiegeAftermath
 Follow-up isolation: action-tag routing now uses `SiegeActionRoutingFacts`, `SiegeActionRoutingDecision`, and `SiegeActionRoutingPolicy`; the fused AF adapter passes raw action text and live target/material/lock facts, then delegates destructive/mercy-track detection and soldier relief routing to the isolated GCCZ source area.
 
 
+Follow-up isolation: postprocess action effect trigger wording now uses `SiegePostprocessActionEffectProfile`; the fused AF adapter keeps regex matching, live target classification, and Bannerlord mutations while delegating normalized mercy replacement plus trigger source/detail text to the isolated GCCZ source area.
+
+
 Follow-up isolation: mercy-track transition UI now uses `SiegeMercyTrackTransitionProfile`; the fused AF adapter keeps destructive-lock checks, plunder-state clearing, logging, and `InformationMessage` display while delegating blocked-action and reversible-plunder-stop wording to the isolated GCCZ source area.
 
 

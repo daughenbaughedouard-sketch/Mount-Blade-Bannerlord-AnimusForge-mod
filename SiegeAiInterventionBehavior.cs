@@ -1491,12 +1491,12 @@ public class SiegeAiInterventionBehavior : CampaignBehaviorBase
 			bool targetIsCivilian = IsCivilianReliefConversationTarget(targetAgentIndex, targetCharacter);
 			if (actionRouting.ShouldDowngradeSoldierReliefToMercy)
 			{
-				text = ReliefTagRegex.Replace(text, "[ACTION:宽恕]");
+				text = ReliefTagRegex.Replace(text, SiegePostprocessActionEffectProfile.NormalizedMercyTag);
 			}
 			bool soldierPositiveCapToRelief = actionRouting.ShouldCapSoldierPositiveToRelief;
 			if (!canApplyMercyTrack && !containsDestructiveTag && actionRouting.HasMercyTrackAction)
 			{
-				actionHandled |= TryBlockMercyTrackAfterDestructive("降级处置");
+				actionHandled |= TryBlockMercyTrackAfterDestructive(SiegePostprocessActionEffectProfile.BlockedMercyTrackActionName);
 			}
 			if (SoldierAppeasementTagRegex.IsMatch(text))
 			{
@@ -1504,41 +1504,41 @@ public class SiegeAiInterventionBehavior : CampaignBehaviorBase
 			}
 			if (GatherCiviliansTagRegex.IsMatch(text))
 			{
-				actionHandled |= GatherCiviliansForSpeech("ai_tag", targetAgentIndex);
+				actionHandled |= GatherCiviliansForSpeech(SiegePostprocessActionEffectProfile.GatherCiviliansSource, targetAgentIndex);
 			}
 			if (canApplyMercyTrack && MercyTagRegex.IsMatch(text))
 			{
-				actionHandled |= ApplyMercyChoice("场景对话宽恕", "玩家通过场景对话选择宽恕普通民众。");
+				actionHandled |= ApplyMercyChoice(SiegePostprocessActionEffectProfile.MercyTriggerSource, SiegePostprocessActionEffectProfile.MercyTriggerDetail);
 			}
 			if (canApplyMercyTrack && ReliefTagRegex.IsMatch(text))
 			{
 				actionHandled |= targetIsAlliedSoldier
-					? ApplySoldierMaterialReliefChoice(targetAgentIndex, "士兵分发安抚", "玩家命令己方士兵分发共享物资安抚民众；士兵分发路线最高按安抚结算。")
-					: ApplyCivilianVerbalReliefChoice(targetIsCivilian ? "平民对话安抚" : "场景对话安抚", targetIsCivilian ? "玩家直接通过言语安抚战败民众，使其接受宽恕和秩序安排。" : "玩家通过场景对话选择安抚和救济民众。");
+					? ApplySoldierMaterialReliefChoice(targetAgentIndex, SiegePostprocessActionEffectProfile.SoldierMaterialReliefTriggerSource, SiegePostprocessActionEffectProfile.SoldierMaterialReliefTriggerDetail)
+					: ApplyCivilianVerbalReliefChoice(SiegePostprocessActionEffectProfile.GetReliefTriggerSource(targetIsCivilian), SiegePostprocessActionEffectProfile.GetReliefTriggerDetail(targetIsCivilian));
 			}
 			if (canApplyMercyTrack && soldierPositiveCapToRelief)
 			{
-				actionHandled |= ApplySoldierMaterialReliefChoice(targetAgentIndex, "士兵分发安抚", "玩家命令己方士兵分发共享物资安抚民众；士兵分发路线最高按安抚结算。");
+				actionHandled |= ApplySoldierMaterialReliefChoice(targetAgentIndex, SiegePostprocessActionEffectProfile.SoldierMaterialReliefTriggerSource, SiegePostprocessActionEffectProfile.SoldierMaterialReliefTriggerDetail);
 			}
 			if (canApplyMercyTrack && !soldierPositiveCapToRelief && InspireTagRegex.IsMatch(text))
 			{
-				actionHandled |= ApplyInspirationChoice("场景对话安民宣抚", "玩家通过场景对话召集民众并宣示新秩序，以提高忠诚度并争取本地要人支持。");
+				actionHandled |= ApplyInspirationChoice(SiegePostprocessActionEffectProfile.InspirationTriggerSource, SiegePostprocessActionEffectProfile.InspirationTriggerDetail);
 			}
 			if (canApplyMercyTrack && !soldierPositiveCapToRelief && RallyOathTagRegex.IsMatch(text))
 			{
-				actionHandled |= ApplyRallyOathChoice("场景对话归心盟誓", "玩家通过场景对话组织公开盟誓，以强力争取民众归附和要人支持。");
+				actionHandled |= ApplyRallyOathChoice(SiegePostprocessActionEffectProfile.RallyOathTriggerSource, SiegePostprocessActionEffectProfile.RallyOathTriggerDetail);
 			}
 			if (destructiveAllowed && PlunderTagRegex.IsMatch(text))
 			{
-				actionHandled |= StartPlunder("场景对话触发搜掠", "玩家在攻城后亲自进城时通过对话下令搜掠。");
+				actionHandled |= StartPlunder(SiegePostprocessActionEffectProfile.PlunderTriggerSource, SiegePostprocessActionEffectProfile.PlunderTriggerDetail);
 			}
 			if (destructiveAllowed && MassacreTagRegex.IsMatch(text))
 			{
-				actionHandled |= StartMassacre("场景对话触发血洗", "NPC回复表明对话谈崩或玩家已明确下令血洗，攻城后处置升级为血洗。");
+				actionHandled |= StartMassacre(SiegePostprocessActionEffectProfile.MassacreTriggerSource, SiegePostprocessActionEffectProfile.MassacreTriggerDetail);
 			}
 			if (destructiveAllowed && RepopulationTagRegex.IsMatch(text))
 			{
-				actionHandled |= RequestCulturalRepopulation(targetAgentIndex, "场景对话屠民迁殖", "玩家通过场景对话要求杀尽原住民并将定居点改为己方文化。");
+				actionHandled |= RequestCulturalRepopulation(targetAgentIndex, SiegePostprocessActionEffectProfile.CulturalRepopulationTriggerSource, SiegePostprocessActionEffectProfile.CulturalRepopulationTriggerDetail);
 			}
 			text = StripSiegeTags(text);
 			return actionHandled;
