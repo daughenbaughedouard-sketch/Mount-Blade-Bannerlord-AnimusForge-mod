@@ -97,6 +97,9 @@ Follow-up isolation: single memory-event formatting now lives in mirrored `Siege
 Follow-up isolation: completed intervention summary now lives in mirrored `SiegeCompletedInterventionSummaryFacts` and `SiegeCompletedInterventionSummaryBuilder`. The fused tree routes completion-summary wording through that core while preserving AF-side fact collection and menu transitions.
 
 
+Follow-up isolation: civilian loot-accounting UI now lives in mirrored `SiegeLootAccountingProfile`. The fused tree routes exit-settlement and per-target civilian gold wording through the core while preserving AF-side Bannerlord gold transfer, target eligibility, random amount calculation, and display side effects.
+
+
 Follow-up isolation: scene-entry tooltip and missing-scene UI now live in mirrored `SiegeInterventionEntryProfile`. The fused tree routes entry wording through that core while preserving AF-side settlement/location/menu checks and display side effects.
 
 

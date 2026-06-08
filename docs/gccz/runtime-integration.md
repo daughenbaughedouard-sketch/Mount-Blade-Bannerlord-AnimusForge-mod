@@ -81,6 +81,9 @@ Follow-up isolation: single memory-event formatting now uses `SiegeInterventionM
 Follow-up isolation: completed intervention summary now uses `SiegeCompletedInterventionSummaryFacts` and `SiegeCompletedInterventionSummaryBuilder`; the fused AF adapter gathers settlement/culture/loot facts and keeps menu transitions while delegating completion-summary wording to the isolated GCCZ source area.
 
 
+Follow-up isolation: civilian loot-accounting UI now uses `SiegeLootAccountingProfile`; the fused AF adapter keeps Bannerlord gold transfer, target eligibility, random amount calculation, and `InformationMessage` display while delegating exit-settlement and per-target civilian gold wording to the isolated GCCZ source area.
+
+
 Follow-up isolation: scene-entry tooltip and missing-scene UI now use `SiegeInterventionEntryProfile`; the fused AF adapter keeps settlement/location/menu checks and display side effects while delegating entry wording to the isolated GCCZ source area.
 
 

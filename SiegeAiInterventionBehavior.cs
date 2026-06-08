@@ -6196,7 +6196,7 @@ public class SiegeAiInterventionBehavior : CampaignBehaviorBase
 			if (count > 0)
 			{
 				int gainedGold = Math.Max(0, _lastCivilianGoldLoot - goldBefore);
-				InformationManager.DisplayMessage(new InformationMessage("【战利清点】本次入城处置共记录 " + SceneCivilianAgentIndexes.Count + " 名普通民众；离场时结算剩余 " + count + " 名，共新增 " + gainedGold + " 第纳尔。", Color.FromUint(0xFFFFC46Bu)));
+				InformationManager.DisplayMessage(new InformationMessage(SiegeLootAccountingProfile.BuildCivilianExitSettlementMessage(SceneCivilianAgentIndexes.Count, count, gainedGold), Color.FromUint(SiegeLootAccountingProfile.LootMessageColor)));
 			}
 		}
 		catch
@@ -6257,9 +6257,8 @@ public class SiegeAiInterventionBehavior : CampaignBehaviorBase
 		{
 			_lastCivilianGoldLoot += amount;
 			_lastCivilianTargetsLooted++;
-			string targetName = agent.Name?.ToString() ?? "目标";
-			string line = string.IsNullOrWhiteSpace(actorName) ? ("从 " + targetName + " 取得 " + amount + " 第纳尔。") : (actorName + " 盘问 " + targetName + " 后取得 " + amount + " 第纳尔。");
-			InformationManager.DisplayMessage(new InformationMessage("【战利清点】" + line, Color.FromUint(0xFFFFC46Bu)));
+			string targetName = agent.Name?.ToString();
+			InformationManager.DisplayMessage(new InformationMessage(SiegeLootAccountingProfile.BuildCivilianLootMessage(actorName, targetName, amount), Color.FromUint(SiegeLootAccountingProfile.LootMessageColor)));
 			return true;
 		}
 		return false;
