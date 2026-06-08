@@ -3527,7 +3527,7 @@ public class SiegeAiInterventionBehavior : CampaignBehaviorBase
 			if (!_civilianAssemblyMessageShown && total > 0)
 			{
 				_civilianAssemblyMessageShown = true;
-				InformationManager.DisplayMessage(new InformationMessage("【攻城处置】城内有 " + total + " 名普通民众等待处置。士兵已跟随你入城。", Color.FromUint(0xFFB6F7A8u)));
+				InformationManager.DisplayMessage(new InformationMessage(SiegeCivilianGatherUiProfile.BuildCivilianPreparedMessage(total), Color.FromUint(SiegeCivilianGatherUiProfile.MessageColor)));
 				Logger.Log("SiegeAiIntervention", "Civilian town population prepared. Source=" + (source ?? "N/A") + ", Civilians=" + total + ", Desired=" + desiredCount);
 			}
 		}
@@ -3633,13 +3633,13 @@ public class SiegeAiInterventionBehavior : CampaignBehaviorBase
 			MaintainCivilianSpeechRally(mission, force: true);
 			if (firstStart)
 			{
-				InformationManager.DisplayMessage(new InformationMessage("【攻城处置】传令已经发出，民众会逐步聚拢，等待你的进一步命令。", Color.FromUint(0xFFB6F7A8u)));
-				RecordInterventionMemory("召集", "玩家已下令召集民众，" + (seedIsSoldier ? "己方士兵" : "平民") + "开始作为传令者通知城内民众前来听训/接受处置。");
+				InformationManager.DisplayMessage(new InformationMessage(SiegeCivilianGatherUiProfile.PropagationStartedMessage, Color.FromUint(SiegeCivilianGatherUiProfile.MessageColor)));
+				RecordInterventionMemory(SiegeCivilianGatherUiProfile.GatherMemoryTitle, SiegeCivilianGatherUiProfile.BuildPropagationStartedMemory(seedIsSoldier));
 			}
 			else if (addedMessengers > 0)
 			{
-				InformationManager.DisplayMessage(new InformationMessage("【攻城处置】新的传令者已加入召集。", Color.FromUint(0xFFB6F7A8u)));
-				RecordInterventionMemory("召集", "玩家追加了传令者继续通知民众；当前传令者约 " + CivilianGatherMessengerAgentIndexes.Count + " 人。");
+				InformationManager.DisplayMessage(new InformationMessage(SiegeCivilianGatherUiProfile.MessengerAddedMessage, Color.FromUint(SiegeCivilianGatherUiProfile.MessageColor)));
+				RecordInterventionMemory(SiegeCivilianGatherUiProfile.GatherMemoryTitle, SiegeCivilianGatherUiProfile.BuildMessengerAddedMemory(CivilianGatherMessengerAgentIndexes.Count));
 			}
 			Logger.Log("SiegeAiIntervention", "Updated civilian gathering propagation. Source=" + (source ?? "N/A") + ", FirstStart=" + firstStart + ", Seed=" + (seed?.Index.ToString() ?? "none") + ", SeedSoldier=" + seedIsSoldier + ", AddedMessengers=" + addedMessengers + ", Messengers=" + CivilianGatherMessengerAgentIndexes.Count + ", Civilians=" + total);
 			return firstStart || addedMessengers > 0;
@@ -4343,7 +4343,7 @@ public class SiegeAiInterventionBehavior : CampaignBehaviorBase
 				_civilianFormationControlPending = true;
 				_civilianFormationControlNotBeforeTime = now + CivilianFormationControlInitialDelaySeconds;
 				_nextCivilianFormationControlBatchTime = _civilianFormationControlNotBeforeTime;
-				RecordInterventionMemory("聚集", "民众召集进入收束阶段，系统正把已跟随的平民转入玩家可调度的民众队列；原因=" + (reason ?? "N/A") + "。");
+				RecordInterventionMemory(SiegeCivilianGatherUiProfile.AssemblyMemoryTitle, SiegeCivilianGatherUiProfile.BuildFormationQueuedMemory(reason));
 				Logger.Log("SiegeAiIntervention", "Queued civilian formation control. Reason=" + (reason ?? "N/A"));
 			}
 		}
@@ -4492,11 +4492,11 @@ public class SiegeAiInterventionBehavior : CampaignBehaviorBase
 			_civilianFormationControlPending = false;
 			_civilianFormationControlComplete = true;
 			ApplyCivilianFormationFollowOrder(mission, "civilian_formation_ready_follow");
-			RecordInterventionMemory("聚集", "民众已经完成聚集并编入玩家可调度的民众队列，后续NPC应知道民众已到场听命。");
+			RecordInterventionMemory(SiegeCivilianGatherUiProfile.AssemblyMemoryTitle, SiegeCivilianGatherUiProfile.FormationCompleteMemory);
 			if (!_civilianFormationControlMessageShown)
 			{
 				_civilianFormationControlMessageShown = true;
-				InformationManager.DisplayMessage(new InformationMessage("【攻城处置】民众已经聚拢听命，你现在可以像战场上调度队列一样让他们列阵。", Color.FromUint(0xFFB6F7A8u)));
+				InformationManager.DisplayMessage(new InformationMessage(SiegeCivilianGatherUiProfile.FormationReadyMessage, Color.FromUint(SiegeCivilianGatherUiProfile.MessageColor)));
 			}
 			if (!_civilianOrderControllerPrimed)
 			{
