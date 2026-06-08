@@ -24,6 +24,8 @@ public static class SiegeSoldierCordonProfile
 
     public const string AlliedDefaultFollowSource = "allied_default_follow";
 
+    public const string SpawnAlliedTroopRestoreSource = "spawn_allied_troop";
+
     public const string SpawnDefaultFollowSource = "spawn_default_follow";
 
     public const string SpawnFollowAfterBatchSource = "spawn_follow_after_batch";

@@ -7222,7 +7222,7 @@ public class SiegeAiInterventionBehavior : CampaignBehaviorBase
 					NotifyAgentBuiltForMission(spawnedAgent, mission);
 					spawned++;
 					AlliedAgentIndexes.Add(spawnedAgent.Index);
-					RestoreAlliedSoldierFriendlyState(spawnedAgent, 0f, "spawn_allied_troop", forceFollow: false);
+					RestoreAlliedSoldierFriendlyState(spawnedAgent, 0f, SiegeSoldierCordonProfile.SpawnAlliedTroopRestoreSource, forceFollow: false);
 					AssignAgentToPlayerFormation(spawnedAgent, FormationClass.Infantry);
 					spawnedAgent.SetWatchState(_massacreStarted ? Agent.WatchState.Alarmed : Agent.WatchState.Patrolling);
 					if (_massacreStarted)
