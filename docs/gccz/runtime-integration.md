@@ -100,3 +100,6 @@ Follow-up isolation: soldier appeasement now uses `SiegeSoldierAppeasementProfil
 
 
 Follow-up isolation: soldier appeasement need-warning now also routes through `SiegeSoldierAppeasementProfile`; the fused AF adapter keeps the random requirement gate and state flips while delegating the warning UI and memory wording to the isolated GCCZ source area.
+
+
+Follow-up isolation: soldier appeasement target validation now also routes through `SiegeSoldierAppeasementProfile`; the fused AF adapter keeps only the live allied-soldier validation and display side effect.

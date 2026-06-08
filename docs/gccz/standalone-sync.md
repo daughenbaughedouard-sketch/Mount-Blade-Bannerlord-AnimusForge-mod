@@ -116,3 +116,6 @@ Follow-up isolation: soldier appeasement now lives in mirrored `SiegeSoldierAppe
 
 
 Follow-up isolation: soldier appeasement need-warning now also lives in mirrored `SiegeSoldierAppeasementProfile`. The fused tree routes the initial 军心 warning UI and memory wording through that core while preserving AF-side random gating and state changes.
+
+
+Follow-up isolation: soldier appeasement target validation now also lives in mirrored `SiegeSoldierAppeasementProfile`. The fused tree routes the invalid-target UI text through that core while preserving AF-side allied-soldier validation and display.

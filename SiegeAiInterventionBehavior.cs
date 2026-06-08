@@ -1168,7 +1168,7 @@ public class SiegeAiInterventionBehavior : CampaignBehaviorBase
 		{
 			if (targetAgentIndex < 0 || !AlliedAgentIndexes.Contains(targetAgentIndex))
 			{
-				InformationManager.DisplayMessage(new InformationMessage("【攻城处置】安抚军心必须对己方入城士兵进行。", Color.FromUint(0xFFFFD27Fu)));
+				InformationManager.DisplayMessage(new InformationMessage(SiegeSoldierAppeasementProfile.TargetValidationMessage, Color.FromUint(SiegeSoldierAppeasementProfile.ValidationMessageColor)));
 				return false;
 			}
 			if (!_soldierAppeasementRequired)

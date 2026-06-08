@@ -6,6 +6,10 @@ namespace AnimusForge.SiegeAftermathIntervention;
 /// </summary>
 public sealed class SiegeSoldierAppeasementProfile
 {
+    public const uint ValidationMessageColor = 0xFFFFD27Fu;
+
+    public const string TargetValidationMessage = "【攻城处置】安抚军心必须对己方入城士兵进行。";
+
     public int MoralePenalty { get; } = 20;
 
     public string NeedMemoryTitle { get; } = "军心";
