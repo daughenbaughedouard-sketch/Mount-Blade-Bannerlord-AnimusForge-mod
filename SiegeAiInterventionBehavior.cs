@@ -867,28 +867,28 @@ public class SiegeAiInterventionBehavior : CampaignBehaviorBase
 		{
 			AutoLootRemainingVisibleCiviliansForPlunder();
 		}
-		bool finalized = FinalizePendingAftermath("mission_end");
+		bool finalized = FinalizePendingAftermath(SiegeAftermathTransitionSourceProfile.MissionEndFinalizeSource);
 		if (finalized)
 		{
 			_pendingSummarySwitch = true;
 			if (_massacreStarted && _pendingSummaryAftermath == SiegeAftermathAction.SiegeAftermath.Devastate)
 			{
-				QueueDirectMassacreAftermathScript("mission_end_finalized");
+				QueueDirectMassacreAftermathScript(SiegeAftermathTransitionSourceProfile.MissionEndFinalizedSource);
 			}
 			else if (_plunderStarted && _pendingSummaryAftermath == SiegeAftermathAction.SiegeAftermath.Pillage)
 			{
-				QueueDirectPlunderAftermathScript("mission_end_finalized");
+				QueueDirectPlunderAftermathScript(SiegeAftermathTransitionSourceProfile.MissionEndFinalizedSource);
 			}
 			else
 			{
-				QueueEncounterFinishAfterIntervention(_pendingSummaryAftermath, "mission_end_finalized", 2, forceDelay: true);
+				QueueEncounterFinishAfterIntervention(_pendingSummaryAftermath, SiegeAftermathTransitionSourceProfile.MissionEndFinalizedSource, 2, forceDelay: true);
 			}
 		}
 		else
 		{
 			_pendingSummarySwitch = true;
 			_pendingSummaryAftermath = SiegeAftermathAction.SiegeAftermath.ShowMercy;
-			QueueEncounterFinishAfterIntervention(_pendingSummaryAftermath, "mission_end_no_pending_aftermath", 2, forceDelay: true);
+			QueueEncounterFinishAfterIntervention(_pendingSummaryAftermath, SiegeAftermathTransitionSourceProfile.MissionEndNoPendingAftermathSource, 2, forceDelay: true);
 			ClearActiveState(preserveSummarySwitch: true);
 		}
 	}
@@ -2029,7 +2029,7 @@ public class SiegeAiInterventionBehavior : CampaignBehaviorBase
 				_pendingLootScreen = true;
 				_pendingLootScreenShown = true;
 				_pendingSummarySwitch = true;
-				QueueEncounterFinishAfterIntervention(SiegeAftermathAction.SiegeAftermath.Devastate, "native_devastate_summary_continue_loot", 0, forceDelay: true);
+				QueueEncounterFinishAfterIntervention(SiegeAftermathAction.SiegeAftermath.Devastate, SiegeAftermathTransitionSourceProfile.NativeDevastateSummaryContinueLootSource, 0, forceDelay: true);
 				InventoryScreenHelper.OpenScreenAsLoot(new Dictionary<PartyBase, ItemRoster>
 				{
 					{
@@ -2040,8 +2040,8 @@ public class SiegeAiInterventionBehavior : CampaignBehaviorBase
 				Logger.Log("SiegeAiIntervention", "Opened native loot screen after AF massacre Devastate summary. Source=" + (source ?? "N/A") + ", LootItems=" + _pendingLootRoster.Count);
 				return true;
 			}
-			QueueEncounterFinishAfterIntervention(SiegeAftermathAction.SiegeAftermath.Devastate, "native_devastate_summary_continue_no_loot", 0, forceDelay: true);
-			TryFinishPlayerEncounterAfterInterventionNow(SiegeAftermathAction.SiegeAftermath.Devastate, "native_devastate_summary_continue_no_loot");
+			QueueEncounterFinishAfterIntervention(SiegeAftermathAction.SiegeAftermath.Devastate, SiegeAftermathTransitionSourceProfile.NativeDevastateSummaryContinueNoLootSource, 0, forceDelay: true);
+			TryFinishPlayerEncounterAfterInterventionNow(SiegeAftermathAction.SiegeAftermath.Devastate, SiegeAftermathTransitionSourceProfile.NativeDevastateSummaryContinueNoLootSource);
 			Logger.Log("SiegeAiIntervention", "Finished AF massacre Devastate summary without loot. Source=" + (source ?? "N/A"));
 			return true;
 		}
