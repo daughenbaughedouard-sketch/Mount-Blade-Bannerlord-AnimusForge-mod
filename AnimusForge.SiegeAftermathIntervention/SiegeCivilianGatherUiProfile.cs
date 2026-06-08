@@ -12,6 +12,10 @@ public static class SiegeCivilianGatherUiProfile
 
     public const string AssemblyMemoryTitle = "聚集";
 
+    public const string MessengerFallbackName = "传令者";
+
+    public const string CivilianFallbackName = "民众";
+
     public const string PropagationStartedMessage = "【攻城处置】传令已经发出，民众会逐步聚拢，等待你的进一步命令。";
 
     public const string MessengerAddedMessage = "【攻城处置】新的传令者已加入召集。";
@@ -37,9 +41,19 @@ public static class SiegeCivilianGatherUiProfile
         return "玩家追加了传令者继续通知民众；当前传令者约 " + safeMessengerCount + " 人。";
     }
 
+    public static string BuildMessengerSpeechFactText(string targetName)
+    {
+        return "【攻城处置传令】你现在正替玩家传唤城内民众。玩家刚下令召集所有民众到他身边听取训示、安民宣告或后续处置；你已经来到" + NormalizeTargetName(targetName) + "身边，需要用一句自然现场话把这件事转告给对方。不要写内部标签，不要解释机制，不要说自己不能传话；话里要让对方明白：领主/大人召集大家过去听命、听训或听宣示。";
+    }
+
     public static string BuildFormationQueuedMemory(string reason)
     {
         return "民众召集进入收束阶段，系统正把已跟随的平民转入玩家可调度的民众队列；原因=" + NormalizeReason(reason) + "。";
+    }
+
+    private static string NormalizeTargetName(string targetName)
+    {
+        return string.IsNullOrWhiteSpace(targetName) ? CivilianFallbackName : targetName.Trim();
     }
 
     private static string NormalizeReason(string reason)

@@ -69,7 +69,7 @@ Follow-up isolation: postprocess current-outcome wording now uses `SiegePostproc
 Follow-up isolation: civilian gather runtime context now uses `SiegeCivilianGatherContextFacts` and `SiegeCivilianGatherContextBuilder`; the fused AF adapter counts live mission agents and passes gather/formation flags while delegating 民众召集状态 wording to the isolated GCCZ source area.
 
 
-Follow-up isolation: civilian gather UI/memory now uses `SiegeCivilianGatherUiProfile`; the fused AF adapter keeps mission-agent tracking, messenger/formation state, `InformationMessage`, and memory recording side effects while delegating prepared-count, messenger, queue, and ready wording to the isolated GCCZ source area.
+Follow-up isolation: civilian gather UI/memory now uses `SiegeCivilianGatherUiProfile`; the fused AF adapter keeps mission-agent tracking, messenger/formation state, `ShoutBehavior`, `InformationMessage`, and memory recording side effects while delegating prepared-count, messenger, queue, ready wording, immediate messenger speech prompt, and fallback names to the isolated GCCZ source area.
 
 
 Follow-up isolation: intervention memory context formatting now uses `SiegeInterventionMemoryContextBuilder`; the fused AF adapter keeps event collection, de-duplication, trimming, and logging while delegating prompt context wording to the isolated GCCZ source area.

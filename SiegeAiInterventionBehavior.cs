@@ -4183,9 +4183,9 @@ public class SiegeAiInterventionBehavior : CampaignBehaviorBase
 				return;
 			}
 			_civilianGatherMessengerSpeechCount++;
-			string messengerName = messenger.Name?.ToString() ?? "传令者";
-			string targetName = target.Name?.ToString() ?? "民众";
-			string factText = "【攻城处置传令】你现在正替玩家传唤城内民众。玩家刚下令召集所有民众到他身边听取训示、安民宣告或后续处置；你已经来到" + targetName + "身边，需要用一句自然现场话把这件事转告给对方。不要写内部标签，不要解释机制，不要说自己不能传话；话里要让对方明白：领主/大人召集大家过去听命、听训或听宣示。";
+			string messengerName = messenger.Name?.ToString() ?? SiegeCivilianGatherUiProfile.MessengerFallbackName;
+			string targetName = target.Name?.ToString() ?? SiegeCivilianGatherUiProfile.CivilianFallbackName;
+			string factText = SiegeCivilianGatherUiProfile.BuildMessengerSpeechFactText(targetName);
 			ShoutBehavior.TriggerImmediateSceneBehaviorReactionForExternal(factText, messenger.Index, persistHeroPrivateHistory: true, suppressStare: true, postSpeechLeaveSeconds: -1f);
 			Logger.Log("SiegeAiIntervention", "Triggered gather messenger speech. Messenger=" + messenger.Index + "/" + messengerName + ", Target=" + target.Index + "/" + targetName + ", Count=" + _civilianGatherMessengerSpeechCount + ", Budget=" + _civilianGatherMessengerSpeechBudget);
 		}
