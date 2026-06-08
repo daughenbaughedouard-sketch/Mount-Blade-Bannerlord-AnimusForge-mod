@@ -2070,10 +2070,10 @@ public class SiegeAiInterventionBehavior : CampaignBehaviorBase
 				LogDirectMassacreLootDeferOnce("native_menu_mission_current:" + menuId, "Suppressed native siege aftermath menu while Mission.Current is still active; direct AF massacre loot will be pumped after MapState. Menu=" + menuId + ", Source=" + (source ?? "N/A"));
 				return true;
 			}
-			if (!TryOpenDirectMassacreLootScreenNow(source ?? "native_menu_intercept") && IsSafeToOpenDirectMassacreLootScreen(source ?? "native_menu_intercept_no_loot"))
+			if (!TryOpenDirectMassacreLootScreenNow(source ?? SiegeDirectAftermathSourceProfile.NativeMenuInterceptSource) && IsSafeToOpenDirectMassacreLootScreen(source ?? SiegeDirectAftermathSourceProfile.NativeMenuInterceptNoLootProbeSource))
 			{
-				QueueEncounterFinishAfterIntervention(SiegeAftermathAction.SiegeAftermath.Devastate, "direct_massacre_native_menu_intercept_no_loot", 0, forceDelay: true);
-				TryFinishPlayerEncounterAfterInterventionNow(SiegeAftermathAction.SiegeAftermath.Devastate, "direct_massacre_native_menu_intercept_no_loot");
+				QueueEncounterFinishAfterIntervention(SiegeAftermathAction.SiegeAftermath.Devastate, SiegeDirectAftermathSourceProfile.DirectMassacreNativeMenuNoLootSource, 0, forceDelay: true);
+				TryFinishPlayerEncounterAfterInterventionNow(SiegeAftermathAction.SiegeAftermath.Devastate, SiegeDirectAftermathSourceProfile.DirectMassacreNativeMenuNoLootSource);
 			}
 			return true;
 		}
@@ -2102,10 +2102,10 @@ public class SiegeAiInterventionBehavior : CampaignBehaviorBase
 				LogDirectPlunderLootDeferOnce("native_menu_mission_current:" + menuId, "Suppressed native siege aftermath menu while Mission.Current is still active; direct AF plunder loot will be pumped after MapState. Menu=" + menuId + ", Source=" + (source ?? "N/A"));
 				return true;
 			}
-			if (!TryOpenDirectPlunderLootScreenNow(source ?? "native_menu_intercept") && IsSafeToOpenDirectPlunderLootScreen(source ?? "native_menu_intercept_no_loot"))
+			if (!TryOpenDirectPlunderLootScreenNow(source ?? SiegeDirectAftermathSourceProfile.NativeMenuInterceptSource) && IsSafeToOpenDirectPlunderLootScreen(source ?? SiegeDirectAftermathSourceProfile.NativeMenuInterceptNoLootProbeSource))
 			{
-				QueueEncounterFinishAfterIntervention(SiegeAftermathAction.SiegeAftermath.Pillage, "direct_plunder_native_menu_intercept_no_loot", 0, forceDelay: true);
-				TryFinishPlayerEncounterAfterInterventionNow(SiegeAftermathAction.SiegeAftermath.Pillage, "direct_plunder_native_menu_intercept_no_loot");
+				QueueEncounterFinishAfterIntervention(SiegeAftermathAction.SiegeAftermath.Pillage, SiegeDirectAftermathSourceProfile.DirectPlunderNativeMenuNoLootSource, 0, forceDelay: true);
+				TryFinishPlayerEncounterAfterInterventionNow(SiegeAftermathAction.SiegeAftermath.Pillage, SiegeDirectAftermathSourceProfile.DirectPlunderNativeMenuNoLootSource);
 			}
 			return true;
 		}
@@ -2124,7 +2124,7 @@ public class SiegeAiInterventionBehavior : CampaignBehaviorBase
 			{
 				return false;
 			}
-			return TryRunDirectMassacreAftermathScript(source ?? "external_direct_massacre_script");
+			return TryRunDirectMassacreAftermathScript(source ?? SiegeDirectAftermathSourceProfile.ExternalDirectMassacreScriptSource);
 		}
 		catch (Exception ex)
 		{
@@ -8169,7 +8169,7 @@ public class SiegeAiInterventionBehavior : CampaignBehaviorBase
 			{
 				return false;
 			}
-			return TryRunDirectPlunderAftermathScript(source ?? "external_direct_plunder_script");
+			return TryRunDirectPlunderAftermathScript(source ?? SiegeDirectAftermathSourceProfile.ExternalDirectPlunderScriptSource);
 		}
 		catch (Exception ex)
 		{

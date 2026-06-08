@@ -25,4 +25,16 @@ public static class SiegeDirectAftermathSourceProfile
     public const string DirectPlunderAfterLootSource = "direct_plunder_script_after_loot";
 
     public const string DirectPlunderNoLootSource = "direct_plunder_script_no_loot";
+
+    public const string NativeMenuInterceptSource = "native_menu_intercept";
+
+    public const string NativeMenuInterceptNoLootProbeSource = "native_menu_intercept_no_loot";
+
+    public const string DirectMassacreNativeMenuNoLootSource = "direct_massacre_native_menu_intercept_no_loot";
+
+    public const string DirectPlunderNativeMenuNoLootSource = "direct_plunder_native_menu_intercept_no_loot";
+
+    public const string ExternalDirectMassacreScriptSource = "external_direct_massacre_script";
+
+    public const string ExternalDirectPlunderScriptSource = "external_direct_plunder_script";
 }
