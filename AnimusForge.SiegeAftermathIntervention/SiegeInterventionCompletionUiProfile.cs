@@ -10,6 +10,8 @@ public static class SiegeInterventionCompletionUiProfile
 
     public const uint MassacreVictoryMessageColor = 0xFFFF7777u;
 
+    public const string DoneContinueMenuOptionText = "继续...";
+
     public const string DoneMenuFallbackText = "攻城后的入城处置已经完成。按继续结束本次攻城遭遇。";
 
     public const string CompletedSummaryFallbackText = "攻城后的入城处置已经完成，正在结束本次攻城遭遇。";

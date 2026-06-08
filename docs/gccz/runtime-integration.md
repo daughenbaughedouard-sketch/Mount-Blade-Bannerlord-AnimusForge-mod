@@ -105,6 +105,9 @@ Follow-up isolation: scene-entry troop-selection instructions and selection-resu
 Follow-up isolation: mission-entry battle-equipment and allied-summon UI now also use `SiegeInterventionEntryProfile`; the fused AF adapter keeps equipment mutation, troop picking, agent spawning, and formation side effects while delegating wording/colors to the isolated GCCZ source area.
 
 
+Follow-up isolation: scene-entry menu option text now also uses `SiegeInterventionEntryProfile`; the fused AF adapter keeps only menu IDs, registration, and condition/consequence callbacks while delegating the user-facing label to the isolated GCCZ source area.
+
+
 Follow-up isolation: pending native aftermath selection now uses `SiegeAftermathResolutionKind` and `SiegeAftermathSelectionPolicy`; the fused AF adapter maps TaleWorlds aftermath enum values and delegates severity/replacement checks to the isolated GCCZ source area.
 
 
@@ -168,7 +171,7 @@ Follow-up isolation: soldier appeasement need-warning now also routes through `S
 Follow-up isolation: soldier appeasement target validation now also routes through `SiegeSoldierAppeasementProfile`; the fused AF adapter keeps only the live allied-soldier validation and display side effect.
 
 
-Follow-up isolation: final completion and encounter-exit UI now routes through `SiegeInterventionCompletionUiProfile`; the fused AF adapter keeps native-aftermath mapping, loot-total gating, menu text variable assignment, mission-exit state, and `InformationMessage`/quick-information display while delegating completed-menu fallback, massacre-victory, final completion labels/text, and loot-summary wording to the isolated GCCZ source area.
+Follow-up isolation: final completion and encounter-exit UI now routes through `SiegeInterventionCompletionUiProfile`; the fused AF adapter keeps native-aftermath mapping, loot-total gating, menu registration/text variable assignment, mission-exit state, and `InformationMessage`/quick-information display while delegating completed-menu fallback, continue-option text, massacre-victory, final completion labels/text, and loot-summary wording to the isolated GCCZ source area.
 
 
 Follow-up isolation: mission-exit fallback aftermath selection now routes through `SiegeMissionExitOutcomeProfile`; the fused AF adapter keeps live mission state, native aftermath mapping, plunder start side effects, and pending-aftermath mutation while delegating the exit outcome priority and trigger wording to the isolated GCCZ source area.

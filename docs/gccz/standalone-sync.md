@@ -121,6 +121,9 @@ Follow-up isolation: scene-entry troop-selection instructions and selection-resu
 Follow-up isolation: mission-entry battle-equipment and allied-summon UI now also live in mirrored `SiegeInterventionEntryProfile`. The fused tree routes battle-equipment, no-healthy-troop, and summoned-troop messages through the core while preserving AF-side equipment mutation, troop picking, agent spawning, and formation side effects.
 
 
+Follow-up isolation: scene-entry menu option text now also lives in mirrored `SiegeInterventionEntryProfile`. The fused tree routes the user-facing entry label through the core while preserving AF-side menu IDs, registration, and callbacks.
+
+
 Follow-up isolation: pending native aftermath selection now lives in mirrored `SiegeAftermathResolutionKind` and `SiegeAftermathSelectionPolicy`. The fused tree routes native aftermath severity and replacement decisions through that core while preserving AF-side enum mapping and side effects.
 
 
@@ -184,7 +187,7 @@ Follow-up isolation: soldier appeasement need-warning now also lives in mirrored
 Follow-up isolation: soldier appeasement target validation now also lives in mirrored `SiegeSoldierAppeasementProfile`. The fused tree routes the invalid-target UI text through that core while preserving AF-side allied-soldier validation and display.
 
 
-Follow-up isolation: final completion and encounter-exit UI now lives in mirrored `SiegeInterventionCompletionUiProfile`. The fused tree routes completed-menu fallbacks, massacre-victory message/quick text, completed-aftermath labels/text, loot-settlement summary, and leave-encounter quick text through the core while preserving AF-side enum mapping, state checks, and display side effects.
+Follow-up isolation: final completion and encounter-exit UI now lives in mirrored `SiegeInterventionCompletionUiProfile`. The fused tree routes completed-menu fallbacks, continue-option text, massacre-victory message/quick text, completed-aftermath labels/text, loot-settlement summary, and leave-encounter quick text through the core while preserving AF-side menu registration, enum mapping, state checks, and display side effects.
 
 
 Follow-up isolation: mission-exit fallback aftermath selection now lives in mirrored `SiegeMissionExitOutcomeProfile`. The fused tree routes the exit priority order and trigger source/detail text through the core while preserving AF-side state flags, native enum mapping, plunder side effects, and pending-aftermath mutation.

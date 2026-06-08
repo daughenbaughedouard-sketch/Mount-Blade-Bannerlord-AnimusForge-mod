@@ -402,8 +402,8 @@ public class SiegeAiInterventionBehavior : CampaignBehaviorBase
 		try
 		{
 			starter.AddGameMenu("AnimusForge_siege_intervention_done", "{=!}{AF_SIEGE_DONE_TEXT}", AfSiegeInterventionDoneOnInit, GameMenu.MenuOverlayType.None, GameMenu.MenuFlags.None, null);
-			starter.AddGameMenuOption("AnimusForge_siege_intervention_done", "AnimusForge_siege_intervention_done_continue", "继续...", AfSiegeInterventionDoneContinueCondition, AfSiegeInterventionDoneContinueConsequence, isLeave: false, -1);
-			starter.AddGameMenuOption("menu_settlement_taken_player_leader", "AnimusForge_siege_ai_intervention_entry", "亲自进城决定", SiegeInterventionEntryCondition, SiegeInterventionEntryConsequence, isLeave: false, -1);
+			starter.AddGameMenuOption("AnimusForge_siege_intervention_done", "AnimusForge_siege_intervention_done_continue", SiegeInterventionCompletionUiProfile.DoneContinueMenuOptionText, AfSiegeInterventionDoneContinueCondition, AfSiegeInterventionDoneContinueConsequence, isLeave: false, -1);
+			starter.AddGameMenuOption("menu_settlement_taken_player_leader", "AnimusForge_siege_ai_intervention_entry", SiegeInterventionEntryProfile.EntryMenuOptionText, SiegeInterventionEntryCondition, SiegeInterventionEntryConsequence, isLeave: false, -1);
 		}
 		catch (Exception ex)
 		{
