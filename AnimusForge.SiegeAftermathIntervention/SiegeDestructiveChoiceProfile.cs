@@ -8,6 +8,12 @@ namespace AnimusForge.SiegeAftermathIntervention;
 /// </summary>
 public sealed class SiegeDestructiveChoiceProfile
 {
+    public const uint ValidationMessageColor = 0xFFFFD27Fu;
+
+    public const string PlunderPolicyBlockedMessage = "【攻城处置】该定居点与你当前阵营文化相同，军纪禁止掠夺。";
+
+    public const string MassacrePolicyBlockedMessage = "【攻城处置】该定居点与你当前阵营文化相同，军纪禁止毁坏或血洗。";
+
     private SiegeDestructiveChoiceProfile(
         SiegeAftermathResolutionKind aftermathKind,
         string assemblySource,

@@ -3030,7 +3030,7 @@ public class SiegeAiInterventionBehavior : CampaignBehaviorBase
 		}
 		if (!IsDestructiveInterventionAllowed())
 		{
-			InformationManager.DisplayMessage(new InformationMessage("【攻城处置】该定居点与你当前阵营文化相同，军纪禁止掠夺。", Color.FromUint(0xFFFFD27Fu)));
+			InformationManager.DisplayMessage(new InformationMessage(SiegeDestructiveChoiceProfile.PlunderPolicyBlockedMessage, Color.FromUint(SiegeDestructiveChoiceProfile.ValidationMessageColor)));
 			return false;
 		}
 		SiegeDestructiveChoiceProfile plunderProfile = SiegeDestructiveChoiceProfile.BuildPlunder();
@@ -3054,7 +3054,7 @@ public class SiegeAiInterventionBehavior : CampaignBehaviorBase
 	{
 		if (!IsDestructiveInterventionAllowed())
 		{
-			InformationManager.DisplayMessage(new InformationMessage("【攻城处置】该定居点与你当前阵营文化相同，军纪禁止毁坏或血洗。", Color.FromUint(0xFFFFD27Fu)));
+			InformationManager.DisplayMessage(new InformationMessage(SiegeDestructiveChoiceProfile.MassacrePolicyBlockedMessage, Color.FromUint(SiegeDestructiveChoiceProfile.ValidationMessageColor)));
 			return false;
 		}
 		SiegeDestructiveChoiceProfile massacreProfile = SiegeDestructiveChoiceProfile.BuildMassacre();

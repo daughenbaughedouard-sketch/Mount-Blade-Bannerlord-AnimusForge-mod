@@ -90,6 +90,9 @@ Follow-up isolation: destructive profile selection now uses `SiegeDestructiveCho
 Follow-up isolation: plunder finalized trust penalty now also uses `SiegeDestructiveChoiceProfile`; the fused AF adapter preserves the Bannerlord settlement mutation call while delegating the delta and reason string to the isolated GCCZ source area.
 
 
+Follow-up isolation: destructive same-culture/policy validation UI for blocked 搜掠 or 血洗 now also uses `SiegeDestructiveChoiceProfile`; the fused AF adapter keeps only the live policy check and display side effect.
+
+
 Follow-up isolation: cultural repopulation request handling now uses `SiegeCulturalRepopulationProfile`; the fused AF adapter keeps target validation, culture resolution, pending aftermath mutation, and later settlement/notable mutation while delegating the 屠民迁殖 request wording and devastate aftermath kind to the isolated GCCZ source area.
 
 
