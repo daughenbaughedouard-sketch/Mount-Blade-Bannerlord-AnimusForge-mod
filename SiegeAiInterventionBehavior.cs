@@ -1566,7 +1566,7 @@ public class SiegeAiInterventionBehavior : CampaignBehaviorBase
 						if (started || _massacreStarted)
 						{
 							PrepareCivilianForMassacreCombat(target, mission);
-							TryForcePlayerDamageToCivilian(target, MBRandom.RandomInt(36, 64), "player_attack_release_massacre_start");
+							TryForcePlayerDamageToCivilian(target, MBRandom.RandomInt(36, 64), SiegeDestructiveChoiceProfile.PlayerAttackReleaseDamageSource);
 						}
 					}
 				}

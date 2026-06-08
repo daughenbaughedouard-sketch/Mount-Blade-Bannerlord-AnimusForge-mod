@@ -71,6 +71,11 @@ Second extraction slice:
 `SiegeSettlementEffectProfile` owns dependency-free reason codes for GCCZ settlement-effect mutations, including the positive public-trust reason used by relief/civic/mercy-track adjustments. AF adapters still own Bannerlord settlement, town, and reward-system side effects.
 
 
+## Destructive choice profile
+
+SiegeDestructiveChoiceProfile owns dependency-free aftermath kind, assembly source, message text, memory text, massacre source classification, player-attack trigger wording, player-attack damage source, policy validation text, and public-trust deltas for 搜掠 and 血洗. AF adapters still apply Bannerlord aftermath, troop, mission, UI, settlement, damage, and memory side effects.
+
+
 ## Massacre interaction profile
 
 `SiegeMassacreInteractionProfile` owns dependency-free runtime parameters and source codes for GCCZ 血洗 civilian hide distance, hide refresh timing, soldier follow refresh, soldier target refresh, occupation follow, combat preparation, and allied combat drive operations. AF adapters still own live mission-agent routing, order timing application, hide-point projection, and combat side effects.
@@ -78,7 +83,7 @@ Second extraction slice:
 
 ## Cultural repopulation profile
 
-SiegeCulturalRepopulationProfile owns dependency-free aftermath kind, massacre trigger wording, request memory text, pending UI message, completion UI message, target-culture labels, validation text, and apply source codes for 屠民迁殖. AF adapters still resolve Bannerlord cultures, mutate settlements/villages/notables, and run mission/combat side effects.
+`SiegeCulturalRepopulationProfile` owns dependency-free aftermath kind, massacre trigger wording, request memory text, pending UI message, completion UI message, target-culture labels, validation text, and apply source codes for 屠民迁殖. AF adapters still resolve Bannerlord cultures, mutate settlements/villages/notables, and run mission/combat side effects.
 
 
 ## Civilian gather interaction profile

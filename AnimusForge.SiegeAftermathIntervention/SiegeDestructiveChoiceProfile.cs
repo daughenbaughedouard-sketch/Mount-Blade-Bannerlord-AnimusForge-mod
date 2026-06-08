@@ -26,6 +26,8 @@ public sealed class SiegeDestructiveChoiceProfile
 
     public const string PlayerHitTriggerSource = "玩家主动攻击NPC触发血洗";
 
+    public const string PlayerAttackReleaseDamageSource = "player_attack_release_massacre_start";
+
     private SiegeDestructiveChoiceProfile(
         SiegeAftermathResolutionKind aftermathKind,
         string assemblySource,
