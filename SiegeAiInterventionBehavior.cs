@@ -147,10 +147,10 @@ public class SiegeAiInterventionBehavior : CampaignBehaviorBase
 	private const float PlunderSoldierAssignmentRatio = SiegePlunderInteractionProfile.SoldierAssignmentRatio;
 	private const float PlunderApproachDistance = SiegePlunderInteractionProfile.ApproachDistance;
 	private const float PlunderTalkSeconds = SiegePlunderInteractionProfile.TalkSeconds;
-	private const float MassacreCivilianHideDistance = 42f;
-	private const float MassacreCivilianHideRefreshSeconds = 10.0f;
-	private const float MassacreSoldierFollowRefreshSeconds = 2.0f;
-	private const float MassacreSoldierTargetRefreshSeconds = 0.75f;
+	private const float MassacreCivilianHideDistance = SiegeMassacreInteractionProfile.CivilianHideDistance;
+	private const float MassacreCivilianHideRefreshSeconds = SiegeMassacreInteractionProfile.CivilianHideRefreshSeconds;
+	private const float MassacreSoldierFollowRefreshSeconds = SiegeMassacreInteractionProfile.SoldierFollowRefreshSeconds;
+	private const float MassacreSoldierTargetRefreshSeconds = SiegeMassacreInteractionProfile.SoldierTargetRefreshSeconds;
 	private const float CivilianSpeechRallySettleTolerance = 0.8f;
 	private const float CivilianGatherTalkMinSeconds = 1.0f;
 	private const float CivilianGatherTalkMaxSeconds = 3.0f;
