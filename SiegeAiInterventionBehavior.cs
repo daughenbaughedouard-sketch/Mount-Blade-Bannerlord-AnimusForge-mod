@@ -446,8 +446,8 @@ public class SiegeAiInterventionBehavior : CampaignBehaviorBase
 			args.IsEnabled = enabled;
 			args.optionLeaveType = GameMenuOption.LeaveType.Submenu;
 			args.Tooltip = new TextObject(enabled
-				? "{=!}暂不立即处置战后事务；你将披甲带约50名健康士兵进城，普通民众仍散在城内街区，再由现场对话或行动决定安抚、宽恕、搜掠或血洗。"
-				: (sameCultureBlocked ? SiegeDestructiveChoiceProfile.SameCultureEntryBlockedTooltip : "{=!}当前没有可进入的攻城胜利定居点场景。"));
+				? SiegeInterventionEntryProfile.EnabledTooltip
+				: (sameCultureBlocked ? SiegeDestructiveChoiceProfile.SameCultureEntryBlockedTooltip : SiegeInterventionEntryProfile.MissingSceneTooltip));
 			return true;
 		}
 		catch
@@ -469,7 +469,7 @@ public class SiegeAiInterventionBehavior : CampaignBehaviorBase
 			Location location = ResolveInterventionLocation(settlement);
 			if (settlement == null || PlayerEncounter.LocationEncounter == null || location == null)
 			{
-				InformationManager.DisplayMessage(new InformationMessage("【攻城处置】当前没有可进入的被攻陷定居点场景。", Color.FromUint(0xFFFF7777u)));
+				InformationManager.DisplayMessage(new InformationMessage(SiegeInterventionEntryProfile.MissingSceneMessage, Color.FromUint(SiegeInterventionEntryProfile.MissingSceneMessageColor)));
 				return;
 			}
 			if (IsSameFactionCultureAsPlayer(settlement))
