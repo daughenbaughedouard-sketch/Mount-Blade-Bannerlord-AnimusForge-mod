@@ -1469,11 +1469,7 @@ public class SiegeAiInterventionBehavior : CampaignBehaviorBase
 	{
 		try
 		{
-			if (string.IsNullOrWhiteSpace(raw))
-			{
-				return "";
-			}
-			HashSet<string> allowed = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+			List<string> allowed = new List<string>();
 			foreach (PostprocessRuleEntry rule in rules ?? new List<PostprocessRuleEntry>())
 			{
 				string tag = (rule?.Tag ?? "").Trim();
@@ -1482,65 +1478,7 @@ public class SiegeAiInterventionBehavior : CampaignBehaviorBase
 					allowed.Add(tag);
 				}
 			}
-			bool AllowsAny(params string[] candidates)
-			{
-				if (allowed.Count == 0)
-				{
-					return false;
-				}
-				foreach (string candidate in candidates ?? new string[0])
-				{
-					string value = (candidate ?? "").Trim();
-					if (string.IsNullOrWhiteSpace(value))
-					{
-						continue;
-					}
-					if (allowed.Contains(value))
-					{
-						return true;
-					}
-					string prefix = value.EndsWith("]", StringComparison.Ordinal) ? value.Substring(0, value.Length - 1) : value;
-					if (allowed.Any(x => (x ?? "").StartsWith(prefix, StringComparison.OrdinalIgnoreCase)))
-					{
-						return true;
-					}
-				}
-				return false;
-			}
-			List<string> tags = new List<string>();
-			HashSet<string> seen = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
-			void Add(string tag)
-			{
-				string normalized = (tag ?? "").Trim();
-				if (!string.IsNullOrWhiteSpace(normalized) && seen.Add(normalized))
-				{
-					tags.Add(normalized);
-				}
-			}
-			string text = raw.Replace("\r", "");
-			IReadOnlyList<SiegeInterventionActionKind> extractedKinds = SiegeActionTagCatalog.ExtractKinds(text);
-			foreach (SiegeInterventionActionKind kind in SiegeActionTagCatalog.GetCanonicalOrder())
-			{
-				if (!extractedKinds.Contains(kind))
-				{
-					continue;
-				}
-				IReadOnlyList<string> aliases = SiegeActionTagCatalog.GetAliases(kind);
-				if (aliases.Count > 0 && AllowsAny(aliases.ToArray()) && SiegeActionTagCatalog.TryGetCanonicalTag(kind, out string canonicalTag))
-				{
-					Add(canonicalTag);
-				}
-			}
-			string mood = "";
-			foreach (Match moodMatch in Regex.Matches(text, "\\[ACTION:MOOD:[^\\]\\r\\n]*\\]", RegexOptions.IgnoreCase))
-			{
-				mood = (moodMatch?.Value ?? "").Trim();
-			}
-			if (!string.IsNullOrWhiteSpace(mood))
-			{
-				Add(mood);
-			}
-			return string.Join("\n", tags.Where(x => !string.IsNullOrWhiteSpace(x))).Trim();
+			return SiegePostprocessTagNormalizer.Normalize(raw, allowed);
 		}
 		catch (Exception ex)
 		{
