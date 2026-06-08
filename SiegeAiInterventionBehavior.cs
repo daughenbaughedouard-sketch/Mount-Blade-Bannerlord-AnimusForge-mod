@@ -136,8 +136,8 @@ public class SiegeAiInterventionBehavior : CampaignBehaviorBase
 		}
 	}
 
-	private const int AutoSummonCount = 50;
-	private const int MaxSummonPerAction = 50;
+	private const int AutoSummonCount = SiegeInterventionEntryProfile.DefaultAutoSummonCount;
+	private const int MaxSummonPerAction = SiegeInterventionEntryProfile.MaxSummonPerAction;
 	private const float MercyInterventionLoyaltyBonus = 15f;
 	private const int NonHeroPlunderMinGold = 5;
 	private const int NonHeroPlunderMaxGold = 9;
