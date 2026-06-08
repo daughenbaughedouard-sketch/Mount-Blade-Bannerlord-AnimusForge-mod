@@ -3687,7 +3687,7 @@ public class SiegeAiInterventionBehavior : CampaignBehaviorBase
 				return false;
 			}
 			PrepareCivilianForPreMassacreHitDetection(agent, Mission.Current ?? agent.Mission);
-			NeutralizeCivilianDailyUsableBehavior(agent, "gather_mark:" + (reason ?? "N/A"));
+			NeutralizeCivilianDailyUsableBehavior(agent, SiegeCivilianGatherInteractionProfile.BuildGatherMarkSource(reason));
 			CivilianGatherFollowerAgentIndexes.Add(agent.Index);
 			if (CivilianGatherMessengerAgentIndexes.Contains(agent.Index))
 			{
@@ -4280,7 +4280,7 @@ public class SiegeAiInterventionBehavior : CampaignBehaviorBase
 				return;
 			}
 			StopCivilianGatherScriptFollowForCommandControl(mission, "queue:" + (reason ?? "N/A"));
-			TrySetPlayerFormationFollowOrder(FormationClass.Ranged, "civilian_formation_control_begin");
+			TrySetPlayerFormationFollowOrder(FormationClass.Ranged, SiegeCivilianGatherInteractionProfile.FormationControlBeginSource);
 			float now = mission?.CurrentTime ?? 0f;
 			if (!_civilianFormationControlPending)
 			{
@@ -4410,7 +4410,7 @@ public class SiegeAiInterventionBehavior : CampaignBehaviorBase
 			foreach (Agent agent in pending)
 			{
 				PrepareCivilianForPreMassacreHitDetection(agent, mission);
-				NeutralizeCivilianDailyUsableBehavior(agent, "formation_control_batch");
+				NeutralizeCivilianDailyUsableBehavior(agent, SiegeCivilianGatherInteractionProfile.FormationControlBatchSource);
 				AssignAgentToPlayerFormation(agent, FormationClass.Ranged, refreshFormationOrders: false);
 				CivilianGatherReadyFormationAgentIndexes.Add(agent.Index);
 				try
@@ -4435,7 +4435,7 @@ public class SiegeAiInterventionBehavior : CampaignBehaviorBase
 			}
 			_civilianFormationControlPending = false;
 			_civilianFormationControlComplete = true;
-			ApplyCivilianFormationFollowOrder(mission, "civilian_formation_ready_follow");
+			ApplyCivilianFormationFollowOrder(mission, SiegeCivilianGatherInteractionProfile.FormationReadyFollowSource);
 			RecordInterventionMemory(SiegeCivilianGatherUiProfile.AssemblyMemoryTitle, SiegeCivilianGatherUiProfile.FormationCompleteMemory);
 			if (!_civilianFormationControlMessageShown)
 			{
@@ -4444,7 +4444,7 @@ public class SiegeAiInterventionBehavior : CampaignBehaviorBase
 			}
 			if (!_civilianOrderControllerPrimed)
 			{
-				_civilianOrderControllerPrimed = TryPrimePlayerOrderController(mission, "civilian_formation_ready", force: true);
+				_civilianOrderControllerPrimed = TryPrimePlayerOrderController(mission, SiegeCivilianGatherInteractionProfile.FormationReadyOrderControllerSource, force: true);
 			}
 		}
 		catch (Exception ex)

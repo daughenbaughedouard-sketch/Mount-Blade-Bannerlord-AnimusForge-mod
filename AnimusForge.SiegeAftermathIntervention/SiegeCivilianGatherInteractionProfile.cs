@@ -53,4 +53,21 @@ public static class SiegeCivilianGatherInteractionProfile
     public const string AllGatheredAndSettledFormationSource = "all_civilians_gathered_and_settled";
 
     public const string TargetBecameFollowerReleaseSource = "gather_target_became_c";
+
+    public const string GatherMarkSourcePrefix = "gather_mark:";
+
+    public const string FormationControlBeginSource = "civilian_formation_control_begin";
+
+    public const string FormationControlBatchSource = "formation_control_batch";
+
+    public const string FormationReadyFollowSource = "civilian_formation_ready_follow";
+
+    public const string FormationReadyOrderControllerSource = "civilian_formation_ready";
+
+    public const string UnavailableSourceSuffix = "N/A";
+
+    public static string BuildGatherMarkSource(string reason)
+    {
+        return GatherMarkSourcePrefix + (reason ?? UnavailableSourceSuffix);
+    }
 }
