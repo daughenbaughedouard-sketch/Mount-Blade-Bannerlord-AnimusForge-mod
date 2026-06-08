@@ -115,7 +115,7 @@ Second extraction slice:
 
 ## Native bridge source profile
 
-`SiegeNativeBridgeSourceProfile` owns dependency-free source codes for native flee suppression, order UI readiness, order-team resolution, control-tick order-controller priming, order-controller binding, and injected native order views. AF adapters still own Harmony patches, mission views, and live agent/order side effects.
+`SiegeNativeBridgeSourceProfile` owns dependency-free source codes for native flee suppression, order UI readiness, order-team resolution, commandable-agent probing, control-tick order-controller priming, order-controller binding, and injected native order views. AF adapters still own Harmony patches, mission views, and live agent/order side effects.
 
 ## Aftermath menu profile
 

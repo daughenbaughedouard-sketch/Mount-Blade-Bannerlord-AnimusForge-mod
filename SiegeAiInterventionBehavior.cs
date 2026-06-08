@@ -5270,7 +5270,7 @@ public class SiegeAiInterventionBehavior : CampaignBehaviorBase
 		try
 		{
 			mission ??= Mission.Current;
-			Team playerTeam = ResolveInterventionPlayerCommandTeamForExternal(mission, "has_commandable_agents");
+			Team playerTeam = ResolveInterventionPlayerCommandTeamForExternal(mission, SiegeNativeBridgeSourceProfile.HasCommandableAgentsSource);
 			Agent main = Agent.Main ?? mission?.MainAgent;
 			return mission?.Agents != null && playerTeam != null && mission.Agents.Any(a => a != null && a.IsHuman && a.IsActive() && a != main && a.Team == playerTeam && a.Formation != null);
 		}

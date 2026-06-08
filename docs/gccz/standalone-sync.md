@@ -223,6 +223,6 @@ Follow-up isolation: direct AF aftermath campaign tick, native-menu intercept, e
 
 Follow-up isolation: mission-end, post-mission encounter finish, done-menu continue finish, native menu init/detection, and native devastate summary transition source codes now live in mirrored `SiegeAftermathTransitionSourceProfile`. The fused tree routes those aftermath transition source strings through that core while preserving AF-side mission lifecycle, menu handling, loot-screen timing, and encounter transitions.
 
-Follow-up isolation: native flee/order bridge, control-tick order-controller priming, and order-controller source codes now live in mirrored `SiegeNativeBridgeSourceProfile`. The fused tree routes those native bridge source strings through the core while preserving AF-side Harmony patches, native order UI, and live agent/order side effects.
+Follow-up isolation: native flee/order bridge, commandable-agent probing, control-tick order-controller priming, and order-controller source codes now live in mirrored `SiegeNativeBridgeSourceProfile`. The fused tree routes those native bridge source strings through the core while preserving AF-side Harmony patches, native order UI, and live agent/order side effects.
 
 Follow-up isolation: GCCZ aftermath menu IDs now live in mirrored `SiegeAftermathMenuProfile`. The fused tree routes entry/native/contextual-summary menu identifiers through the core while preserving AF-side menu registration, switching, and live menu side effects.
