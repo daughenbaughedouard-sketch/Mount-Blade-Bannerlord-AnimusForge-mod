@@ -29,4 +29,8 @@ public static class SiegeCivilianAssemblyProfile
     public const float RowSpacing = 0.78f;
 
     public const int Columns = 14;
+
+    public const string MissionAfterStartSource = "mission_after_start";
+
+    public const string ControlTickSource = "control_tick";
 }

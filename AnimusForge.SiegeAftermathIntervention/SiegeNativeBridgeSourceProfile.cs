@@ -29,4 +29,6 @@ public static class SiegeNativeBridgeSourceProfile
     public const string ResolveOrderControllerSource = "resolve_order_controller";
 
     public const string MissionOrderVmTeamSource = "mission_order_vm_team";
+
+    public const string ControlTickOrderControllerSource = "control_tick";
 }

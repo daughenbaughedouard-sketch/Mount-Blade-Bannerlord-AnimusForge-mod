@@ -779,7 +779,7 @@ public class SiegeAiInterventionBehavior : CampaignBehaviorBase
 		RemoveBackstreetCrimeAgents(mission);
 		RemoveUnsafeAssemblyCivilianAgents(mission);
 		TrackSceneCivilianAgents(mission);
-		MaintainCivilianAssembly(mission, "mission_after_start", force: true);
+		MaintainCivilianAssembly(mission, SiegeCivilianAssemblyProfile.MissionAfterStartSource, force: true);
 	}
 
 	private void OnMissionTick(float dt)
@@ -808,7 +808,7 @@ public class SiegeAiInterventionBehavior : CampaignBehaviorBase
 			RemoveBackstreetCrimeAgents(mission);
 			RemoveUnsafeAssemblyCivilianAgents(mission);
 			TrackSceneCivilianAgents(mission);
-			MaintainCivilianAssembly(mission, "control_tick", force: false);
+			MaintainCivilianAssembly(mission, SiegeCivilianAssemblyProfile.ControlTickSource, force: false);
 			MaintainCivilianSpeechRally(mission, force: false);
 			ApplyFrightenedCivilianIdle(mission);
 			if (!_alliedTroopsAutoSummoned)
@@ -819,7 +819,7 @@ public class SiegeAiInterventionBehavior : CampaignBehaviorBase
 			if (!_massacreVictoryReached)
 			{
 				KeepAlliedTroopsUseful(mission);
-				TryPrimePlayerOrderController(mission, "control_tick", force: false);
+				TryPrimePlayerOrderController(mission, SiegeNativeBridgeSourceProfile.ControlTickOrderControllerSource, force: false);
 			}
 			if (_massacreStarted)
 			{

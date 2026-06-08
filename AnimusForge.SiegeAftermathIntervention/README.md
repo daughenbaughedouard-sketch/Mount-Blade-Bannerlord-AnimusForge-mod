@@ -98,7 +98,7 @@ Second extraction slice:
 
 ## Civilian assembly profile
 
-`SiegeCivilianAssemblyProfile` owns dependency-free runtime parameters for GCCZ civilian assembly target counts, scene caps, extra-spawn gating, forward offset, grid spacing, and columns. AF adapters still own scene capacity checks, spawn gating, formation slot projection, and mission side effects.
+`SiegeCivilianAssemblyProfile` owns dependency-free runtime parameters and source codes for GCCZ civilian assembly target counts, scene caps, extra-spawn gating, forward offset, grid spacing, columns, mission-start assembly, and control-tick assembly. AF adapters still own scene capacity checks, spawn gating, formation slot projection, and mission side effects.
 
 
 ## Soldier cordon profile
@@ -115,7 +115,7 @@ Second extraction slice:
 
 ## Native bridge source profile
 
-`SiegeNativeBridgeSourceProfile` owns dependency-free source codes for native flee suppression, order UI readiness, order-team resolution, order-controller binding, and injected native order views. AF adapters still own Harmony patches, mission views, and live agent/order side effects.
+`SiegeNativeBridgeSourceProfile` owns dependency-free source codes for native flee suppression, order UI readiness, order-team resolution, control-tick order-controller priming, order-controller binding, and injected native order views. AF adapters still own Harmony patches, mission views, and live agent/order side effects.
 
 ## Aftermath menu profile
 
