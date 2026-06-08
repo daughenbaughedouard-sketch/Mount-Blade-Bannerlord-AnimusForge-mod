@@ -402,7 +402,7 @@ public class SiegeAiInterventionBehavior : CampaignBehaviorBase
 		{
 			starter.AddGameMenu("AnimusForge_siege_intervention_done", "{=!}{AF_SIEGE_DONE_TEXT}", AfSiegeInterventionDoneOnInit, GameMenu.MenuOverlayType.None, GameMenu.MenuFlags.None, null);
 			starter.AddGameMenuOption("AnimusForge_siege_intervention_done", "AnimusForge_siege_intervention_done_continue", SiegeInterventionCompletionUiProfile.DoneContinueMenuOptionText, AfSiegeInterventionDoneContinueCondition, AfSiegeInterventionDoneContinueConsequence, isLeave: false, -1);
-			starter.AddGameMenuOption("menu_settlement_taken_player_leader", "AnimusForge_siege_ai_intervention_entry", SiegeInterventionEntryProfile.EntryMenuOptionText, SiegeInterventionEntryCondition, SiegeInterventionEntryConsequence, isLeave: false, -1);
+			starter.AddGameMenuOption(SiegeAftermathMenuProfile.SettlementTakenPlayerLeaderMenuId, SiegeAftermathMenuProfile.EntryMenuOptionId, SiegeInterventionEntryProfile.EntryMenuOptionText, SiegeInterventionEntryCondition, SiegeInterventionEntryConsequence, isLeave: false, -1);
 		}
 		catch (Exception ex)
 		{
@@ -1048,10 +1048,10 @@ public class SiegeAiInterventionBehavior : CampaignBehaviorBase
 				return false;
 			}
 			string menuId = Campaign.Current?.CurrentMenuContext?.GameMenu?.StringId;
-			if (string.Equals(menuId, "menu_settlement_taken", StringComparison.OrdinalIgnoreCase) || string.Equals(menuId, "menu_settlement_taken_player_leader", StringComparison.OrdinalIgnoreCase))
+			if (SiegeAftermathMenuProfile.IsNativeSettlementTakenMenuId(menuId))
 			{
 				TrySetNativePlayerEncounterAftermathForSummary(SiegeAftermathAction.SiegeAftermath.Devastate);
-				GameMenu.SwitchToMenu("siege_aftermath_contextual_summary");
+				GameMenu.SwitchToMenu(SiegeAftermathMenuProfile.ContextualSummaryMenuId);
 				Logger.Log("SiegeAiIntervention", "Routed AF massacre from native settlement-taken menu to native Devastate summary. CurrentMenu=" + (menuId ?? "N/A"));
 				return true;
 			}
@@ -1065,7 +1065,7 @@ public class SiegeAiInterventionBehavior : CampaignBehaviorBase
 
 	private static bool IsNativeSiegeAftermathMenuId(string menuId)
 	{
-		return string.Equals(menuId, "menu_settlement_taken_player_leader", StringComparison.OrdinalIgnoreCase) || string.Equals(menuId, "menu_settlement_taken", StringComparison.OrdinalIgnoreCase) || string.Equals(menuId, "siege_aftermath_contextual_summary", StringComparison.OrdinalIgnoreCase);
+		return SiegeAftermathMenuProfile.IsNativeOrContextualSummaryMenuId(menuId);
 	}
 
 	private static bool DoesCompletedAftermathMatchCurrentSettlement()
@@ -1983,7 +1983,7 @@ public class SiegeAiInterventionBehavior : CampaignBehaviorBase
 					Logger.Log("SiegeAiIntervention", "Allowing native Devastate contextual summary init for AF massacre. Source=" + (source ?? "N/A"));
 					return false;
 				}
-				GameMenu.SwitchToMenu("siege_aftermath_contextual_summary");
+				GameMenu.SwitchToMenu(SiegeAftermathMenuProfile.ContextualSummaryMenuId);
 				Logger.Log("SiegeAiIntervention", "Auto-routed native siege aftermath menu to Devastate summary for AF massacre. Source=" + (source ?? "N/A"));
 				return true;
 			}
@@ -2008,7 +2008,7 @@ public class SiegeAiInterventionBehavior : CampaignBehaviorBase
 				return false;
 			}
 			string menuId = Campaign.Current?.CurrentMenuContext?.GameMenu?.StringId;
-			if (!string.Equals(menuId, "siege_aftermath_contextual_summary", StringComparison.OrdinalIgnoreCase))
+			if (!SiegeAftermathMenuProfile.IsContextualSummaryMenuId(menuId))
 			{
 				return false;
 			}

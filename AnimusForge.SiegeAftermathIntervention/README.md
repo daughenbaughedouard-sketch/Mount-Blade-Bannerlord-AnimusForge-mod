@@ -111,3 +111,7 @@ Second extraction slice:
 ## Native bridge source profile
 
 `SiegeNativeBridgeSourceProfile` owns dependency-free source codes for native flee suppression, order UI initialization, order-controller binding, and injected native order views. AF adapters still own Harmony patches, mission views, and live agent/order side effects.
+
+## Aftermath menu profile
+
+`SiegeAftermathMenuProfile` owns dependency-free menu identifiers for GCCZ aftermath entry, native settlement-taken routing, and contextual summary routing. AF adapters still own Bannerlord menu registration, switching, and live menu side effects.
