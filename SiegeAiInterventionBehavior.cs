@@ -6,6 +6,7 @@ using System.Reflection.Emit;
 using System.Runtime.CompilerServices;
 using System.Text;
 using System.Text.RegularExpressions;
+using AnimusForge.SiegeAftermathIntervention;
 using Helpers;
 using HarmonyLib;
 using SandBox;
@@ -1402,10 +1403,6 @@ public class SiegeAiInterventionBehavior : CampaignBehaviorBase
 			bool destructiveAllowed = IsDestructiveInterventionAllowed();
 			bool destructiveLocked = HasDestructiveOutcomeLocked();
 			List<PostprocessRuleEntry> filtered = new List<PostprocessRuleEntry>();
-			bool ContainsAnyTagName(string tagValue, params string[] names)
-			{
-				return names.Any(name => !string.IsNullOrWhiteSpace(name) && (tagValue ?? "").IndexOf(name, StringComparison.OrdinalIgnoreCase) >= 0);
-			}
 			foreach (PostprocessRuleEntry rule in rules)
 			{
 				string tag = (rule?.Tag ?? "").Trim();
@@ -1413,9 +1410,10 @@ public class SiegeAiInterventionBehavior : CampaignBehaviorBase
 				{
 					continue;
 				}
-				bool destructiveTag = ContainsAnyTagName(tag, "SIEGE_PLUNDER", "SIEGE_MASSACRE", "SIEGE_PURGE_REPOPULATION", "SIEGE_CULTURAL_REPOPULATION", "搜掠", "血洗", "殖民");
-				bool mercyTrackTag = ContainsAnyTagName(tag, "SIEGE_MERCY", "SIEGE_RELIEF", "SIEGE_INSPIRE", "SIEGE_RALLY_OATH", "宽恕", "救济", "宣抚", "盟誓");
-				bool soldierAppeasementTag = ContainsAnyTagName(tag, "SIEGE_APPEASE_SOLDIERS", "安兵");
+				IReadOnlyList<SiegeInterventionActionKind> tagKinds = SiegeActionTagCatalog.ExtractKinds(tag);
+				bool destructiveTag = tagKinds.Any(SiegeInterventionActionRules.IsDestructive);
+				bool mercyTrackTag = tagKinds.Any(SiegeInterventionActionRules.IsMercyTrack);
+				bool soldierAppeasementTag = tagKinds.Contains(SiegeInterventionActionKind.AppeaseSoldiers);
 				if (!destructiveAllowed && destructiveTag)
 				{
 					continue;
@@ -1548,15 +1546,19 @@ public class SiegeAiInterventionBehavior : CampaignBehaviorBase
 				}
 			}
 			string text = raw.Replace("\r", "");
-			if (AllowsAny("[ACTION:宽恕]", "[ACTION:SIEGE_MERCY]") && MercyTagRegex.IsMatch(text)) Add("[ACTION:宽恕]");
-			if (AllowsAny("[ACTION:救济]", "[ACTION:SIEGE_RELIEF]") && ReliefTagRegex.IsMatch(text)) Add("[ACTION:救济]");
-			if (AllowsAny("[ACTION:宣抚]", "[ACTION:SIEGE_INSPIRE]") && InspireTagRegex.IsMatch(text)) Add("[ACTION:宣抚]");
-			if (AllowsAny("[ACTION:盟誓]", "[ACTION:SIEGE_RALLY_OATH]") && RallyOathTagRegex.IsMatch(text)) Add("[ACTION:盟誓]");
-			if (AllowsAny("[ACTION:安兵]", "[ACTION:SIEGE_APPEASE_SOLDIERS]") && SoldierAppeasementTagRegex.IsMatch(text)) Add("[ACTION:安兵]");
-			if (AllowsAny("[ACTION:召集]", "[ACTION:SIEGE_GATHER_CIVILIANS]") && GatherCiviliansTagRegex.IsMatch(text)) Add("[ACTION:召集]");
-			if (AllowsAny("[ACTION:搜掠]", "[ACTION:SIEGE_PLUNDER]") && PlunderTagRegex.IsMatch(text)) Add("[ACTION:搜掠]");
-			if (AllowsAny("[ACTION:血洗]", "[ACTION:SIEGE_MASSACRE]") && MassacreTagRegex.IsMatch(text)) Add("[ACTION:血洗]");
-			if (AllowsAny("[ACTION:殖民]", "[ACTION:SIEGE_PURGE_REPOPULATION]", "[ACTION:SIEGE_CULTURAL_REPOPULATION]") && RepopulationTagRegex.IsMatch(text)) Add("[ACTION:殖民]");
+			IReadOnlyList<SiegeInterventionActionKind> extractedKinds = SiegeActionTagCatalog.ExtractKinds(text);
+			foreach (SiegeInterventionActionKind kind in GetStandaloneActionTagOrder())
+			{
+				if (!extractedKinds.Contains(kind))
+				{
+					continue;
+				}
+				string[] aliases = GetStandaloneActionTagAliases(kind);
+				if (aliases.Length > 0 && AllowsAny(aliases) && SiegeActionTagCatalog.TryGetCanonicalTag(kind, out string canonicalTag))
+				{
+					Add(canonicalTag);
+				}
+			}
 			string mood = "";
 			foreach (Match moodMatch in Regex.Matches(text, "\\[ACTION:MOOD:[^\\]\\r\\n]*\\]", RegexOptions.IgnoreCase))
 			{
@@ -1592,14 +1594,14 @@ public class SiegeAiInterventionBehavior : CampaignBehaviorBase
 			bool destructiveAllowed = IsDestructiveInterventionAllowed();
 			if (!destructiveAllowed)
 			{
-				bool blockedDestructiveTag = PlunderTagRegex.IsMatch(text) || MassacreTagRegex.IsMatch(text) || RepopulationTagRegex.IsMatch(text);
+				bool blockedDestructiveTag = SiegeActionTagCatalog.ExtractKinds(text).Any(SiegeInterventionActionRules.IsDestructive);
 				if (blockedDestructiveTag)
 				{
 					InformationManager.DisplayMessage(new InformationMessage("【攻城处置】该定居点与你当前阵营文化相同，军纪禁止掠夺或毁坏，本次只能宽恕或安抚。", Color.FromUint(0xFFFFD27Fu)));
 					actionHandled = true;
 				}
 			}
-			bool containsDestructiveTag = PlunderTagRegex.IsMatch(text) || MassacreTagRegex.IsMatch(text) || RepopulationTagRegex.IsMatch(text);
+			bool containsDestructiveTag = SiegeActionTagCatalog.ExtractKinds(text).Any(SiegeInterventionActionRules.IsDestructive);
 			bool canApplyMercyTrack = !containsDestructiveTag && !HasDestructiveOutcomeLocked();
 			bool targetIsAlliedSoldier = targetAgentIndex >= 0 && AlliedAgentIndexes.Contains(targetAgentIndex);
 			bool targetIsCivilian = IsCivilianReliefConversationTarget(targetAgentIndex, targetCharacter);
@@ -2555,14 +2557,83 @@ public class SiegeAiInterventionBehavior : CampaignBehaviorBase
 		}
 	}
 
+	private static SiegeInterventionOutcome GetStandaloneOutcome()
+	{
+		if (_massacreStarted || _culturalRepopulationRequested)
+		{
+			return SiegeInterventionOutcome.Massacre;
+		}
+		if (_plunderStarted)
+		{
+			return SiegeInterventionOutcome.Plunder;
+		}
+		if (_activeMode == InterventionMode.MercyRelief)
+		{
+			return SiegeInterventionOutcome.MercyRelief;
+		}
+		if (_activeMode == InterventionMode.WaitingDecision)
+		{
+			return SiegeInterventionOutcome.WaitingDecision;
+		}
+		return SiegeInterventionOutcome.None;
+	}
+
+	private static bool HasPendingDevastateAftermath()
+	{
+		return _hasPendingAftermath && GetAftermathSeverity(_pendingAftermath) >= GetAftermathSeverity(SiegeAftermathAction.SiegeAftermath.Devastate);
+	}
+
 	private static bool HasDestructiveOutcomeLocked()
 	{
-		return _culturalRepopulationRequested || _massacreStarted || (_hasPendingAftermath && GetAftermathSeverity(_pendingAftermath) >= GetAftermathSeverity(SiegeAftermathAction.SiegeAftermath.Devastate));
+		return SiegeInterventionActionRules.HasDestructiveOutcomeLocked(GetStandaloneOutcome(), _culturalRepopulationRequested, HasPendingDevastateAftermath());
 	}
 
 	private static bool HasMercyTrackTag(string text)
 	{
-		return MercyTagRegex.IsMatch(text) || ReliefTagRegex.IsMatch(text) || InspireTagRegex.IsMatch(text) || RallyOathTagRegex.IsMatch(text);
+		return SiegeActionTagCatalog.ExtractKinds(text).Any(SiegeInterventionActionRules.IsMercyTrack);
+	}
+
+	private static SiegeInterventionActionKind[] GetStandaloneActionTagOrder()
+	{
+		return new[]
+		{
+			SiegeInterventionActionKind.Mercy,
+			SiegeInterventionActionKind.Relief,
+			SiegeInterventionActionKind.Inspire,
+			SiegeInterventionActionKind.RallyOath,
+			SiegeInterventionActionKind.AppeaseSoldiers,
+			SiegeInterventionActionKind.GatherCivilians,
+			SiegeInterventionActionKind.Plunder,
+			SiegeInterventionActionKind.Massacre,
+			SiegeInterventionActionKind.CulturalRepopulation,
+		};
+	}
+
+	private static string[] GetStandaloneActionTagAliases(SiegeInterventionActionKind kind)
+	{
+		switch (kind)
+		{
+			case SiegeInterventionActionKind.Mercy:
+				return new[] { "[ACTION:宽恕]", "[ACTION:SIEGE_MERCY]" };
+			case SiegeInterventionActionKind.Relief:
+				return new[] { "[ACTION:救济]", "[ACTION:SIEGE_RELIEF]" };
+			case SiegeInterventionActionKind.Inspire:
+				return new[] { "[ACTION:宣抚]", "[ACTION:SIEGE_INSPIRE]" };
+			case SiegeInterventionActionKind.RallyOath:
+				return new[] { "[ACTION:盟誓]", "[ACTION:SIEGE_RALLY_OATH]" };
+			case SiegeInterventionActionKind.AppeaseSoldiers:
+				return new[] { "[ACTION:安兵]", "[ACTION:SIEGE_APPEASE_SOLDIERS]" };
+			case SiegeInterventionActionKind.GatherCivilians:
+				return new[] { "[ACTION:召集]", "[ACTION:SIEGE_GATHER_CIVILIANS]" };
+			case SiegeInterventionActionKind.Plunder:
+				return new[] { "[ACTION:搜掠]", "[ACTION:SIEGE_PLUNDER]" };
+			case SiegeInterventionActionKind.Massacre:
+				return new[] { "[ACTION:血洗]", "[ACTION:SIEGE_MASSACRE]" };
+			case SiegeInterventionActionKind.CulturalRepopulation:
+				return new[] { "[ACTION:殖民]", "[ACTION:SIEGE_PURGE_REPOPULATION]", "[ACTION:SIEGE_CULTURAL_REPOPULATION]" };
+			default:
+				return Array.Empty<string>();
+		}
 	}
 
 	private static bool TryBlockMercyTrackAfterDestructive(string actionName)
