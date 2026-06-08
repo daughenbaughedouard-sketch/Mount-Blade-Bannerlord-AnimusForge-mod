@@ -99,3 +99,7 @@ Second extraction slice:
 ## Soldier cordon profile
 
 `SiegeSoldierCordonProfile` owns dependency-free runtime parameters for GCCZ soldier cordon radius, padding, teleport threshold, movement tolerance, settle tolerance, and order/look refresh timing. AF adapters still own live soldier selection, target-slot projection, movement orders, and look-at side effects.
+
+## Direct aftermath source profile
+
+`SiegeDirectAftermathSourceProfile` owns dependency-free source codes for direct AF aftermath campaign tick scripts. AF adapters still own campaign tick timing, loot-screen state, and encounter transitions.

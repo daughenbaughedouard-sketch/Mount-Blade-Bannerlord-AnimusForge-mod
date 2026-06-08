@@ -7989,7 +7989,7 @@ public class SiegeAiInterventionBehavior : CampaignBehaviorBase
 		}
 	}
 
-	private static bool TryRunDirectMassacreAftermathScript(string source = "campaign_tick_direct_massacre_script")
+	private static bool TryRunDirectMassacreAftermathScript(string source = SiegeDirectAftermathSourceProfile.CampaignTickDirectMassacreScriptSource)
 	{
 		if (!_directMassacreAftermathScriptPending || Mission.Current != null)
 		{
@@ -8087,7 +8087,7 @@ public class SiegeAiInterventionBehavior : CampaignBehaviorBase
 		}
 	}
 
-	private static bool TryRunDirectPlunderAftermathScript(string source = "campaign_tick_direct_plunder_script")
+	private static bool TryRunDirectPlunderAftermathScript(string source = SiegeDirectAftermathSourceProfile.CampaignTickDirectPlunderScriptSource)
 	{
 		if (!_directPlunderAftermathScriptPending || Mission.Current != null)
 		{
