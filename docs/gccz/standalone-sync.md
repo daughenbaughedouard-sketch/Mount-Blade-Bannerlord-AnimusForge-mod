@@ -86,3 +86,6 @@ Follow-up isolation: mercy profile selection now lives in mirrored `SiegeMercyCh
 
 
 Follow-up isolation: destructive profile selection now lives in mirrored `SiegeDestructiveChoiceProfile`. The fused tree routes 搜掠/血洗 aftermath kind, assembly source, UI message text, memory wording, public-trust delta, and trigger-source classification through that core while preserving AF-side mission/combat/settlement side effects.
+
+
+Follow-up isolation: soldier appeasement now lives in mirrored `SiegeSoldierAppeasementProfile`. The fused tree routes 安兵 success wording plus fallback morale-penalty text/amount through that core while preserving AF-side target validation, party morale mutation, UI, and memory side effects.

@@ -1192,9 +1192,10 @@ public class SiegeAiInterventionBehavior : CampaignBehaviorBase
 			{
 				return true;
 			}
+			SiegeSoldierAppeasementProfile soldierProfile = new SiegeSoldierAppeasementProfile();
 			_soldierAppeasementApplied = true;
-			RecordInterventionMemory("安兵", "玩家已经安抚己方士兵，承诺军纪、补偿或日后战利安排，避免因宽恕/救济/宣抚/盟誓路线扣除士气。");
-			InformationManager.DisplayMessage(new InformationMessage("【攻城处置】你安抚了士兵，军中对放弃搜掠的怨气被压下，本次不会扣除士气。", Color.FromUint(0xFFB6F7A8u)));
+			RecordInterventionMemory(soldierProfile.AppeasementMemoryTitle, soldierProfile.AppeasementMemoryText);
+			InformationManager.DisplayMessage(new InformationMessage(soldierProfile.AppeasementMessageText, Color.FromUint(soldierProfile.AppeasementMessageColor)));
 			return true;
 		}
 		catch (Exception ex)
@@ -1217,11 +1218,12 @@ public class SiegeAiInterventionBehavior : CampaignBehaviorBase
 			{
 				return;
 			}
+			SiegeSoldierAppeasementProfile soldierProfile = new SiegeSoldierAppeasementProfile();
 			_soldierAppeasementMoralePenaltyApplied = true;
-			party.RecentEventsMorale -= 20f;
-			RecordInterventionMemory("军心", "玩家未在离场结算前安抚因放弃战利品而不满的士兵，主队士气扣除20。");
-			InformationManager.DisplayMessage(new InformationMessage("【攻城处置】士兵对放弃战利品仍有怨气，主队士气 -20。", Color.FromUint(0xFFFF7777u)));
-			Logger.Log("SiegeAiIntervention", "Applied soldier appeasement morale penalty -20. MoraleNow=" + party.Morale);
+			party.RecentEventsMorale -= soldierProfile.MoralePenalty;
+			RecordInterventionMemory(soldierProfile.PenaltyMemoryTitle, soldierProfile.PenaltyMemoryText);
+			InformationManager.DisplayMessage(new InformationMessage(soldierProfile.PenaltyMessageText, Color.FromUint(soldierProfile.PenaltyMessageColor)));
+			Logger.Log("SiegeAiIntervention", "Applied soldier appeasement morale penalty -" + soldierProfile.MoralePenalty + ". MoraleNow=" + party.Morale);
 		}
 		catch (Exception ex)
 		{
