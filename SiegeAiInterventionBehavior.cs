@@ -6189,13 +6189,13 @@ public class SiegeAiInterventionBehavior : CampaignBehaviorBase
 			}
 			else if (amount > 0)
 			{
-				AwardGoldToPlayer(amount, "civilian_hero_fallback");
+				AwardGoldToPlayer(amount, SiegeLootAccountingProfile.CivilianHeroFallbackGoldSource);
 			}
 		}
 		else
 		{
 			amount = massacre ? NonHeroMassacreGold : MBRandom.RandomInt(NonHeroPlunderMinGold, NonHeroPlunderMaxGold + 1);
-			AwardGoldToPlayer(amount, "civilian_flat");
+			AwardGoldToPlayer(amount, SiegeLootAccountingProfile.CivilianFlatGoldSource);
 		}
 		if (amount > 0)
 		{
@@ -7357,7 +7357,7 @@ public class SiegeAiInterventionBehavior : CampaignBehaviorBase
 			}
 			int amount = town.Gold;
 			town.ChangeGold(-amount);
-			AwardGoldToPlayer(amount, "market_gold");
+			AwardGoldToPlayer(amount, SiegeLootAccountingProfile.MarketGoldSource);
 			_lastMarketGoldLoot += amount;
 			if (showMessage)
 			{

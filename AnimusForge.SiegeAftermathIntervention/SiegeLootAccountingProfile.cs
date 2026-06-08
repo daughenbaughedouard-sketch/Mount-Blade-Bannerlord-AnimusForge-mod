@@ -20,6 +20,12 @@ public static class SiegeLootAccountingProfile
 
     public const string MassacreSettlementLootReason = "血洗结算";
 
+    public const string CivilianHeroFallbackGoldSource = "civilian_hero_fallback";
+
+    public const string CivilianFlatGoldSource = "civilian_flat";
+
+    public const string MarketGoldSource = "market_gold";
+
     public const int NonHeroPlunderMinGold = 5;
 
     public const int NonHeroPlunderMaxGold = 9;

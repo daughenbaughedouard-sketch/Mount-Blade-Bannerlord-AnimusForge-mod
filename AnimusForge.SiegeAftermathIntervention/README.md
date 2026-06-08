@@ -53,7 +53,7 @@ Second extraction slice:
 
 ## Loot accounting profile
 
-`SiegeLootAccountingProfile` owns dependency-free loot UI wording, market-loot ratios, and civilian/hero gold amount constants for GCCZ 搜掠/血洗 accounting. AF adapters still own Bannerlord gold/item mutation, target eligibility, random sampling, and display side effects.
+`SiegeLootAccountingProfile` owns dependency-free loot UI wording, market-loot ratios, civilian/hero gold amount constants, and award source codes for GCCZ 搜掠/血洗 accounting. AF adapters still own Bannerlord gold/item mutation, target eligibility, random sampling, and display side effects.
 
 
 ## Plunder interaction profile
