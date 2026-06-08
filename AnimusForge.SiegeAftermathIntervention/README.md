@@ -33,7 +33,7 @@ Second extraction slice:
 
 ## Postprocess context builder
 
-`SiegePostprocessContextBuilder` owns dependency-free formatting for postprocess runtime facts. The AF adapter now only gathers live objects and passes `SiegePostprocessContextFacts`.
+`SiegePostprocessContextBuilder` owns dependency-free formatting for postprocess runtime facts plus speaker identity labels for allied soldiers, civilians, and other scene NPCs. The AF adapter now only gathers live objects and passes `SiegePostprocessContextFacts`.
 
 
 ## Intervention memory context

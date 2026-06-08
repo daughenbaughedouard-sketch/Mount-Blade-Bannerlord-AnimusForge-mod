@@ -8,14 +8,34 @@ namespace AnimusForge.SiegeAftermathIntervention;
 /// </summary>
 public static class SiegePostprocessContextBuilder
 {
+    public const string DefaultSettlementName = "刚被攻下的定居点";
+
+    public const string DefaultSpeakerName = "NPC";
+
+    public const string AlliedSoldierSpeakerIdentity = "玩家己方入城士兵";
+
+    public const string CivilianSpeakerIdentity = "战败定居点普通民众/商人/工匠";
+
+    public const string DefaultSpeakerIdentity = "其他场景NPC";
+
+    public static string SelectSpeakerIdentity(bool isAlliedSoldier, bool isCivilian)
+    {
+        if (isAlliedSoldier)
+        {
+            return AlliedSoldierSpeakerIdentity;
+        }
+
+        return isCivilian ? CivilianSpeakerIdentity : DefaultSpeakerIdentity;
+    }
+
     public static string Build(SiegePostprocessContextFacts facts)
     {
         var sb = new StringBuilder();
         sb.AppendLine("【攻城处置后处理运行时事实】");
-        sb.AppendLine("- 当前场景：" + (string.IsNullOrWhiteSpace(facts.SettlementName) ? "刚被攻下的定居点" : facts.SettlementName));
+        sb.AppendLine("- 当前场景：" + (string.IsNullOrWhiteSpace(facts.SettlementName) ? DefaultSettlementName : facts.SettlementName));
         sb.AppendLine("- 当前处置状态：" + (string.IsNullOrWhiteSpace(facts.CurrentOutcome) ? "尚未选择最终处置" : facts.CurrentOutcome));
         sb.AppendLine("- 破坏性处置是否允许：" + (facts.DestructiveAllowed ? "允许" : "禁止；本轮只能宽恕、安抚、救济或宣抚"));
-        sb.AppendLine("- 当前说话者：" + (string.IsNullOrWhiteSpace(facts.SpeakerName) ? "NPC" : facts.SpeakerName) + "；身份=" + (string.IsNullOrWhiteSpace(facts.SpeakerIdentity) ? "其他场景NPC" : facts.SpeakerIdentity) + "；AgentIndex=" + facts.TargetAgentIndex);
+        sb.AppendLine("- 当前说话者：" + (string.IsNullOrWhiteSpace(facts.SpeakerName) ? DefaultSpeakerName : facts.SpeakerName) + "；身份=" + (string.IsNullOrWhiteSpace(facts.SpeakerIdentity) ? DefaultSpeakerIdentity : facts.SpeakerIdentity) + "；AgentIndex=" + facts.TargetAgentIndex);
         sb.AppendLine("- AF给予共享物资：" + facts.SharedReliefPoolDescription);
 
         if (!string.IsNullOrWhiteSpace(facts.CivilianGatherContext))
