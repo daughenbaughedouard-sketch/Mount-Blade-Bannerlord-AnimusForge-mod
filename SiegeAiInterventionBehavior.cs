@@ -2498,7 +2498,7 @@ public class SiegeAiInterventionBehavior : CampaignBehaviorBase
 
 	private static bool HasPendingDevastateAftermath()
 	{
-		return _hasPendingAftermath && GetAftermathSeverity(_pendingAftermath) >= GetAftermathSeverity(SiegeAftermathAction.SiegeAftermath.Devastate);
+		return _hasPendingAftermath && SiegeAftermathSelectionPolicy.IsDevastateOrWorse(ToStandaloneAftermathKind(_pendingAftermath));
 	}
 
 	private static bool HasDestructiveOutcomeLocked()
@@ -7604,12 +7604,12 @@ public class SiegeAiInterventionBehavior : CampaignBehaviorBase
 
 	private static void MarkPendingAftermath(SiegeAftermathAction.SiegeAftermath aftermath, string triggerSource, string triggerDetail)
 	{
-		if (aftermath == SiegeAftermathAction.SiegeAftermath.Pillage || aftermath == SiegeAftermathAction.SiegeAftermath.Devastate)
+		SiegeAftermathResolutionKind requestedAftermath = ToStandaloneAftermathKind(aftermath);
+		if (SiegeAftermathSelectionPolicy.ShouldReturnSharedReliefPool(requestedAftermath))
 		{
 			ReturnSharedCivilianReliefPoolToPlayerForNegativeOutcome(triggerSource ?? aftermath.ToString());
 		}
-		bool canDowngradeReversiblePlunder = aftermath == SiegeAftermathAction.SiegeAftermath.ShowMercy && !_massacreStarted && !_culturalRepopulationRequested && (!_hasPendingAftermath || GetAftermathSeverity(_pendingAftermath) < GetAftermathSeverity(SiegeAftermathAction.SiegeAftermath.Devastate));
-		if (!_hasPendingAftermath || canDowngradeReversiblePlunder || GetAftermathSeverity(aftermath) >= GetAftermathSeverity(_pendingAftermath))
+		if (SiegeAftermathSelectionPolicy.ShouldReplacePendingAftermath(requestedAftermath, ToStandaloneAftermathKind(_pendingAftermath), _hasPendingAftermath, _massacreStarted, _culturalRepopulationRequested))
 		{
 			ResetOutcomeMessageDedupForTrack(aftermath.ToString());
 			_pendingAftermath = aftermath;
@@ -7646,12 +7646,17 @@ public class SiegeAiInterventionBehavior : CampaignBehaviorBase
 
 	private static int GetAftermathSeverity(SiegeAftermathAction.SiegeAftermath aftermath)
 	{
+		return SiegeAftermathSelectionPolicy.GetSeverity(ToStandaloneAftermathKind(aftermath));
+	}
+
+	private static SiegeAftermathResolutionKind ToStandaloneAftermathKind(SiegeAftermathAction.SiegeAftermath aftermath)
+	{
 		return aftermath switch
 		{
-			SiegeAftermathAction.SiegeAftermath.Devastate => 3,
-			SiegeAftermathAction.SiegeAftermath.Pillage => 2,
-			SiegeAftermathAction.SiegeAftermath.ShowMercy => 1,
-			_ => 0
+			SiegeAftermathAction.SiegeAftermath.Devastate => SiegeAftermathResolutionKind.Devastate,
+			SiegeAftermathAction.SiegeAftermath.Pillage => SiegeAftermathResolutionKind.Pillage,
+			SiegeAftermathAction.SiegeAftermath.ShowMercy => SiegeAftermathResolutionKind.ShowMercy,
+			_ => SiegeAftermathResolutionKind.Unknown
 		};
 	}
 
