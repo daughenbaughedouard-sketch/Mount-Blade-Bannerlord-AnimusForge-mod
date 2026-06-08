@@ -2732,7 +2732,7 @@ public class SiegeAiInterventionBehavior : CampaignBehaviorBase
 			{
 				AdjustSettlementAfterRelief(settlement, reliefEffect.PublicTrustDelta, reliefEffect.LoyaltyDelta, reliefEffect.SecurityDelta);
 			}
-			InformationManager.DisplayMessage(new InformationMessage("【攻城处置】已将AF给予的共享物资纳入本次安抚结算：" + DescribeSharedCivilianReliefPoolForContext() + "。", Color.FromUint(0xFFB6F7A8u)));
+			InformationManager.DisplayMessage(new InformationMessage(SiegeSharedReliefPoolFormatter.BuildAppliedEffectMessage(DescribeSharedCivilianReliefPoolForContext()), Color.FromUint(SiegeSharedReliefPoolFormatter.AppliedEffectMessageColor)));
 			Logger.Log("SiegeAiIntervention", "Applied shared civilian relief pool effects. Reason=" + (reason ?? "N/A") + ", NewGold=" + reliefEffect.NewGold + ", NewFood=" + reliefEffect.NewFoodUnits + ", NewMaterialValue=" + reliefEffect.NewMaterialValue + ", PublicTrustDelta=" + reliefEffect.PublicTrustDelta + ", LoyaltyDelta=" + reliefEffect.LoyaltyDelta + ", SecurityDelta=" + reliefEffect.SecurityDelta);
 			return true;
 		}

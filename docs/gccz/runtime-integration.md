@@ -51,6 +51,9 @@ Follow-up isolation: shared civilian relief-pool context now uses `SiegeSharedRe
 Follow-up isolation: negative-outcome shared-pool refund UI and memory wording now also use `SiegeSharedReliefPoolFormatter`; the fused AF adapter keeps inventory/gold mutation and summary collection.
 
 
+Follow-up isolation: shared-pool applied-effect UI now also uses `SiegeSharedReliefPoolFormatter`; the fused AF adapter keeps live pool description and display side effects.
+
+
 Follow-up isolation: newly applied shared-pool settlement-effect deltas now use `SiegeSharedReliefPoolEffectCalculator`; the fused AF adapter keeps Bannerlord town food-stock mutation and settlement delta application.
 
 
