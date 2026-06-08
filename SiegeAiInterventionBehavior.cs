@@ -105,9 +105,9 @@ public class SiegeAiInterventionBehavior : CampaignBehaviorBase
 			if (affectorAgent == Agent.Main)
 			{
 				int collisionDamage = Math.Max(5, Math.Min(80, blow.InflictedDamage > 0 ? blow.InflictedDamage : 35));
-				if (!SiegeAiInterventionBehavior.TryHandlePlayerAttackForAutoMassacre(affectedAgent, "intervention_agent_hit", Math.Max(0, blow.InflictedDamage), collisionDamage))
+				if (!SiegeAiInterventionBehavior.TryHandlePlayerAttackForAutoMassacre(affectedAgent, SiegeDestructiveChoiceProfile.PlayerAgentHitBridgeSource, Math.Max(0, blow.InflictedDamage), collisionDamage))
 				{
-					SiegeAiInterventionBehavior.TryHandleFriendlyHitOnAlliedSoldier(affectedAgent, "intervention_agent_hit", 0f);
+					SiegeAiInterventionBehavior.TryHandleFriendlyHitOnAlliedSoldier(affectedAgent, SiegeDestructiveChoiceProfile.PlayerAgentHitBridgeSource, 0f);
 				}
 			}
 		}
@@ -117,9 +117,9 @@ public class SiegeAiInterventionBehavior : CampaignBehaviorBase
 			base.OnScoreHit(affectedAgent, affectorAgent, attackerWeapon, isBlocked, isSiegeEngineHit, in blow, in collisionData, damagedHp, hitDistance, shotDifficulty);
 			if (damagedHp > 0f && affectorAgent == Agent.Main)
 			{
-				if (!SiegeAiInterventionBehavior.TryHandlePlayerAttackForAutoMassacre(affectedAgent, "intervention_score_hit", damagedHp))
+				if (!SiegeAiInterventionBehavior.TryHandlePlayerAttackForAutoMassacre(affectedAgent, SiegeDestructiveChoiceProfile.PlayerScoreHitBridgeSource, damagedHp))
 				{
-					SiegeAiInterventionBehavior.TryHandleFriendlyHitOnAlliedSoldier(affectedAgent, "intervention_score_hit", damagedHp);
+					SiegeAiInterventionBehavior.TryHandleFriendlyHitOnAlliedSoldier(affectedAgent, SiegeDestructiveChoiceProfile.PlayerScoreHitBridgeSource, damagedHp);
 				}
 			}
 		}

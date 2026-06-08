@@ -168,7 +168,7 @@ Follow-up isolation: destructive same-culture/policy validation UI for blocked �
 Follow-up isolation: same-culture destructive-policy wording for scene entry and postprocess destructive batches now also uses `SiegeDestructiveChoiceProfile`; the fused AF adapter keeps only `TextObject`/`InformationMessage` display and live policy decisions.
 
 
-Follow-up isolation: direct player-attack bloodbath trigger wording and attack-release damage source now also use `SiegeDestructiveChoiceProfile`; the fused AF adapter keeps input/damage detection, pending-aftermath mutation, and combat side effects while delegating UI text, trigger source, trigger detail wording, and damage source string to the isolated GCCZ source area.
+Follow-up isolation: direct player-attack bloodbath trigger wording, attack-release damage source, and agent/score-hit bridge source codes now also use `SiegeDestructiveChoiceProfile`; the fused AF adapter keeps input/damage detection, pending-aftermath mutation, and combat side effects while delegating UI text, trigger source, trigger detail wording, damage source string, and hit bridge source strings to the isolated GCCZ source area.
 
 
 Follow-up isolation: 血洗 civilian-hide parameters, soldier-order refresh parameters, and occupation/combat/allied-drive source codes now use `SiegeMassacreInteractionProfile`; the fused AF adapter keeps live mission-agent routing, order timing application, hide-point projection, and combat side effects while delegating civilian hide distance, hide refresh, soldier follow refresh, soldier target refresh, occupation follow source, combat prepare source, and allied combat drive source to the isolated GCCZ source area.

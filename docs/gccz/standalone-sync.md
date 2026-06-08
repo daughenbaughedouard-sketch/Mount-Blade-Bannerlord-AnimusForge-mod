@@ -184,7 +184,7 @@ Follow-up isolation: destructive same-culture/policy validation messages now als
 Follow-up isolation: same-culture destructive-policy scene-entry and postprocess-batch messages now also live in mirrored `SiegeDestructiveChoiceProfile`. The fused tree routes that wording through the core while preserving AF-side `TextObject`/`InformationMessage` display and live policy checks.
 
 
-Follow-up isolation: direct player-attack bloodbath trigger UI, pending-aftermath detail wording, and attack-release damage source now also live in mirrored `SiegeDestructiveChoiceProfile`. The fused tree routes weapon-attack/hit messages, trigger sources, trigger details, and damage source string through the core while preserving AF-side input/damage detection and combat side effects.
+Follow-up isolation: direct player-attack bloodbath trigger UI, pending-aftermath detail wording, attack-release damage source, and agent/score-hit bridge source codes now also live in mirrored `SiegeDestructiveChoiceProfile`. The fused tree routes weapon-attack/hit messages, trigger sources, trigger details, damage source string, and hit bridge source strings through the core while preserving AF-side input/damage detection and combat side effects.
 
 
 Follow-up isolation: 血洗 civilian-hide parameters, soldier-order refresh parameters, and occupation/combat/allied-drive source codes now live in mirrored `SiegeMassacreInteractionProfile`. The fused tree routes civilian hide distance, hide refresh, soldier follow refresh, soldier target refresh, occupation follow source, combat prepare source, and allied combat drive source through that core while preserving AF-side live mission-agent routing, order timing application, hide-point projection, and combat side effects.

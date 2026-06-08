@@ -28,6 +28,10 @@ public sealed class SiegeDestructiveChoiceProfile
 
     public const string PlayerAttackReleaseDamageSource = "player_attack_release_massacre_start";
 
+    public const string PlayerAgentHitBridgeSource = "intervention_agent_hit";
+
+    public const string PlayerScoreHitBridgeSource = "intervention_score_hit";
+
     private SiegeDestructiveChoiceProfile(
         SiegeAftermathResolutionKind aftermathKind,
         string assemblySource,
