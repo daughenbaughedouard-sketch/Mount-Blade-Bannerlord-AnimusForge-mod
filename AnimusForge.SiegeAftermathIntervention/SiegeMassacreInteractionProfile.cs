@@ -17,4 +17,6 @@ public static class SiegeMassacreInteractionProfile
     public const string OccupationFollowSource = "massacre_occupation_follow";
 
     public const string CombatPrepareSource = "massacre_combat_prepare";
+
+    public const string AlliedCombatDriveSource = "massacre_drive";
 }

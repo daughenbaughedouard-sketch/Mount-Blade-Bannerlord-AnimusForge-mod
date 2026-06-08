@@ -6414,7 +6414,7 @@ public class SiegeAiInterventionBehavior : CampaignBehaviorBase
 			}
 			try
 			{
-				RestoreAlliedSoldierFriendlyState(allied, 0f, "massacre_drive", forceFollow: false, clearTarget: false);
+				RestoreAlliedSoldierFriendlyState(allied, 0f, SiegeMassacreInteractionProfile.AlliedCombatDriveSource, forceFollow: false, clearTarget: false);
 				DisableCompanionStyleFollow(allied);
 				ForceAgentForMassacreFight(allied);
 				allied.SetWatchState(Agent.WatchState.Alarmed);
