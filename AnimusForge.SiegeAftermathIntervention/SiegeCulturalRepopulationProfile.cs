@@ -6,6 +6,12 @@ namespace AnimusForge.SiegeAftermathIntervention;
 /// </summary>
 public sealed class SiegeCulturalRepopulationProfile
 {
+    public const uint ValidationMessageColor = 0xFFFFD27Fu;
+
+    public const string PolicyBlockedMessage = "【攻城处置】该定居点与你当前阵营文化相同，不能执行屠民迁殖。";
+
+    public const string TargetValidationMessage = "【攻城处置】屠民迁殖只能与己方士兵对话触发，不能由平民或其他NPC触发。";
+
     public SiegeAftermathResolutionKind AftermathKind { get; } = SiegeAftermathResolutionKind.Devastate;
 
     public string MassacreTriggerSource { get; } = "场景对话屠民迁殖触发血洗";

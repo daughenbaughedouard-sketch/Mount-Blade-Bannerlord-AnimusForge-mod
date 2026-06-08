@@ -115,6 +115,9 @@ Follow-up isolation: cultural repopulation request handling now lives in mirrore
 Follow-up isolation: cultural repopulation completion UI now also lives in mirrored `SiegeCulturalRepopulationProfile`. The fused tree routes completion text/color and notable-result wording through that core while preserving AF-side settlement/village/notable mutation.
 
 
+Follow-up isolation: cultural repopulation policy/target validation messages now also live in mirrored `SiegeCulturalRepopulationProfile`. The fused tree routes blocked-policy and invalid-target UI text through that core while preserving AF-side policy and allied-soldier validation.
+
+
 Follow-up isolation: soldier appeasement now lives in mirrored `SiegeSoldierAppeasementProfile`. The fused tree routes 安兵 success wording plus fallback morale-penalty text/amount through that core while preserving AF-side target validation, party morale mutation, UI, and memory side effects.
 
 

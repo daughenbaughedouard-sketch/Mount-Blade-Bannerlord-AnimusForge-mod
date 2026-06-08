@@ -99,6 +99,9 @@ Follow-up isolation: cultural repopulation request handling now uses `SiegeCultu
 Follow-up isolation: cultural repopulation completion UI now also uses `SiegeCulturalRepopulationProfile`; the fused AF adapter passes settlement/culture/count facts after Bannerlord mutations and delegates the completion text/color to the isolated GCCZ source area.
 
 
+Follow-up isolation: cultural repopulation policy/target validation UI now also uses `SiegeCulturalRepopulationProfile`; the fused AF adapter keeps only live policy checks, allied-soldier validation, and display side effects.
+
+
 Follow-up isolation: soldier appeasement now uses `SiegeSoldierAppeasementProfile`; the fused AF adapter delegates 安兵 success wording and fallback morale-penalty text/amount to the isolated GCCZ source area before applying Bannerlord party morale, UI, and memory side effects.
 
 

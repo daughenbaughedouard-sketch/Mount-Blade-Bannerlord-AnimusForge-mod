@@ -3087,12 +3087,12 @@ public class SiegeAiInterventionBehavior : CampaignBehaviorBase
 		{
 			if (!IsDestructiveInterventionAllowed())
 			{
-				InformationManager.DisplayMessage(new InformationMessage("【攻城处置】该定居点与你当前阵营文化相同，不能执行屠民迁殖。", Color.FromUint(0xFFFFD27Fu)));
+				InformationManager.DisplayMessage(new InformationMessage(SiegeCulturalRepopulationProfile.PolicyBlockedMessage, Color.FromUint(SiegeCulturalRepopulationProfile.ValidationMessageColor)));
 				return false;
 			}
 			if (!AlliedAgentIndexes.Contains(targetAgentIndex))
 			{
-				InformationManager.DisplayMessage(new InformationMessage("【攻城处置】屠民迁殖只能与己方士兵对话触发，不能由平民或其他NPC触发。", Color.FromUint(0xFFFFD27Fu)));
+				InformationManager.DisplayMessage(new InformationMessage(SiegeCulturalRepopulationProfile.TargetValidationMessage, Color.FromUint(SiegeCulturalRepopulationProfile.ValidationMessageColor)));
 				return false;
 			}
 			bool handled = true;
