@@ -74,3 +74,8 @@ Second extraction slice:
 ## Civilian assembly profile
 
 `SiegeCivilianAssemblyProfile` owns dependency-free runtime parameters for GCCZ civilian assembly target counts, scene caps, extra-spawn gating, forward offset, grid spacing, and columns. AF adapters still own scene capacity checks, spawn gating, formation slot projection, and mission side effects.
+
+
+## Soldier cordon profile
+
+`SiegeSoldierCordonProfile` owns dependency-free runtime parameters for GCCZ soldier cordon radius, padding, teleport threshold, movement tolerance, settle tolerance, and order/look refresh timing. AF adapters still own live soldier selection, target-slot projection, movement orders, and look-at side effects.

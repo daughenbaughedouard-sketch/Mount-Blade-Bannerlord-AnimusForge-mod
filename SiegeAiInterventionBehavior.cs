@@ -177,13 +177,13 @@ public class SiegeAiInterventionBehavior : CampaignBehaviorBase
 	private const float CivilianAssemblyColumnSpacing = SiegeCivilianAssemblyProfile.ColumnSpacing;
 	private const float CivilianAssemblyRowSpacing = SiegeCivilianAssemblyProfile.RowSpacing;
 	private const int CivilianAssemblyColumns = SiegeCivilianAssemblyProfile.Columns;
-	private const float SoldierCordonMinRadius = 7.2f;
-	private const float SoldierCordonPadding = 2.8f;
-	private const float SoldierCordonTeleportDistance = 18f;
-	private const float SoldierCordonMoveTolerance = 0.75f;
-	private const float SoldierCordonSettleTolerance = 0.45f;
-	private const float SoldierCordonOrderRefreshSeconds = 1.25f;
-	private const float SoldierCordonLookRefreshSeconds = 1.1f;
+	private const float SoldierCordonMinRadius = SiegeSoldierCordonProfile.MinRadius;
+	private const float SoldierCordonPadding = SiegeSoldierCordonProfile.Padding;
+	private const float SoldierCordonTeleportDistance = SiegeSoldierCordonProfile.TeleportDistance;
+	private const float SoldierCordonMoveTolerance = SiegeSoldierCordonProfile.MoveTolerance;
+	private const float SoldierCordonSettleTolerance = SiegeSoldierCordonProfile.SettleTolerance;
+	private const float SoldierCordonOrderRefreshSeconds = SiegeSoldierCordonProfile.OrderRefreshSeconds;
+	private const float SoldierCordonLookRefreshSeconds = SiegeSoldierCordonProfile.LookRefreshSeconds;
 	private const int MaxInterventionMemoryEvents = SiegeInterventionMemoryContextBuilder.MaxMemoryEvents;
 
 	private static readonly Regex MercyTagRegex = new Regex(SiegeActionTagCatalog.MercyTagPattern, RegexOptions.IgnoreCase | RegexOptions.Compiled);
