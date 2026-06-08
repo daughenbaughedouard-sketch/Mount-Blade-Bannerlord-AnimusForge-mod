@@ -21,6 +21,24 @@ public static class SiegeLootAccountingProfile
         return "【战利清点】" + BuildCivilianLootLine(actorName, targetName, amount);
     }
 
+    public static string BuildMarketGoldMessage(string reason, int amount)
+    {
+        return "【战利清点】" + NormalizeReason(reason) + "市场金库：获得 " + ClampNonNegative(amount) + " 第纳尔。";
+    }
+
+    public static string BuildMarketInventoryMessage(string reason, int itemTotal, int stackKinds, int itemValue)
+    {
+        return "【战利清点】" + NormalizeReason(reason) + "市场库存：截获 " + ClampNonNegative(itemTotal)
+            + " 件货物（" + ClampNonNegative(stackKinds)
+            + " 类，估值 " + ClampNonNegative(itemValue)
+            + "）；离场后进入战利品界面领取。";
+    }
+
+    public static string BuildCivilianSpoilsMessage(int gold)
+    {
+        return "【战利清点】民众财物：取得 " + ClampNonNegative(gold) + " 第纳尔。";
+    }
+
     public static string BuildCivilianLootLine(string actorName, string targetName, int amount)
     {
         string safeTargetName = string.IsNullOrWhiteSpace(targetName) ? "目标" : targetName.Trim();
@@ -31,6 +49,11 @@ public static class SiegeLootAccountingProfile
         }
 
         return actorName.Trim() + " 盘问 " + safeTargetName + " 后取得 " + safeAmount + " 第纳尔。";
+    }
+
+    private static string NormalizeReason(string reason)
+    {
+        return string.IsNullOrWhiteSpace(reason) ? string.Empty : reason.Trim();
     }
 
     private static int ClampNonNegative(int value)

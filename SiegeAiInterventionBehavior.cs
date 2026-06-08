@@ -6980,15 +6980,15 @@ public class SiegeAiInterventionBehavior : CampaignBehaviorBase
 		{
 			if (_lastMarketGoldLoot > 0)
 			{
-				InformationManager.DisplayMessage(new InformationMessage("【战利清点】血洗市场金库：获得 " + _lastMarketGoldLoot + " 第纳尔。", Color.FromUint(0xFFFFC46Bu)));
+				InformationManager.DisplayMessage(new InformationMessage(SiegeLootAccountingProfile.BuildMarketGoldMessage("血洗", _lastMarketGoldLoot), Color.FromUint(SiegeLootAccountingProfile.LootMessageColor)));
 			}
 			if (_lastLootItemTotal > 0)
 			{
-				InformationManager.DisplayMessage(new InformationMessage("【战利清点】血洗市场库存：截获 " + _lastLootItemTotal + " 件货物（" + _lastLootStackKinds + " 类，估值 " + _lastLootValue + "）；离场后进入战利品界面领取。", Color.FromUint(0xFFFFC46Bu)));
+				InformationManager.DisplayMessage(new InformationMessage(SiegeLootAccountingProfile.BuildMarketInventoryMessage("血洗", _lastLootItemTotal, _lastLootStackKinds, _lastLootValue), Color.FromUint(SiegeLootAccountingProfile.LootMessageColor)));
 			}
 			if (_lastCivilianGoldLoot > 0)
 			{
-				InformationManager.DisplayMessage(new InformationMessage("【战利清点】民众财物：取得 " + _lastCivilianGoldLoot + " 第纳尔。", Color.FromUint(0xFFFFC46Bu)));
+				InformationManager.DisplayMessage(new InformationMessage(SiegeLootAccountingProfile.BuildCivilianSpoilsMessage(_lastCivilianGoldLoot), Color.FromUint(SiegeLootAccountingProfile.LootMessageColor)));
 			}
 		}
 		catch (Exception ex)
@@ -7418,7 +7418,7 @@ public class SiegeAiInterventionBehavior : CampaignBehaviorBase
 			_lastMarketGoldLoot += amount;
 			if (showMessage)
 			{
-				InformationManager.DisplayMessage(new InformationMessage("【战利清点】" + reason + "市场金库：获得 " + amount + " 第纳尔。", Color.FromUint(0xFFFFC46Bu)));
+				InformationManager.DisplayMessage(new InformationMessage(SiegeLootAccountingProfile.BuildMarketGoldMessage(reason, amount), Color.FromUint(SiegeLootAccountingProfile.LootMessageColor)));
 			}
 		}
 		catch (Exception ex)
@@ -7496,7 +7496,7 @@ public class SiegeAiInterventionBehavior : CampaignBehaviorBase
 			_lastLootValue += movedValue;
 			if (showMessage && movedTotal > 0)
 			{
-				InformationManager.DisplayMessage(new InformationMessage("【战利清点】" + reason + "市场库存：截获 " + movedTotal + " 件货物（" + movedKindKeys.Count + " 类，估值 " + movedValue + "）；离场后进入战利品界面领取。", Color.FromUint(0xFFFFC46Bu)));
+				InformationManager.DisplayMessage(new InformationMessage(SiegeLootAccountingProfile.BuildMarketInventoryMessage(reason, movedTotal, movedKindKeys.Count, movedValue), Color.FromUint(SiegeLootAccountingProfile.LootMessageColor)));
 			}
 		}
 		catch (Exception ex)
