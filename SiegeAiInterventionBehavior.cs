@@ -2842,37 +2842,29 @@ public class SiegeAiInterventionBehavior : CampaignBehaviorBase
 				InformationManager.DisplayMessage(new InformationMessage("【攻城处置】救济安抚需要先通过AF给予功能交给士兵或在场NPC第纳尔、粮食或物资，再明确命令分发给民众。单纯宽恕请按宽恕处置。", Color.FromUint(0xFFFFD27Fu)));
 				return false;
 			}
+			SiegeReliefChoiceProfile reliefProfile = SiegeReliefChoiceProfile.Build(hasSharedPool, civilianVerbalOnly, DescribeSharedCivilianReliefPoolForContext());
 			StopReversiblePlunderForMercyTrack("relief");
 			if (_reliefChoiceApplied)
 			{
-				if (hasSharedPool)
+				if (reliefProfile.HasSharedPool && !string.IsNullOrWhiteSpace(reliefProfile.RepeatSharedPoolEffectReason))
 				{
-					ApplySharedCivilianReliefPoolEffects(ResolveCurrentSettlement(), "relief_repeat");
-					RecordInterventionMemory("救济", "玩家再次要求把已交付的AF共享物资分发给民众；共享物资状态：" + DescribeSharedCivilianReliefPoolForContext() + "。");
+					ApplySharedCivilianReliefPoolEffects(ResolveCurrentSettlement(), reliefProfile.RepeatSharedPoolEffectReason);
 				}
-				else
-				{
-					RecordInterventionMemory("安抚", "玩家继续通过对话直接安抚战败民众，民众应承认已经得到保护与秩序承诺。");
-				}
+				RecordInterventionMemory(reliefProfile.RepeatMemoryTitle, reliefProfile.RepeatMemoryText);
 				return true;
 			}
 			_reliefChoiceApplied = true;
 			_activeMode = InterventionMode.MercyRelief;
 			MarkPendingAftermath(SiegeAftermathAction.SiegeAftermath.ShowMercy, triggerSource, triggerDetail);
-			MaybeTriggerSoldierAppeasementNeed(hasSharedPool ? "救济" : "平民安抚");
+			MaybeTriggerSoldierAppeasementNeed(reliefProfile.SoldierAppeasementReason);
 			Settlement settlement = ResolveCurrentSettlement();
-			AdjustSettlementAfterRelief(settlement, publicTrustDelta: hasSharedPool ? 8 : 5, loyaltyDelta: hasSharedPool ? 3f : 2f, securityDelta: hasSharedPool ? 2f : 1f);
-			if (hasSharedPool)
+			AdjustSettlementAfterRelief(settlement, reliefProfile.PublicTrustDelta, reliefProfile.LoyaltyDelta, reliefProfile.SecurityDelta);
+			if (reliefProfile.HasSharedPool && !string.IsNullOrWhiteSpace(reliefProfile.SharedPoolEffectReason))
 			{
-				ApplySharedCivilianReliefPoolEffects(settlement, civilianVerbalOnly ? "civilian_relief_with_pool" : "relief");
-				ShowOutcomeMessageOnce("relief", "【攻城处置】你选择安抚民众并分发共享物资；离场后按宽恕处置结算，并恢复忠诚度与治安。", 0xFFB6F7A8u);
-				RecordInterventionMemory("救济", "玩家已命令把通过AF给予交付的第纳尔、粮食或物资分发给民众用于安抚；共享物资状态：" + DescribeSharedCivilianReliefPoolForContext() + "。");
+				ApplySharedCivilianReliefPoolEffects(settlement, reliefProfile.SharedPoolEffectReason);
 			}
-			else
-			{
-				ShowOutcomeMessageOnce("civilian_verbal_relief", "【攻城处置】你通过对话安抚了民众；离场后按宽恕处置结算，并小幅恢复忠诚度与治安。", 0xFFB6F7A8u);
-				RecordInterventionMemory("安抚", "玩家没有分发物资，但通过面对面对话安抚战败平民，承诺保护、军纪或安顿秩序；后续NPC应承认平民已被言语安抚。");
-			}
+			ShowOutcomeMessageOnce(reliefProfile.MessageKey, reliefProfile.MessageText, reliefProfile.MessageColor);
+			RecordInterventionMemory(reliefProfile.MemoryTitle, reliefProfile.MemoryText);
 			return true;
 		}
 		catch (Exception ex)
