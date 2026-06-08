@@ -159,4 +159,4 @@ Follow-up isolation: soldier appeasement need-warning now also routes through `S
 Follow-up isolation: soldier appeasement target validation now also routes through `SiegeSoldierAppeasementProfile`; the fused AF adapter keeps only the live allied-soldier validation and display side effect.
 
 
-Follow-up isolation: final completion and encounter-exit UI now routes through `SiegeInterventionCompletionUiProfile`; the fused AF adapter keeps aftermath-label selection, loot-total gating, menu text variable assignment, mission-exit state, and `InformationMessage`/quick-information display while delegating completed-menu fallback, massacre-victory, final completion, and loot-summary wording to the isolated GCCZ source area.
+Follow-up isolation: final completion and encounter-exit UI now routes through `SiegeInterventionCompletionUiProfile`; the fused AF adapter keeps native-aftermath mapping, loot-total gating, menu text variable assignment, mission-exit state, and `InformationMessage`/quick-information display while delegating completed-menu fallback, massacre-victory, final completion labels/text, and loot-summary wording to the isolated GCCZ source area.

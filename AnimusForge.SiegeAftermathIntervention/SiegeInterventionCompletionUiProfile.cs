@@ -20,9 +20,39 @@ public static class SiegeInterventionCompletionUiProfile
 
     public const string LeaveEncounterQuickText = "攻城后处置已完成，正在离开攻城遭遇。";
 
+    public const string CulturalRepopulationCompletedLabel = "屠民迁殖";
+
+    public const string DevastateCompletedLabel = "血洗/毁坏";
+
+    public const string PlunderCompletedLabel = "搜掠";
+
+    public const string MercyCompletedLabel = "安抚";
+
+    public const string DefaultCompletedLabel = "处置";
+
+    public static string BuildCompletedEncounterMessage(SiegeAftermathResolutionKind aftermathKind, bool culturalRepopulationApplied)
+    {
+        return BuildCompletedEncounterMessage(GetCompletedEncounterLabel(aftermathKind, culturalRepopulationApplied));
+    }
+
     public static string BuildCompletedEncounterMessage(string actionLabel)
     {
         return "【攻城处置】攻城后" + NormalizeActionLabel(actionLabel) + "已经结算完成，正在结束攻城遭遇。";
+    }
+
+    public static string GetCompletedEncounterLabel(SiegeAftermathResolutionKind aftermathKind, bool culturalRepopulationApplied)
+    {
+        switch (aftermathKind)
+        {
+            case SiegeAftermathResolutionKind.Devastate:
+                return culturalRepopulationApplied ? CulturalRepopulationCompletedLabel : DevastateCompletedLabel;
+            case SiegeAftermathResolutionKind.Pillage:
+                return PlunderCompletedLabel;
+            case SiegeAftermathResolutionKind.ShowMercy:
+                return MercyCompletedLabel;
+            default:
+                return DefaultCompletedLabel;
+        }
     }
 
     public static string BuildLootSettlementSummaryMessage(int marketItemTotal, int marketStackKinds, int marketGold, int civilianGold)

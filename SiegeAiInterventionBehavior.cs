@@ -8478,16 +8478,9 @@ public class SiegeAiInterventionBehavior : CampaignBehaviorBase
 			return;
 		}
 		_pendingEncounterFinishMessageShown = true;
-		string label = aftermath switch
-		{
-			SiegeAftermathAction.SiegeAftermath.Devastate => _culturalRepopulationRequested || _culturalRepopulationApplied ? "屠民迁殖" : "血洗/毁坏",
-			SiegeAftermathAction.SiegeAftermath.Pillage => "搜掠",
-			SiegeAftermathAction.SiegeAftermath.ShowMercy => "安抚",
-			_ => "处置"
-		};
 		try
 		{
-			InformationManager.DisplayMessage(new InformationMessage(SiegeInterventionCompletionUiProfile.BuildCompletedEncounterMessage(label), Color.FromUint(SiegeInterventionCompletionUiProfile.CompletionMessageColor)));
+			InformationManager.DisplayMessage(new InformationMessage(SiegeInterventionCompletionUiProfile.BuildCompletedEncounterMessage(ToStandaloneAftermathKind(aftermath), _culturalRepopulationRequested || _culturalRepopulationApplied), Color.FromUint(SiegeInterventionCompletionUiProfile.CompletionMessageColor)));
 			if (_lastLootItemTotal > 0 || _lastMarketGoldLoot > 0 || _lastCivilianGoldLoot > 0)
 			{
 				InformationManager.DisplayMessage(new InformationMessage(SiegeInterventionCompletionUiProfile.BuildLootSettlementSummaryMessage(_lastLootItemTotal, _lastLootStackKinds, _lastMarketGoldLoot, _lastCivilianGoldLoot), Color.FromUint(SiegeInterventionCompletionUiProfile.CompletionMessageColor)));

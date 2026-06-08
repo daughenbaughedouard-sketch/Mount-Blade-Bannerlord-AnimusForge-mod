@@ -175,4 +175,4 @@ Follow-up isolation: soldier appeasement need-warning now also lives in mirrored
 Follow-up isolation: soldier appeasement target validation now also lives in mirrored `SiegeSoldierAppeasementProfile`. The fused tree routes the invalid-target UI text through that core while preserving AF-side allied-soldier validation and display.
 
 
-Follow-up isolation: final completion and encounter-exit UI now lives in mirrored `SiegeInterventionCompletionUiProfile`. The fused tree routes completed-menu fallbacks, massacre-victory message/quick text, completed-aftermath text, loot-settlement summary, and leave-encounter quick text through the core while preserving AF-side state checks and display side effects.
+Follow-up isolation: final completion and encounter-exit UI now lives in mirrored `SiegeInterventionCompletionUiProfile`. The fused tree routes completed-menu fallbacks, massacre-victory message/quick text, completed-aftermath labels/text, loot-settlement summary, and leave-encounter quick text through the core while preserving AF-side enum mapping, state checks, and display side effects.
