@@ -1410,19 +1410,7 @@ public class SiegeAiInterventionBehavior : CampaignBehaviorBase
 				{
 					continue;
 				}
-				IReadOnlyList<SiegeInterventionActionKind> tagKinds = SiegeActionTagCatalog.ExtractKinds(tag);
-				bool destructiveTag = tagKinds.Any(SiegeInterventionActionRules.IsDestructive);
-				bool mercyTrackTag = tagKinds.Any(SiegeInterventionActionRules.IsMercyTrack);
-				bool soldierAppeasementTag = tagKinds.Contains(SiegeInterventionActionKind.AppeaseSoldiers);
-				if (!destructiveAllowed && destructiveTag)
-				{
-					continue;
-				}
-				if (destructiveLocked && mercyTrackTag)
-				{
-					continue;
-				}
-				if (soldierAppeasementTag && (!_soldierAppeasementRequired || _soldierAppeasementApplied))
+				if (!SiegePostprocessRuleFilter.ShouldAllowTag(tag, destructiveAllowed, destructiveLocked, _soldierAppeasementRequired, _soldierAppeasementApplied))
 				{
 					continue;
 				}

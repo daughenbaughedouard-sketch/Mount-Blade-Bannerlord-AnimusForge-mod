@@ -19,3 +19,8 @@ Second extraction slice:
 ## Tag order and aliases
 
 `SiegeActionTagCatalog` now owns the canonical tag order and alias table, so AF bridge code does not need duplicate switch statements for action tag normalization.
+
+
+## Postprocess-rule filtering
+
+`SiegePostprocessRuleFilter` owns dependency-free filtering for active scene postprocess tags: destructive policy gate, irreversible outcome downgrade gate, and pending/completed soldier appeasement visibility. AF adapters pass runtime booleans and keep side effects outside the core.
