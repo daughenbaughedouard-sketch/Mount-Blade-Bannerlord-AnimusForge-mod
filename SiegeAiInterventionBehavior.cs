@@ -1222,11 +1222,7 @@ public class SiegeAiInterventionBehavior : CampaignBehaviorBase
 	{
 		try
 		{
-			string normalizedKind = string.IsNullOrWhiteSpace(kind) ? "处置" : kind.Trim();
-			string normalizedDetail = string.IsNullOrWhiteSpace(detail) ? normalizedKind : detail.Trim();
-			normalizedDetail = AnySiegeTagRegex.Replace(normalizedDetail, "");
-			normalizedDetail = Regex.Replace(normalizedDetail.Replace("\r", " ").Replace("\n", " "), "\\s+", " ").Trim();
-			string entry = normalizedKind + "：" + normalizedDetail;
+			string entry = SiegeInterventionMemoryEventFormatter.FormatEntry(kind, detail);
 			if (InterventionMemoryEvents.Count > 0 && string.Equals(InterventionMemoryEvents[InterventionMemoryEvents.Count - 1], entry, StringComparison.OrdinalIgnoreCase))
 			{
 				return;

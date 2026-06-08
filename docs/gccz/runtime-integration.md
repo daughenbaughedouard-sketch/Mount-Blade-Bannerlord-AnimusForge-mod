@@ -60,6 +60,9 @@ Follow-up isolation: civilian gather runtime context now uses `SiegeCivilianGath
 Follow-up isolation: intervention memory context formatting now uses `SiegeInterventionMemoryContextBuilder`; the fused AF adapter keeps event collection, de-duplication, trimming, and logging while delegating prompt context wording to the isolated GCCZ source area.
 
 
+Follow-up isolation: single memory-event formatting now uses `SiegeInterventionMemoryEventFormatter`; the fused AF adapter keeps sequencing, duplicate checks, trimming, and logging while delegating kind/detail fallback, action-tag stripping, and whitespace normalization to the isolated GCCZ source area.
+
+
 Follow-up isolation: completed intervention summary now uses `SiegeCompletedInterventionSummaryFacts` and `SiegeCompletedInterventionSummaryBuilder`; the fused AF adapter gathers settlement/culture/loot facts and keeps menu transitions while delegating completion-summary wording to the isolated GCCZ source area.
 
 
