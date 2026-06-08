@@ -14,6 +14,7 @@ using System.Text;
 using System.Text.RegularExpressions;
 using System.Threading;
 using System.Threading.Tasks;
+using AnimusForge.SiegeAftermathIntervention;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 using TaleWorlds.CampaignSystem;
@@ -15552,7 +15553,7 @@ public class MyBehavior : CampaignBehaviorBase
 			string siegeInterventionRuntimeInstruction = SiegeAiInterventionBehavior.BuildRuntimePromptForPromptContext(targetHero, targetCharacter, targetAgentIndex);
 			if (!string.IsNullOrWhiteSpace(siegeInterventionRuntimeInstruction))
 			{
-				AppendRuleBlock(stringBuilder, "siege_intervention_aftermath", siegeInterventionRuntimeInstruction);
+				AppendRuleBlock(stringBuilder, SiegePostprocessRuleCatalog.RuleId, siegeInterventionRuntimeInstruction);
 			}
 			if (IsPartyTransferLordEligible(targetHero, targetCharacter) && !string.IsNullOrWhiteSpace(text3) && text3.IndexOf("【附加规则:party_transfer】", StringComparison.OrdinalIgnoreCase) >= 0)
 			{
@@ -16540,15 +16541,15 @@ public class MyBehavior : CampaignBehaviorBase
 		{
 			preprocessRuleIds.Add("party_transfer");
 		}
-		if ((shoutPromptContext.Extras?.IndexOf("【附加规则:siege_intervention_aftermath】", StringComparison.OrdinalIgnoreCase)).GetValueOrDefault() >= 0 || SiegeAiInterventionBehavior.ShouldRunSiegeInterventionPostprocessForExternal())
+		if ((shoutPromptContext.Extras?.IndexOf(SiegePostprocessRuleCatalog.InjectedRuleBlockMarker, StringComparison.OrdinalIgnoreCase)).GetValueOrDefault() >= 0 || SiegeAiInterventionBehavior.ShouldRunSiegeInterventionPostprocessForExternal())
 		{
-			preprocessRuleIds.Add("siege_intervention_aftermath");
+			preprocessRuleIds.Add(SiegePostprocessRuleCatalog.RuleId);
 		}
 		shoutPromptContext.PreprocessRuleIds = preprocessRuleIds.ToList();
 		bool extrasHasDuelRule = (shoutPromptContext.Extras?.IndexOf("【附加规则:duel】", StringComparison.OrdinalIgnoreCase)).GetValueOrDefault() >= 0;
 		bool extrasHasRewardRule = (shoutPromptContext.Extras?.IndexOf("【附加规则:reward】", StringComparison.OrdinalIgnoreCase)).GetValueOrDefault() >= 0;
 		bool extrasHasLoanRule = (shoutPromptContext.Extras?.IndexOf("【附加规则:loan】", StringComparison.OrdinalIgnoreCase)).GetValueOrDefault() >= 0;
-		bool extrasHasSiegeInterventionRule = (shoutPromptContext.Extras?.IndexOf("【附加规则:siege_intervention_aftermath】", StringComparison.OrdinalIgnoreCase)).GetValueOrDefault() >= 0;
+		bool extrasHasSiegeInterventionRule = (shoutPromptContext.Extras?.IndexOf(SiegePostprocessRuleCatalog.InjectedRuleBlockMarker, StringComparison.OrdinalIgnoreCase)).GetValueOrDefault() >= 0;
 		Logger.Log("Logic", $"[RuleInjectionDebug] stage=extras targetHero={(targetHero?.StringId ?? "null")} targetCharacter={(targetCharacter?.StringId ?? "null")} extrasHasDuelRule={extrasHasDuelRule} extrasHasRewardRule={extrasHasRewardRule} extrasHasLoanRule={extrasHasLoanRule} extrasHasSiegeInterventionRule={extrasHasSiegeInterventionRule} extrasLen={(shoutPromptContext.Extras ?? "").Length} useDuelContext={shoutPromptContext.UseDuelContext} useRewardContext={shoutPromptContext.UseRewardContext} useLoanContext={shoutPromptContext.IsLoanContext}");
 		return shoutPromptContext;
 		}

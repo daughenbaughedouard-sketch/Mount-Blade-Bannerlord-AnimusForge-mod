@@ -42,6 +42,9 @@ Follow-up isolation: postprocess-rule filtering now lives in `SiegePostprocessRu
 Follow-up isolation: fallback postprocess rules now live in `SiegePostprocessRuleCatalog`; fused AF maps them to `PostprocessRuleEntry` and no longer stores rule wording in `SiegeAiInterventionBehavior`.
 
 
+Follow-up isolation: GCCZ passive rule id and injected-rule marker now also live in `SiegePostprocessRuleCatalog`; the fused AF adapter keeps prompt injection, preprocess-hit checks, and postprocess selection while delegating the rule id/marker strings to the isolated GCCZ source area.
+
+
 Follow-up isolation: postprocess context text now lives in `SiegePostprocessContextBuilder`; fused AF gathers live facts into `SiegePostprocessContextFacts` and delegates formatting to GCCZ core.
 
 

@@ -10,6 +10,7 @@ using System.Text;
 using System.Text.RegularExpressions;
 using System.Threading;
 using System.Threading.Tasks;
+using AnimusForge.SiegeAftermathIntervention;
 using SandBox;
 using SandBox.Missions.AgentBehaviors;
 using SandBox.Missions.MissionLogics;
@@ -11177,7 +11178,7 @@ private static string NormalizeScenePlayerHistoryLine(string text, string target
 			partyTransferRuleInjected = partyTransferRuleInjected || HasPreprocessRuleHit(preprocessRuleHits, "party_transfer");
 			settlementTransferRuleInjected = settlementTransferRuleInjected || HasPreprocessRuleHit(preprocessRuleHits, "settlement_transfer");
 			voteDealRuleInjected = voteDealRuleInjected || HasPreprocessRuleHit(preprocessRuleHits, "vote_deal");
-			bool siegeInterventionRuleInjected = HasPreprocessRuleHit(preprocessRuleHits, "siege_intervention_aftermath") || SiegeAiInterventionBehavior.ShouldRunSiegeInterventionPostprocessForExternal();
+			bool siegeInterventionRuleInjected = HasPreprocessRuleHit(preprocessRuleHits, SiegePostprocessRuleCatalog.RuleId) || SiegeAiInterventionBehavior.ShouldRunSiegeInterventionPostprocessForExternal();
 			bool marriageRuleInjected = HasPreprocessRuleHit(preprocessRuleHits, "marriage");
 			if (!AIConfigHandler.CanUseAuxiliaryActionPostprocess())
 			{
@@ -14814,7 +14815,7 @@ private static string NormalizeScenePlayerHistoryLine(string text, string target
 					partyTransferRuleInjected = HasInjectedRuleBlockForPostprocess(combinedRuleInspectionBlock, "party_transfer");
 					settlementTransferRuleInjected = HasInjectedRuleBlockForPostprocess(combinedRuleInspectionBlock, "settlement_transfer");
 					voteDealRuleInjected = HasInjectedRuleBlockForPostprocess(combinedRuleInspectionBlock, "vote_deal");
-					siegeInterventionRuleInjected = HasInjectedRuleBlockForPostprocess(combinedRuleInspectionBlock, "siege_intervention_aftermath") || SiegeAiInterventionBehavior.ShouldRunSiegeInterventionPostprocessForExternal();
+					siegeInterventionRuleInjected = HasInjectedRuleBlockForPostprocess(combinedRuleInspectionBlock, SiegePostprocessRuleCatalog.RuleId) || SiegeAiInterventionBehavior.ShouldRunSiegeInterventionPostprocessForExternal();
 					bool duelRuleInjectedBeforeEligibility = duelRuleInjected;
 					string duelPostprocessBlockedReason = "";
 					if (duelRuleInjected && !CanInjectDuelPostprocessRule(ctx, speakingHero, currentSpeaker.AgentIndex, out duelPostprocessBlockedReason))
@@ -14943,7 +14944,7 @@ private static string NormalizeScenePlayerHistoryLine(string text, string target
 					bool partyTransferPostprocessSelected = partyTransferRuleInjected || HasPreprocessRuleHit(postprocessPreprocessHits, "party_transfer");
 					bool settlementTransferPostprocessSelected = settlementTransferRuleInjected || HasPreprocessRuleHit(postprocessPreprocessHits, "settlement_transfer");
 					bool voteDealPostprocessSelected = voteDealRuleInjected || HasPreprocessRuleHit(postprocessPreprocessHits, "vote_deal");
-					bool siegeInterventionPostprocessSelected = siegeInterventionRuleInjected || HasPreprocessRuleHit(postprocessPreprocessHits, "siege_intervention_aftermath") || SiegeAiInterventionBehavior.ShouldRunSiegeInterventionPostprocessForExternal();
+					bool siegeInterventionPostprocessSelected = siegeInterventionRuleInjected || HasPreprocessRuleHit(postprocessPreprocessHits, SiegePostprocessRuleCatalog.RuleId) || SiegeAiInterventionBehavior.ShouldRunSiegeInterventionPostprocessForExternal();
 					bool marriagePostprocessSelected = HasPreprocessRuleHit(postprocessPreprocessHits, "marriage");
 					bool flag11 = duelPostprocessSelected || rewardPostprocessSelected || loanPostprocessSelected || kingdomServicePostprocessSelected || lordsHallPostprocessSelected || meetingReleasePostprocessSelected || vanillaIssuePostprocessSelected || heroJoinPartyPostprocessSelected || sceneMechanismPostprocessSelected || partyTransferPostprocessSelected || settlementTransferPostprocessSelected || voteDealPostprocessSelected || siegeInterventionPostprocessSelected || marriagePostprocessSelected;
 					Logger.Log("ShoutBehavior", "[RuleInjectionDebug] stage=scene_queue npc=" + GetSceneNpcHistoryNameForPrompt(currentSpeaker) + " duelInjected=" + duelRuleInjected + " rewardInjected=" + rewardRuleInjected + " loanInjected=" + loanRuleInjected + " kingdomServiceInjected=" + kingdomServiceRuleInjected + " lordsHallInjected=" + lordsHallRuleInjected + " meetingReleaseInjected=" + meetingReleaseRuleInjected + " vanillaIssueInjected=" + vanillaIssueRuleInjected + " heroJoinPartyInjected=" + heroJoinPartyRuleInjected + " sceneMechanismInjected=" + sceneMechanismRuleInjected + " partyTransferInjected=" + partyTransferRuleInjected + " settlementTransferInjected=" + settlementTransferRuleInjected + " voteDealInjected=" + voteDealRuleInjected + " siegeInterventionInjected=" + siegeInterventionRuleInjected + " marriageSelected=" + marriagePostprocessSelected + " preprocessHits=" + ((postprocessPreprocessHits == null || postprocessPreprocessHits.Count == 0) ? "(none)" : string.Join(",", postprocessPreprocessHits)) + " queueDeferred=" + flag11 + " replyLen=" + cleaned.Length);

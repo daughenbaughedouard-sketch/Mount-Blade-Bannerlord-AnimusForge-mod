@@ -8,6 +8,10 @@ namespace AnimusForge.SiegeAftermathIntervention;
 /// </summary>
 public static class SiegePostprocessRuleCatalog
 {
+    public const string RuleId = "siege_intervention_aftermath";
+
+    public const string InjectedRuleBlockMarker = "【附加规则:siege_intervention_aftermath】";
+
     private static readonly SiegePostprocessRuleDefinition[] FallbackRules =
     {
         new SiegePostprocessRuleDefinition("[ACTION:宽恕]", "如果NPC在<latest_reply>里明确接受或传达玩家对普通民众的宽恕、不追究、不杀不抢，就输出这个；若只是害怕、讨价还价、模糊求饶或玩家没有明确给出处置，就不要输出"),

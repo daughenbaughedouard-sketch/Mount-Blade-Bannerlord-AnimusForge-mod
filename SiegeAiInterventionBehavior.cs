@@ -184,7 +184,6 @@ public class SiegeAiInterventionBehavior : CampaignBehaviorBase
 	private const float SoldierCordonSettleTolerance = 0.45f;
 	private const float SoldierCordonOrderRefreshSeconds = 1.25f;
 	private const float SoldierCordonLookRefreshSeconds = 1.1f;
-	private const string SiegeInterventionRuleId = "siege_intervention_aftermath";
 	private const int MaxInterventionMemoryEvents = 10;
 
 	private static readonly Regex MercyTagRegex = new Regex(SiegeActionTagCatalog.MercyTagPattern, RegexOptions.IgnoreCase | RegexOptions.Compiled);
@@ -1303,7 +1302,7 @@ public class SiegeAiInterventionBehavior : CampaignBehaviorBase
 	{
 		try
 		{
-			List<PostprocessRuleEntry> configured = AIConfigHandler.GetGuardrailRulePostprocessRules(SiegeInterventionRuleId) ?? new List<PostprocessRuleEntry>();
+			List<PostprocessRuleEntry> configured = AIConfigHandler.GetGuardrailRulePostprocessRules(SiegePostprocessRuleCatalog.RuleId) ?? new List<PostprocessRuleEntry>();
 			List<PostprocessRuleEntry> rules = configured.Count > 0 ? configured : BuildFallbackSiegeInterventionPostprocessRules();
 			bool destructiveAllowed = IsDestructiveInterventionAllowed();
 			bool destructiveLocked = HasDestructiveOutcomeLocked();
