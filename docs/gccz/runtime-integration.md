@@ -43,3 +43,6 @@ Follow-up isolation: postprocess context text now lives in `SiegePostprocessCont
 
 
 Follow-up isolation: postprocess tag normalization now lives in `SiegePostprocessTagNormalizer`; `SiegeAiInterventionBehavior` collects allowed runtime rule tags and delegates alias matching, canonical order, duplicate removal, and mood preservation to the isolated GCCZ source area.
+
+
+Follow-up isolation: shared civilian relief-pool context now uses `SiegeSharedReliefPoolFacts` and `SiegeSharedReliefPoolFormatter`; the fused AF adapter keeps ItemObject/inventory/UI side effects and delegates material-pool checks plus context wording to the isolated GCCZ source area.

@@ -2609,24 +2609,7 @@ public class SiegeAiInterventionBehavior : CampaignBehaviorBase
 	{
 		try
 		{
-			if (_sharedCivilianReliefGold <= 0 && _sharedCivilianReliefFoodUnits <= 0 && _sharedCivilianReliefItemTotal <= 0)
-			{
-				return "尚未通过AF给予功能交付共享物资";
-			}
-			List<string> parts = new List<string>();
-			if (_sharedCivilianReliefGold > 0)
-			{
-				parts.Add(_sharedCivilianReliefGold + " 第纳尔");
-			}
-			if (_sharedCivilianReliefFoodUnits > 0)
-			{
-				parts.Add(_sharedCivilianReliefFoodUnits + " 份食物");
-			}
-			if (_sharedCivilianReliefItemTotal > _sharedCivilianReliefFoodUnits)
-			{
-				parts.Add((_sharedCivilianReliefItemTotal - _sharedCivilianReliefFoodUnits) + " 件非食物物资，估值 " + _sharedCivilianReliefItemValue);
-			}
-			return string.Join("，", parts);
+			return SiegeSharedReliefPoolFormatter.DescribeForContext(BuildSharedCivilianReliefPoolFacts());
 		}
 		catch
 		{
@@ -2636,7 +2619,16 @@ public class SiegeAiInterventionBehavior : CampaignBehaviorBase
 
 	private static bool HasSharedCivilianReliefPool()
 	{
-		return _sharedCivilianReliefGold > 0 || _sharedCivilianReliefFoodUnits > 0 || _sharedCivilianReliefItemTotal > 0 || _sharedCivilianReliefItemValue > 0;
+		return SiegeSharedReliefPoolFormatter.HasAnyMaterial(BuildSharedCivilianReliefPoolFacts());
+	}
+
+	private static SiegeSharedReliefPoolFacts BuildSharedCivilianReliefPoolFacts()
+	{
+		return new SiegeSharedReliefPoolFacts(
+			_sharedCivilianReliefGold,
+			_sharedCivilianReliefFoodUnits,
+			_sharedCivilianReliefItemTotal,
+			_sharedCivilianReliefItemValue);
 	}
 
 	private static bool IsCivilianReliefConversationTarget(int targetAgentIndex, CharacterObject targetCharacter)

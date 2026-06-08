@@ -59,3 +59,6 @@ Follow-up isolation: postprocess context text now lives in `SiegePostprocessCont
 
 
 Follow-up isolation: postprocess tag normalization now lives in `SiegePostprocessTagNormalizer`; this fused tree mirrors the standalone source file and routes `NormalizeSiegeInterventionPostprocessTagsForExternal(...)` through that core.
+
+
+Follow-up isolation: shared civilian relief-pool context now lives in mirrored `SiegeSharedReliefPoolFacts` and `SiegeSharedReliefPoolFormatter` source files. The fused tree routes `DescribeSharedCivilianReliefPoolForContext()` and `HasSharedCivilianReliefPool()` through that core while preserving AF-side inventory effects.
