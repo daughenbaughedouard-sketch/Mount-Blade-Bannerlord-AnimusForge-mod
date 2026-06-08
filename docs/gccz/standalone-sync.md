@@ -109,6 +109,9 @@ Follow-up isolation: plunder finalized trust penalty now also lives in mirrored 
 Follow-up isolation: destructive same-culture/policy validation messages now also live in mirrored `SiegeDestructiveChoiceProfile`. The fused tree routes blocked 搜掠/血洗 UI text through that core while preserving AF-side policy validation and display.
 
 
+Follow-up isolation: same-culture destructive-policy scene-entry and postprocess-batch messages now also live in mirrored `SiegeDestructiveChoiceProfile`. The fused tree routes that wording through the core while preserving AF-side `TextObject`/`InformationMessage` display and live policy checks.
+
+
 Follow-up isolation: cultural repopulation request handling now lives in mirrored `SiegeCulturalRepopulationProfile`. The fused tree routes 屠民迁殖 request wording and devastate aftermath kind through that core while preserving AF-side validation, culture resolution, and settlement/notable mutation.
 
 

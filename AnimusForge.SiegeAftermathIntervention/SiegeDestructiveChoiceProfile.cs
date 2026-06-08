@@ -14,6 +14,12 @@ public sealed class SiegeDestructiveChoiceProfile
 
     public const string MassacrePolicyBlockedMessage = "【攻城处置】该定居点与你当前阵营文化相同，军纪禁止毁坏或血洗。";
 
+    public const string SameCultureEntryBlockedTooltip = "{=!}该定居点与你当前阵营文化相同，军纪禁止掠夺或毁坏，只能宽恕或安抚，因此无法亲自进城处置。";
+
+    public const string SameCultureEntryBlockedMessage = "【攻城处置】该定居点与你当前阵营文化相同，军纪禁止掠夺或毁坏；本次只能宽恕或安抚。";
+
+    public const string SameCultureActionBatchBlockedMessage = "【攻城处置】该定居点与你当前阵营文化相同，军纪禁止掠夺或毁坏，本次只能宽恕或安抚。";
+
     private SiegeDestructiveChoiceProfile(
         SiegeAftermathResolutionKind aftermathKind,
         string assemblySource,

@@ -447,7 +447,7 @@ public class SiegeAiInterventionBehavior : CampaignBehaviorBase
 			args.optionLeaveType = GameMenuOption.LeaveType.Submenu;
 			args.Tooltip = new TextObject(enabled
 				? "{=!}暂不立即处置战后事务；你将披甲带约50名健康士兵进城，普通民众仍散在城内街区，再由现场对话或行动决定安抚、宽恕、搜掠或血洗。"
-				: (sameCultureBlocked ? "{=!}该定居点与你当前阵营文化相同，军纪禁止掠夺或毁坏，只能宽恕或安抚，因此无法亲自进城处置。" : "{=!}当前没有可进入的攻城胜利定居点场景。"));
+				: (sameCultureBlocked ? SiegeDestructiveChoiceProfile.SameCultureEntryBlockedTooltip : "{=!}当前没有可进入的攻城胜利定居点场景。"));
 			return true;
 		}
 		catch
@@ -474,7 +474,7 @@ public class SiegeAiInterventionBehavior : CampaignBehaviorBase
 			}
 			if (IsSameFactionCultureAsPlayer(settlement))
 			{
-				InformationManager.DisplayMessage(new InformationMessage("【攻城处置】该定居点与你当前阵营文化相同，军纪禁止掠夺或毁坏；本次只能宽恕或安抚。", Color.FromUint(0xFFFFD27Fu)));
+				InformationManager.DisplayMessage(new InformationMessage(SiegeDestructiveChoiceProfile.SameCultureEntryBlockedMessage, Color.FromUint(SiegeDestructiveChoiceProfile.ValidationMessageColor)));
 				return;
 			}
 			_activeMode = InterventionMode.WaitingDecision;
@@ -1482,7 +1482,7 @@ public class SiegeAiInterventionBehavior : CampaignBehaviorBase
 			{
 				if (actionRouting.ContainsDestructiveAction)
 				{
-					InformationManager.DisplayMessage(new InformationMessage("【攻城处置】该定居点与你当前阵营文化相同，军纪禁止掠夺或毁坏，本次只能宽恕或安抚。", Color.FromUint(0xFFFFD27Fu)));
+					InformationManager.DisplayMessage(new InformationMessage(SiegeDestructiveChoiceProfile.SameCultureActionBatchBlockedMessage, Color.FromUint(SiegeDestructiveChoiceProfile.ValidationMessageColor)));
 					actionHandled = true;
 				}
 			}
