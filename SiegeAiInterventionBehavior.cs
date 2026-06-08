@@ -3920,7 +3920,7 @@ public class SiegeAiInterventionBehavior : CampaignBehaviorBase
 				Agent target = mission.Agents.FirstOrDefault(a => a != null && a.Index == interaction.TargetAgentIndex);
 				if (!IsCivilianGatherMessengerAgent(messenger) || !IsEligibleCivilianAgent(target, includeHeroes: true) || CivilianGatherFollowerAgentIndexes.Contains(target.Index))
 				{
-					ReleaseGatherMessengerFromCurrentTarget(messenger, "gather_interaction_invalid_or_target_already_c");
+					ReleaseGatherMessengerFromCurrentTarget(messenger, SiegeCivilianGatherInteractionProfile.InvalidOrAlreadyFollowerReleaseSource);
 					ActiveCivilianGatherInteractions.Remove(interaction.TargetAgentIndex);
 					continue;
 				}
@@ -3943,14 +3943,14 @@ public class SiegeAiInterventionBehavior : CampaignBehaviorBase
 					}
 					if (now - interaction.TalkStartedAt >= interaction.TalkSeconds)
 					{
-						MarkCivilianAsGatherFollower(target, "gather_fake_talk");
+						MarkCivilianAsGatherFollower(target, SiegeCivilianGatherInteractionProfile.FakeTalkFollowerSource);
 						ReleaseGatherMessengerFromCurrentTarget(messenger, "gather_target_became_c");
 						ActiveCivilianGatherInteractions.Remove(interaction.TargetAgentIndex);
 					}
 				}
 				else if (now - interaction.StartedAt > 18f)
 				{
-					ReleaseGatherMessengerFromCurrentTarget(messenger, "gather_interaction_timeout");
+					ReleaseGatherMessengerFromCurrentTarget(messenger, SiegeCivilianGatherInteractionProfile.InteractionTimeoutReleaseSource);
 					ActiveCivilianGatherInteractions.Remove(interaction.TargetAgentIndex);
 				}
 			}

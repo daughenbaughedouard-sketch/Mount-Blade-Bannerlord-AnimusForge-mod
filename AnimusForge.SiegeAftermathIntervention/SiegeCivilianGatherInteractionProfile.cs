@@ -39,4 +39,10 @@ public static class SiegeCivilianGatherInteractionProfile
     public const string MessengerMoveSource = "gather_messenger_move";
 
     public const string FollowPrepareSource = "gather_follow_prepare_once";
+
+    public const string InvalidOrAlreadyFollowerReleaseSource = "gather_interaction_invalid_or_target_already_c";
+
+    public const string FakeTalkFollowerSource = "gather_fake_talk";
+
+    public const string InteractionTimeoutReleaseSource = "gather_interaction_timeout";
 }
