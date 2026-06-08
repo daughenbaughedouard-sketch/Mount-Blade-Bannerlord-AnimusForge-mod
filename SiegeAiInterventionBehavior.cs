@@ -1165,9 +1165,9 @@ public class SiegeAiInterventionBehavior : CampaignBehaviorBase
 			_soldierAppeasementRequired = true;
 			_soldierAppeasementApplied = false;
 			_soldierAppeasementMoralePenaltyApplied = false;
-			string label = string.IsNullOrWhiteSpace(outcomeName) ? "宽恕处置" : outcomeName.Trim();
-			RecordInterventionMemory("军心", "玩家选择" + label + "触发部分士兵对放弃战利品的含蓄不满；若离场前对己方士兵安抚并触发安兵标签，可避免士气惩罚。");
-			InformationManager.DisplayMessage(new InformationMessage("【攻城处置】部分士兵对放弃战利品有些不满；若离场前安抚己方士兵，可避免主队士气 -20。", Color.FromUint(0xFFFFD27Fu)));
+			SiegeSoldierAppeasementProfile soldierProfile = new SiegeSoldierAppeasementProfile();
+			RecordInterventionMemory(soldierProfile.NeedMemoryTitle, soldierProfile.BuildNeedMemoryText(outcomeName));
+			InformationManager.DisplayMessage(new InformationMessage(soldierProfile.NeedMessageText, Color.FromUint(soldierProfile.NeedMessageColor)));
 		}
 		catch (Exception ex)
 		{

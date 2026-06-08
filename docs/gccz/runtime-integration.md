@@ -73,3 +73,6 @@ Follow-up isolation: destructive profile selection now uses `SiegeDestructiveCho
 
 
 Follow-up isolation: soldier appeasement now uses `SiegeSoldierAppeasementProfile`; the fused AF adapter delegates 安兵 success wording and fallback morale-penalty text/amount to the isolated GCCZ source area before applying Bannerlord party morale, UI, and memory side effects.
+
+
+Follow-up isolation: soldier appeasement need-warning now also routes through `SiegeSoldierAppeasementProfile`; the fused AF adapter keeps the random requirement gate and state flips while delegating the warning UI and memory wording to the isolated GCCZ source area.

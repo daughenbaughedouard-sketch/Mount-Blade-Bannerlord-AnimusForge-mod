@@ -89,3 +89,6 @@ Follow-up isolation: destructive profile selection now lives in mirrored `SiegeD
 
 
 Follow-up isolation: soldier appeasement now lives in mirrored `SiegeSoldierAppeasementProfile`. The fused tree routes 安兵 success wording plus fallback morale-penalty text/amount through that core while preserving AF-side target validation, party morale mutation, UI, and memory side effects.
+
+
+Follow-up isolation: soldier appeasement need-warning now also lives in mirrored `SiegeSoldierAppeasementProfile`. The fused tree routes the initial 军心 warning UI and memory wording through that core while preserving AF-side random gating and state changes.
