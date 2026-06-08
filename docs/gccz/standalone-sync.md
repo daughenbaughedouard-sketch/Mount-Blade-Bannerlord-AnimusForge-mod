@@ -80,3 +80,6 @@ Follow-up isolation: relief/appeasement profile selection now lives in mirrored 
 
 
 Follow-up isolation: civic profile selection now lives in mirrored `SiegeCivicChoiceProfile`. The fused tree routes 安民宣抚/归心盟誓 deltas, notable effects, message/memory wording, gather source, soldier appeasement reason, and shared-pool effect reason through that core while preserving AF-side side effects.
+
+
+Follow-up isolation: mercy profile selection now lives in mirrored `SiegeMercyChoiceProfile`. The fused tree routes stop-plunder reason, soldier appeasement reason, shared-pool effect reason, message text, and memory text through that core while preserving AF-side side effects.

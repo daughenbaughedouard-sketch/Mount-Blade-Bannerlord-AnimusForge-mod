@@ -3006,13 +3006,14 @@ public class SiegeAiInterventionBehavior : CampaignBehaviorBase
 			{
 				return false;
 			}
-			StopReversiblePlunderForMercyTrack("mercy");
+			SiegeMercyChoiceProfile mercyProfile = new SiegeMercyChoiceProfile();
+			StopReversiblePlunderForMercyTrack(mercyProfile.StopPlunderReason);
 			_activeMode = InterventionMode.MercyRelief;
 			MarkPendingAftermath(SiegeAftermathAction.SiegeAftermath.ShowMercy, triggerSource, triggerDetail);
-			MaybeTriggerSoldierAppeasementNeed("宽恕");
-			ApplySharedCivilianReliefPoolEffects(ResolveCurrentSettlement(), "mercy");
-			ShowOutcomeMessageOnce("mercy", "【攻城处置】你选择宽恕民众；离场后按宽恕处置结算。", 0xFFB6F7A8u);
-			RecordInterventionMemory("宽恕", "玩家已选择宽恕普通民众，不杀不抢；后续NPC应知道玩家已经给出宽恕处置。");
+			MaybeTriggerSoldierAppeasementNeed(mercyProfile.SoldierAppeasementReason);
+			ApplySharedCivilianReliefPoolEffects(ResolveCurrentSettlement(), mercyProfile.SharedPoolEffectReason);
+			ShowOutcomeMessageOnce(mercyProfile.MessageKey, mercyProfile.MessageText, mercyProfile.MessageColor);
+			RecordInterventionMemory(mercyProfile.MemoryTitle, mercyProfile.MemoryText);
 			return true;
 		}
 		catch (Exception ex)
