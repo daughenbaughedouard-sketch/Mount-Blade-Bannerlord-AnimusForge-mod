@@ -2719,7 +2719,7 @@ public class SiegeAiInterventionBehavior : CampaignBehaviorBase
 	{
 		try
 		{
-			if (TryBlockMercyTrackAfterDestructive("安抚"))
+			if (TryBlockMercyTrackAfterDestructive(SiegeReliefChoiceProfile.BlockedAfterDestructiveActionName))
 			{
 				return false;
 			}
@@ -2765,7 +2765,7 @@ public class SiegeAiInterventionBehavior : CampaignBehaviorBase
 	{
 		try
 		{
-			if (TryBlockMercyTrackAfterDestructive("安民宣抚"))
+			if (TryBlockMercyTrackAfterDestructive(SiegeCivicChoiceProfile.InspirationBlockedAfterDestructiveActionName))
 			{
 				return false;
 			}
@@ -2829,7 +2829,7 @@ public class SiegeAiInterventionBehavior : CampaignBehaviorBase
 	{
 		try
 		{
-			if (TryBlockMercyTrackAfterDestructive("归心盟誓"))
+			if (TryBlockMercyTrackAfterDestructive(SiegeCivicChoiceProfile.RallyOathBlockedAfterDestructiveActionName))
 			{
 				return false;
 			}
@@ -2899,7 +2899,7 @@ public class SiegeAiInterventionBehavior : CampaignBehaviorBase
 	{
 		try
 		{
-			if (TryBlockMercyTrackAfterDestructive("宽恕"))
+			if (TryBlockMercyTrackAfterDestructive(SiegeMercyChoiceProfile.BlockedAfterDestructiveActionName))
 			{
 				return false;
 			}

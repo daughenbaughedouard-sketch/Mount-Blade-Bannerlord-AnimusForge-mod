@@ -16,6 +16,8 @@ public sealed class SiegeReliefChoiceProfile
 
     public const string RequiredSharedMaterialMissingMessage = "【攻城处置】救济安抚需要先通过AF给予功能交给士兵或在场NPC第纳尔、粮食或物资，再明确命令分发给民众。单纯宽恕请按宽恕处置。";
 
+    public const string BlockedAfterDestructiveActionName = "安抚";
+
     private SiegeReliefChoiceProfile(
         bool hasSharedPool,
         string soldierAppeasementReason,

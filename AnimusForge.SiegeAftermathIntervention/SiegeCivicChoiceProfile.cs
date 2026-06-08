@@ -21,6 +21,10 @@ public sealed class SiegeCivicChoiceProfile
     private const int RallyOathNotableRelationBonus = 12;
     private const float RallyOathNotablePowerBonus = 8f;
 
+    public const string InspirationBlockedAfterDestructiveActionName = "安民宣抚";
+
+    public const string RallyOathBlockedAfterDestructiveActionName = "归心盟誓";
+
     private SiegeCivicChoiceProfile(
         string soldierAppeasementReason,
         int publicTrustDelta,

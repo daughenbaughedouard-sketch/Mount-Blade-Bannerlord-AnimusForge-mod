@@ -10,6 +10,8 @@ public sealed class SiegeMercyChoiceProfile
 
     public const float LoyaltyBonus = 15f;
 
+    public const string BlockedAfterDestructiveActionName = "宽恕";
+
     public string StopPlunderReason => "mercy";
 
     public string SoldierAppeasementReason => "宽恕";

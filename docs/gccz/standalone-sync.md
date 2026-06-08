@@ -157,16 +157,16 @@ Follow-up isolation: postprocess action effect trigger wording now lives in mirr
 Follow-up isolation: mercy-track transition UI now lives in mirrored `SiegeMercyTrackTransitionProfile`. The fused tree routes blocked post-destruction action and reversible-plunder-stop wording through the core while preserving AF-side destructive-lock checks, plunder-state clearing, logging, and display side effects.
 
 
-Follow-up isolation: relief/appeasement profile selection now lives in mirrored `SiegeReliefChoiceProfile`. The fused tree routes relief deltas, message/memory wording, soldier appeasement reason, and shared-pool effect reason through that core while preserving AF-side side effects.
+Follow-up isolation: relief/appeasement profile selection now lives in mirrored `SiegeReliefChoiceProfile`. The fused tree routes relief deltas, message/memory wording, soldier appeasement reason, shared-pool effect reason, and destructive-lock display action name through that core while preserving AF-side side effects.
 
 
 Follow-up isolation: relief validation messages now also live in mirrored `SiegeReliefChoiceProfile`. The fused tree routes invalid-target and missing-shared-material UI text through that core while preserving AF-side validation and `InformationMessage` display.
 
 
-Follow-up isolation: civic profile selection now lives in mirrored `SiegeCivicChoiceProfile`. The fused tree routes 安民宣抚/归心盟誓 deltas, notable effects, message/memory wording, gather source, soldier appeasement reason, and shared-pool effect reason through that core while preserving AF-side side effects.
+Follow-up isolation: civic profile selection now lives in mirrored `SiegeCivicChoiceProfile`. The fused tree routes 安民宣抚/归心盟誓 deltas, notable effects, message/memory wording, gather source, soldier appeasement reason, shared-pool effect reason, and destructive-lock display action names through that core while preserving AF-side side effects.
 
 
-Follow-up isolation: mercy profile selection now lives in mirrored `SiegeMercyChoiceProfile`. The fused tree routes stop-plunder reason, soldier appeasement reason, shared-pool effect reason, message text, memory text, and loyalty bonus through that core while preserving AF-side side effects.
+Follow-up isolation: mercy profile selection now lives in mirrored `SiegeMercyChoiceProfile`. The fused tree routes stop-plunder reason, soldier appeasement reason, shared-pool effect reason, message text, memory text, loyalty bonus, and destructive-lock display action name through that core while preserving AF-side side effects.
 
 
 Follow-up isolation: destructive profile selection now lives in mirrored `SiegeDestructiveChoiceProfile`. The fused tree routes 搜掠/血洗 aftermath kind, assembly source, UI message text, memory wording, public-trust delta, and trigger-source classification through that core while preserving AF-side mission/combat/settlement side effects.
