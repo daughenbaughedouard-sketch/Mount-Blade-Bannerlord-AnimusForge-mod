@@ -70,6 +70,9 @@ Follow-up isolation: outcome message de-duplication now lives in mirrored `Siege
 Follow-up isolation: postprocess current-outcome wording now lives in mirrored `SiegePostprocessOutcomeFacts` and `SiegePostprocessOutcomeTextBuilder`. The fused tree routes postprocess context outcome text through that core while preserving AF-side live state collection.
 
 
+Follow-up isolation: civilian gather runtime context now lives in mirrored `SiegeCivilianGatherContextFacts` and `SiegeCivilianGatherContextBuilder`. The fused tree routes 民众召集状态 wording through that core while preserving AF-side live agent counting and gather/formation flags.
+
+
 Follow-up isolation: intervention memory context formatting now lives in mirrored `SiegeInterventionMemoryContextBuilder`. The fused tree routes prompt memory wording through that core while preserving AF-side event collection, de-duplication, trimming, and logging.
 
 

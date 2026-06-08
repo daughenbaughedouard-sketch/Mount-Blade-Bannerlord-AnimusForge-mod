@@ -54,6 +54,9 @@ Follow-up isolation: outcome message de-duplication now uses `SiegeOutcomeMessag
 Follow-up isolation: postprocess current-outcome wording now uses `SiegePostprocessOutcomeFacts` and `SiegePostprocessOutcomeTextBuilder`; the fused AF adapter passes live state flags and pending aftermath name, then delegates wording to the isolated GCCZ source area.
 
 
+Follow-up isolation: civilian gather runtime context now uses `SiegeCivilianGatherContextFacts` and `SiegeCivilianGatherContextBuilder`; the fused AF adapter counts live mission agents and passes gather/formation flags while delegating 民众召集状态 wording to the isolated GCCZ source area.
+
+
 Follow-up isolation: intervention memory context formatting now uses `SiegeInterventionMemoryContextBuilder`; the fused AF adapter keeps event collection, de-duplication, trimming, and logging while delegating prompt context wording to the isolated GCCZ source area.
 
 
