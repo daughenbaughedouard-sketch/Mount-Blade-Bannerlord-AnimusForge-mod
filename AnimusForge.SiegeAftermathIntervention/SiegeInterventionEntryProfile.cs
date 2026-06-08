@@ -30,6 +30,10 @@ public static class SiegeInterventionEntryProfile
 
     public const string TroopSelectionDoneMissionSource = "game_menu_troop_selection_done";
 
+    public const string SceneEntryCleanupSource = "siege_intervention_enter_isolated_scene";
+
+    public const string AutoEnterSummonSource = "auto_enter";
+
     public static readonly string EnabledTooltip = "{=!}暂不立即处置战后事务；你将披甲带约" + DefaultAutoSummonCount + "名健康士兵进城，普通民众仍散在城内街区，再由现场对话或行动决定安抚、宽恕、搜掠或血洗。";
 
     public const string MissingSceneTooltip = "{=!}当前没有可进入的攻城胜利定居点场景。";

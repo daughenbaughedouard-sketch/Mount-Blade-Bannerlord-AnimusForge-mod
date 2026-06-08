@@ -63,7 +63,7 @@ Second extraction slice:
 
 ## Intervention entry profile
 
-`SiegeInterventionEntryProfile` owns dependency-free scene-entry tooltip, missing-scene UI wording, and troop-selection mission-entry source codes for the GCCZ intervention menu. AF adapters still resolve Bannerlord settlements, locations, menu args, and display side effects.
+`SiegeInterventionEntryProfile` owns dependency-free scene-entry tooltip, missing-scene UI wording, and troop-selection mission-entry, scene-cleanup, and auto-enter summon source codes for the GCCZ intervention menu. AF adapters still resolve Bannerlord settlements, locations, menu args, and display side effects.
 
 
 ## Mercy choice profile

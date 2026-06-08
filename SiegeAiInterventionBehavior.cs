@@ -510,10 +510,10 @@ public class SiegeAiInterventionBehavior : CampaignBehaviorBase
 			_civilianAssemblyForward = Vec3.Forward;
 			CaptureNativeSiegeContext(settlement);
 			ResetSessionCounters();
-			SceneTauntBehavior.ClearArmedCarryoverForExternal("siege_intervention_enter_isolated_scene");
-			SceneTauntBehavior.ClearPendingLocalDungeonCaptivityForExternal("siege_intervention_enter_isolated_scene");
-			SceneTauntBehavior.ClearPendingForcedPlayerExecutionForExternal("siege_intervention_enter_isolated_scene");
-			SceneTauntBehavior.ClearPendingMainHeroBattleDeathForExternal("siege_intervention_enter_isolated_scene");
+			SceneTauntBehavior.ClearArmedCarryoverForExternal(SiegeInterventionEntryProfile.SceneEntryCleanupSource);
+			SceneTauntBehavior.ClearPendingLocalDungeonCaptivityForExternal(SiegeInterventionEntryProfile.SceneEntryCleanupSource);
+			SceneTauntBehavior.ClearPendingForcedPlayerExecutionForExternal(SiegeInterventionEntryProfile.SceneEntryCleanupSource);
+			SceneTauntBehavior.ClearPendingMainHeroBattleDeathForExternal(SiegeInterventionEntryProfile.SceneEntryCleanupSource);
 			InformationManager.DisplayMessage(new InformationMessage(SiegeInterventionEntryProfile.BuildTroopSelectionInstructionMessage(AutoSummonCount), Color.FromUint(SiegeInterventionEntryProfile.EntryInstructionMessageColor)));
 			InformationManager.DisplayMessage(new InformationMessage(SiegeInterventionEntryProfile.DecisionPolicyMessage, Color.FromUint(SiegeInterventionEntryProfile.EntryInstructionMessageColor)));
 			if (!TryOpenInterventionTroopSelection(args, location))
@@ -814,7 +814,7 @@ public class SiegeAiInterventionBehavior : CampaignBehaviorBase
 			if (!_alliedTroopsAutoSummoned)
 			{
 				_alliedTroopsAutoSummoned = true;
-				SummonAlliedTroops(AutoSummonCount, "auto_enter");
+				SummonAlliedTroops(AutoSummonCount, SiegeInterventionEntryProfile.AutoEnterSummonSource);
 			}
 			if (!_massacreVictoryReached)
 			{
