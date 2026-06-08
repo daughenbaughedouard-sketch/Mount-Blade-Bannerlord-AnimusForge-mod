@@ -1265,7 +1265,7 @@ public class SiegeAiInterventionBehavior : CampaignBehaviorBase
 			{
 				return "";
 			}
-			return "【攻城处置记忆】" + string.Join("；", InterventionMemoryEvents) + "。这些是本次入城处置内已经发生的事实，后续NPC必须承认大概情况，不能表现得像玩家没有下过这些命令或民众没有被聚集过。";
+			return SiegeInterventionMemoryContextBuilder.Build(InterventionMemoryEvents);
 		}
 		catch
 		{
