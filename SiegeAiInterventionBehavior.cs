@@ -7454,7 +7454,7 @@ public class SiegeAiInterventionBehavior : CampaignBehaviorBase
 		{
 			if (settlement != null && RewardSystemBehavior.Instance != null)
 			{
-				RewardSystemBehavior.Instance.AdjustSettlementLocalPublicTrustForExternal(settlement, publicTrustDelta, "siege_ai_relief");
+				RewardSystemBehavior.Instance.AdjustSettlementLocalPublicTrustForExternal(settlement, publicTrustDelta, SiegeSettlementEffectProfile.PositivePublicTrustReason);
 			}
 			if (settlement?.Town != null)
 			{

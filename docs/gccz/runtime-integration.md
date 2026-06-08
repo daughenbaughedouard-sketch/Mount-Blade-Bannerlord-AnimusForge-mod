@@ -66,6 +66,9 @@ Follow-up isolation: shared-pool capture/refund summaries now also use `SiegeSha
 Follow-up isolation: newly applied shared-pool settlement-effect deltas now use `SiegeSharedReliefPoolEffectCalculator`; the fused AF adapter keeps Bannerlord town food-stock mutation and settlement delta application.
 
 
+Follow-up isolation: positive settlement public-trust reason codes now use `SiegeSettlementEffectProfile`; the fused AF adapter keeps Bannerlord settlement, town, and reward-system mutation calls.
+
+
 Follow-up isolation: outcome message de-duplication now uses `SiegeOutcomeMessageDeduplicator`; `SiegeAiInterventionBehavior` keeps Bannerlord UI display and delegates reset/show-once decisions to the isolated GCCZ source area.
 
 

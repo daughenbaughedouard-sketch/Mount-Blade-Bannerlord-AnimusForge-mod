@@ -82,6 +82,9 @@ Follow-up isolation: shared-pool capture/refund summaries now also live in mirro
 Follow-up isolation: newly applied shared-pool settlement-effect deltas now live in mirrored `SiegeSharedReliefPoolEffectCalculator` and `SiegeSharedReliefPoolEffectDeltas`. The fused tree routes relief material delta formulas through that core while preserving AF-side town food-stock mutation and settlement application.
 
 
+Follow-up isolation: positive settlement public-trust reason codes now live in mirrored `SiegeSettlementEffectProfile`. The fused tree routes the GCCZ reason code through that core while preserving AF-side Bannerlord settlement, town, and reward-system mutation calls.
+
+
 Follow-up isolation: outcome message de-duplication now lives in mirrored `SiegeOutcomeMessageDeduplicator`. The fused tree routes reset/show-once decisions through that core while preserving AF-side `InformationMessage` display.
 
 

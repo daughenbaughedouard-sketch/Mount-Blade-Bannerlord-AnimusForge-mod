@@ -61,6 +61,11 @@ Second extraction slice:
 `SiegeMercyChoiceProfile` owns dependency-free stop-plunder reason, soldier appeasement reason, shared-pool effect reason, message, memory text, loyalty bonus, and destructive-lock display action name for the simple 宽恕 choice. AF adapters still apply Bannerlord aftermath, shared-pool, UI, memory, and settlement side effects.
 
 
+## Settlement effect profile
+
+`SiegeSettlementEffectProfile` owns dependency-free reason codes for GCCZ settlement-effect mutations, including the positive public-trust reason used by relief/civic/mercy-track adjustments. AF adapters still own Bannerlord settlement, town, and reward-system side effects.
+
+
 ## Massacre interaction profile
 
 `SiegeMassacreInteractionProfile` owns dependency-free runtime parameters for GCCZ 血洗 civilian hide distance, hide refresh timing, soldier follow refresh, and soldier target refresh. AF adapters still own live mission-agent routing, order timing application, hide-point projection, and combat side effects.
