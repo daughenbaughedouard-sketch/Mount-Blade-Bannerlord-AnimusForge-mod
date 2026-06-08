@@ -97,6 +97,9 @@ Follow-up isolation: civilian gather UI/memory now lives in mirrored `SiegeCivil
 Follow-up isolation: civilian gather interaction timing and formation-control parameters now live in mirrored `SiegeCivilianGatherInteractionProfile`. The fused tree routes messenger speech count, talk duration, approach/follow timing, fallback timing, soldier messenger ratio, messenger speed, and formation-control batching through that core while preserving AF-side live mission-agent selection, `ShoutBehavior` triggering, movement, formation control, and side effects.
 
 
+Follow-up isolation: civilian assembly target counts, scene caps, extra-spawn gating, and grid layout now live in mirrored `SiegeCivilianAssemblyProfile`. The fused tree routes desired counts, scene caps, extra-spawn flag, forward offset, spacing, and columns through that core while preserving AF-side scene capacity checks, spawn gating, formation slot projection, and mission side effects.
+
+
 Follow-up isolation: intervention memory context formatting and the max retained memory-event count now live in mirrored `SiegeInterventionMemoryContextBuilder`. The fused tree routes prompt memory wording and the trim limit through that core while preserving AF-side event collection, de-duplication, trim application, and logging.
 
 
