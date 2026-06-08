@@ -37,4 +37,24 @@ public static class SiegeDirectAftermathSourceProfile
     public const string ExternalDirectMassacreScriptSource = "external_direct_massacre_script";
 
     public const string ExternalDirectPlunderScriptSource = "external_direct_plunder_script";
+
+    public const string NativeMenuMissionCurrentSourcePrefix = "native_menu_mission_current:";
+
+    public const string MissionCurrentLootDeferSource = "mission_current";
+
+    public const string NullStateLootDeferSource = "state_null";
+
+    public const string ActiveStateLootDeferSourcePrefix = "state:";
+
+    public const string UnavailableSourceSuffix = "N/A";
+
+    public static string BuildNativeMenuMissionCurrentSource(string menuId)
+    {
+        return NativeMenuMissionCurrentSourcePrefix + (menuId ?? UnavailableSourceSuffix);
+    }
+
+    public static string BuildActiveStateLootDeferSource(string stateName)
+    {
+        return ActiveStateLootDeferSourcePrefix + (stateName ?? UnavailableSourceSuffix);
+    }
 }

@@ -2067,7 +2067,7 @@ public class SiegeAiInterventionBehavior : CampaignBehaviorBase
 			Logger.Log("SiegeAiIntervention", "Intercepted native siege aftermath menu for direct AF massacre loot script. Menu=" + menuId + ", Source=" + (source ?? "N/A"));
 			if (Mission.Current != null)
 			{
-				LogDirectMassacreLootDeferOnce("native_menu_mission_current:" + menuId, "Suppressed native siege aftermath menu while Mission.Current is still active; direct AF massacre loot will be pumped after MapState. Menu=" + menuId + ", Source=" + (source ?? "N/A"));
+				LogDirectMassacreLootDeferOnce(SiegeDirectAftermathSourceProfile.BuildNativeMenuMissionCurrentSource(menuId), "Suppressed native siege aftermath menu while Mission.Current is still active; direct AF massacre loot will be pumped after MapState. Menu=" + menuId + ", Source=" + (source ?? "N/A"));
 				return true;
 			}
 			if (!TryOpenDirectMassacreLootScreenNow(source ?? SiegeDirectAftermathSourceProfile.NativeMenuInterceptSource) && IsSafeToOpenDirectMassacreLootScreen(source ?? SiegeDirectAftermathSourceProfile.NativeMenuInterceptNoLootProbeSource))
@@ -2099,7 +2099,7 @@ public class SiegeAiInterventionBehavior : CampaignBehaviorBase
 			Logger.Log("SiegeAiIntervention", "Intercepted native siege aftermath menu for direct AF plunder loot script. Menu=" + menuId + ", Source=" + (source ?? "N/A"));
 			if (Mission.Current != null)
 			{
-				LogDirectPlunderLootDeferOnce("native_menu_mission_current:" + menuId, "Suppressed native siege aftermath menu while Mission.Current is still active; direct AF plunder loot will be pumped after MapState. Menu=" + menuId + ", Source=" + (source ?? "N/A"));
+				LogDirectPlunderLootDeferOnce(SiegeDirectAftermathSourceProfile.BuildNativeMenuMissionCurrentSource(menuId), "Suppressed native siege aftermath menu while Mission.Current is still active; direct AF plunder loot will be pumped after MapState. Menu=" + menuId + ", Source=" + (source ?? "N/A"));
 				return true;
 			}
 			if (!TryOpenDirectPlunderLootScreenNow(source ?? SiegeDirectAftermathSourceProfile.NativeMenuInterceptSource) && IsSafeToOpenDirectPlunderLootScreen(source ?? SiegeDirectAftermathSourceProfile.NativeMenuInterceptNoLootProbeSource))
@@ -8282,13 +8282,13 @@ public class SiegeAiInterventionBehavior : CampaignBehaviorBase
 		{
 			if (Mission.Current != null)
 			{
-				LogDirectMassacreLootDeferOnce("mission_current", "Direct massacre loot screen deferred because Mission.Current is still active. Source=" + (source ?? "N/A"));
+				LogDirectMassacreLootDeferOnce(SiegeDirectAftermathSourceProfile.MissionCurrentLootDeferSource, "Direct massacre loot screen deferred because Mission.Current is still active. Source=" + (source ?? "N/A"));
 				return false;
 			}
 			object activeState = Game.Current?.GameStateManager?.ActiveState;
 			if (activeState == null)
 			{
-				LogDirectMassacreLootDeferOnce("state_null", "Direct massacre loot screen deferred because active game state is null. Source=" + (source ?? "N/A"));
+				LogDirectMassacreLootDeferOnce(SiegeDirectAftermathSourceProfile.NullStateLootDeferSource, "Direct massacre loot screen deferred because active game state is null. Source=" + (source ?? "N/A"));
 				return false;
 			}
 			if (activeState is InventoryState)
@@ -8300,7 +8300,7 @@ public class SiegeAiInterventionBehavior : CampaignBehaviorBase
 				return true;
 			}
 			string stateName = activeState.GetType().FullName ?? activeState.GetType().Name;
-			LogDirectMassacreLootDeferOnce("state:" + stateName, "Direct massacre loot screen deferred until MapState. Source=" + (source ?? "N/A") + ", ActiveState=" + stateName);
+			LogDirectMassacreLootDeferOnce(SiegeDirectAftermathSourceProfile.BuildActiveStateLootDeferSource(stateName), "Direct massacre loot screen deferred until MapState. Source=" + (source ?? "N/A") + ", ActiveState=" + stateName);
 			return false;
 		}
 		catch (Exception ex)
@@ -8316,13 +8316,13 @@ public class SiegeAiInterventionBehavior : CampaignBehaviorBase
 		{
 			if (Mission.Current != null)
 			{
-				LogDirectPlunderLootDeferOnce("mission_current", "Direct plunder loot screen deferred because Mission.Current is still active. Source=" + (source ?? "N/A"));
+				LogDirectPlunderLootDeferOnce(SiegeDirectAftermathSourceProfile.MissionCurrentLootDeferSource, "Direct plunder loot screen deferred because Mission.Current is still active. Source=" + (source ?? "N/A"));
 				return false;
 			}
 			object activeState = Game.Current?.GameStateManager?.ActiveState;
 			if (activeState == null)
 			{
-				LogDirectPlunderLootDeferOnce("state_null", "Direct plunder loot screen deferred because active game state is null. Source=" + (source ?? "N/A"));
+				LogDirectPlunderLootDeferOnce(SiegeDirectAftermathSourceProfile.NullStateLootDeferSource, "Direct plunder loot screen deferred because active game state is null. Source=" + (source ?? "N/A"));
 				return false;
 			}
 			if (activeState is InventoryState)
@@ -8334,7 +8334,7 @@ public class SiegeAiInterventionBehavior : CampaignBehaviorBase
 				return true;
 			}
 			string stateName = activeState.GetType().FullName ?? activeState.GetType().Name;
-			LogDirectPlunderLootDeferOnce("state:" + stateName, "Direct plunder loot screen deferred until MapState. Source=" + (source ?? "N/A") + ", ActiveState=" + stateName);
+			LogDirectPlunderLootDeferOnce(SiegeDirectAftermathSourceProfile.BuildActiveStateLootDeferSource(stateName), "Direct plunder loot screen deferred until MapState. Source=" + (source ?? "N/A") + ", ActiveState=" + stateName);
 			return false;
 		}
 		catch (Exception ex)

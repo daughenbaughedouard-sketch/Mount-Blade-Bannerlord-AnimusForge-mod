@@ -203,7 +203,7 @@ Follow-up isolation: final completion and encounter-exit UI now routes through `
 
 Follow-up isolation: mission-exit fallback aftermath selection now routes through `SiegeMissionExitOutcomeProfile`; the fused AF adapter keeps live mission state, native aftermath mapping, plunder start side effects, and pending-aftermath mutation while delegating the exit outcome priority and trigger wording to the isolated GCCZ source area.
 
-Follow-up isolation: direct AF aftermath campaign tick, native-menu intercept, external-pump, and script-phase source codes now use `SiegeDirectAftermathSourceProfile`; the fused AF adapter keeps campaign tick callbacks, loot-screen timing, pending-script state, and encounter transition side effects while delegating those source-code strings to the isolated GCCZ source area.
+Follow-up isolation: direct AF aftermath campaign tick, native-menu intercept, external-pump, script-phase, and direct loot-screen defer source codes now use `SiegeDirectAftermathSourceProfile`; the fused AF adapter keeps campaign tick callbacks, loot-screen timing, pending-script state, and encounter transition side effects while delegating those source-code strings to the isolated GCCZ source area.
 
 Follow-up isolation: mission-end, post-mission encounter finish, done-menu continue finish, native menu init/detection, and native devastate summary transition source codes now use `SiegeAftermathTransitionSourceProfile`; the fused AF adapter keeps mission lifecycle, native menu handling, loot-screen timing, and encounter transition side effects while delegating those source-code strings to the isolated GCCZ source area.
 

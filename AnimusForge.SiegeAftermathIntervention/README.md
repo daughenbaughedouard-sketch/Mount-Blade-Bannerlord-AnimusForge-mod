@@ -107,7 +107,7 @@ Second extraction slice:
 
 ## Direct aftermath source profile
 
-`SiegeDirectAftermathSourceProfile` owns dependency-free source codes for direct AF aftermath campaign tick scripts, native-menu intercepts, external pump fallbacks, and direct-script phase transitions. AF adapters still own campaign tick timing, loot-screen state, and encounter transitions.
+`SiegeDirectAftermathSourceProfile` owns dependency-free source codes for direct AF aftermath campaign tick scripts, native-menu intercepts, external pump fallbacks, direct-script phase transitions, and direct loot-screen defer reasons. AF adapters still own campaign tick timing, loot-screen state, and encounter transitions.
 
 ## Aftermath transition source profile
 
