@@ -106,7 +106,7 @@ Second extraction slice:
 
 ## Aftermath transition source profile
 
-`SiegeAftermathTransitionSourceProfile` owns dependency-free source codes for mission-end aftermath finalization and native devastate summary continuation. AF adapters still own mission lifecycle, menu switching, loot-screen timing, and encounter side effects.
+`SiegeAftermathTransitionSourceProfile` owns dependency-free source codes for mission-end aftermath finalization, native menu initialization, campaign-tick native menu detection, and native devastate summary continuation. AF adapters still own mission lifecycle, menu switching, loot-screen timing, and encounter side effects.
 
 ## Native bridge source profile
 

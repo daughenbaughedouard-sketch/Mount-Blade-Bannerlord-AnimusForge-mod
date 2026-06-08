@@ -1027,8 +1027,8 @@ public class SiegeAiInterventionBehavior : CampaignBehaviorBase
 			{
 				PrepareCompletedInterventionSummary(_completedAftermath);
 			}
-			QueueEncounterFinishAfterIntervention(_completedAftermath, "campaign_tick_native_menu_detected:" + menuId, 0, forceDelay: true);
-			TryFinishPlayerEncounterAfterInterventionNow(_completedAftermath, "campaign_tick_native_menu_detected:" + menuId);
+			QueueEncounterFinishAfterIntervention(_completedAftermath, SiegeAftermathTransitionSourceProfile.BuildCampaignTickNativeMenuDetectedSource(menuId), 0, forceDelay: true);
+			TryFinishPlayerEncounterAfterInterventionNow(_completedAftermath, SiegeAftermathTransitionSourceProfile.BuildCampaignTickNativeMenuDetectedSource(menuId));
 			Logger.Log("SiegeAiIntervention", "Finished resolved AF siege aftermath instead of returning to native three-option menu.");
 			return true;
 		}
@@ -1964,7 +1964,7 @@ public class SiegeAiInterventionBehavior : CampaignBehaviorBase
 		{
 			if (_directPlunderAftermathScriptPending)
 			{
-				TryRunDirectPlunderAftermathScript("native_menu_init:" + (source ?? "N/A"));
+				TryRunDirectPlunderAftermathScript(SiegeAftermathTransitionSourceProfile.BuildNativeMenuInitSource(source));
 				return true;
 			}
 			if (Mission.Current != null || !_afAftermathResolved || !DoesCompletedAftermathMatchCurrentSettlement())
@@ -1987,8 +1987,8 @@ public class SiegeAiInterventionBehavior : CampaignBehaviorBase
 				Logger.Log("SiegeAiIntervention", "Auto-routed native siege aftermath menu to Devastate summary for AF massacre. Source=" + (source ?? "N/A"));
 				return true;
 			}
-			QueueEncounterFinishAfterIntervention(_completedAftermath, "native_menu_init:" + (source ?? "N/A"), 0, forceDelay: true);
-			TryFinishPlayerEncounterAfterInterventionNow(_completedAftermath, "native_menu_init:" + (source ?? "N/A"));
+			QueueEncounterFinishAfterIntervention(_completedAftermath, SiegeAftermathTransitionSourceProfile.BuildNativeMenuInitSource(source), 0, forceDelay: true);
+			TryFinishPlayerEncounterAfterInterventionNow(_completedAftermath, SiegeAftermathTransitionSourceProfile.BuildNativeMenuInitSource(source));
 			Logger.Log("SiegeAiIntervention", "Suppressed native siege aftermath menu init and requested encounter finish after AF resolved aftermath. Source=" + (source ?? "N/A"));
 			return true;
 		}

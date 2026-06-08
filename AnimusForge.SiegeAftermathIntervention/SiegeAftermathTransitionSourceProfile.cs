@@ -15,4 +15,25 @@ public static class SiegeAftermathTransitionSourceProfile
     public const string NativeDevastateSummaryContinueLootSource = "native_devastate_summary_continue_loot";
 
     public const string NativeDevastateSummaryContinueNoLootSource = "native_devastate_summary_continue_no_loot";
+
+    public const string CampaignTickNativeMenuDetectedSourcePrefix = "campaign_tick_native_menu_detected:";
+
+    public const string NativeMenuInitSourcePrefix = "native_menu_init:";
+
+    public const string UnavailableSourceSuffix = "N/A";
+
+    public static string BuildCampaignTickNativeMenuDetectedSource(string menuId)
+    {
+        return CampaignTickNativeMenuDetectedSourcePrefix + NormalizeSourceSuffix(menuId);
+    }
+
+    public static string BuildNativeMenuInitSource(string source)
+    {
+        return NativeMenuInitSourcePrefix + NormalizeSourceSuffix(source);
+    }
+
+    private static string NormalizeSourceSuffix(string value)
+    {
+        return value ?? UnavailableSourceSuffix;
+    }
 }
