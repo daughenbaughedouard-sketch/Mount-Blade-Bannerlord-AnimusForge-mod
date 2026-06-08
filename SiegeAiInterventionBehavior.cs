@@ -2689,8 +2689,8 @@ public class SiegeAiInterventionBehavior : CampaignBehaviorBase
 			SharedCivilianReliefItems.Clear();
 			SharedCivilianReliefItemObjects.Clear();
 			string summary = string.Join("、", returnedParts.Where(x => !string.IsNullOrWhiteSpace(x)));
-			InformationManager.DisplayMessage(new InformationMessage("【攻城处置】已触发搜掠/血洗等负面处置，先前交给平民共享的物资已退还给你：" + summary + "。", Color.FromUint(0xFFFFD27Fu)));
-			RecordInterventionMemory("返还", "玩家先前交付的平民共享安抚物资因负面处置被退还；返还内容：" + summary + "。");
+			InformationManager.DisplayMessage(new InformationMessage(SiegeSharedReliefPoolFormatter.BuildReturnedToPlayerMessage(summary), Color.FromUint(SiegeSharedReliefPoolFormatter.ReturnedToPlayerMessageColor)));
+			RecordInterventionMemory(SiegeSharedReliefPoolFormatter.ReturnedToPlayerMemoryTitle, SiegeSharedReliefPoolFormatter.BuildReturnedToPlayerMemoryText(summary));
 			Logger.Log("SiegeAiIntervention", "Returned shared civilian relief pool to player due to negative outcome. Reason=" + (reason ?? "N/A") + ", Summary=" + summary);
 			return true;
 		}

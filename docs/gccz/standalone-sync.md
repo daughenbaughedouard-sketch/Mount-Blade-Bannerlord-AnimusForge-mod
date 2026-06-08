@@ -64,6 +64,9 @@ Follow-up isolation: postprocess tag normalization now lives in `SiegePostproces
 Follow-up isolation: shared civilian relief-pool context now lives in mirrored `SiegeSharedReliefPoolFacts` and `SiegeSharedReliefPoolFormatter` source files. The fused tree routes `DescribeSharedCivilianReliefPoolForContext()` and `HasSharedCivilianReliefPool()` through that core while preserving AF-side inventory effects.
 
 
+Follow-up isolation: negative-outcome shared-pool refund UI and memory wording now also live in mirrored `SiegeSharedReliefPoolFormatter`. The fused tree routes refund text through that core while preserving AF-side item/gold return side effects.
+
+
 Follow-up isolation: outcome message de-duplication now lives in mirrored `SiegeOutcomeMessageDeduplicator`. The fused tree routes reset/show-once decisions through that core while preserving AF-side `InformationMessage` display.
 
 
