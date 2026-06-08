@@ -49,3 +49,6 @@ Follow-up isolation: shared civilian relief-pool context now uses `SiegeSharedRe
 
 
 Follow-up isolation: outcome message de-duplication now uses `SiegeOutcomeMessageDeduplicator`; `SiegeAiInterventionBehavior` keeps Bannerlord UI display and delegates reset/show-once decisions to the isolated GCCZ source area.
+
+
+Follow-up isolation: postprocess current-outcome wording now uses `SiegePostprocessOutcomeFacts` and `SiegePostprocessOutcomeTextBuilder`; the fused AF adapter passes live state flags and pending aftermath name, then delegates wording to the isolated GCCZ source area.

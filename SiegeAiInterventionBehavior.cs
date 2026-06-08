@@ -1443,7 +1443,7 @@ public class SiegeAiInterventionBehavior : CampaignBehaviorBase
 			bool alliedSoldier = agent != null && AlliedAgentIndexes.Contains(agent.Index);
 			bool civilian = IsCivilianForIntervention(character);
 			bool destructiveAllowed = IsDestructiveInterventionAllowed();
-			string currentOutcome = _massacreStarted ? "血洗已开始，不可回退" : (_plunderStarted ? "搜掠已开始，但可被后续宽恕/安抚/宣抚覆盖" : (_hasPendingAftermath ? ("已有待结算处置：" + _pendingAftermath) : "尚未选择最终处置"));
+			string currentOutcome = SiegePostprocessOutcomeTextBuilder.Build(BuildPostprocessOutcomeFacts());
 			string gatherContext = BuildCivilianGatherRuntimeContext(Mission.Current);
 			string memoryContext = BuildInterventionMemoryContext();
 			var facts = new SiegePostprocessContextFacts(
@@ -1462,6 +1462,15 @@ public class SiegeAiInterventionBehavior : CampaignBehaviorBase
 		{
 			return "";
 		}
+	}
+
+	private static SiegePostprocessOutcomeFacts BuildPostprocessOutcomeFacts()
+	{
+		return new SiegePostprocessOutcomeFacts(
+			_massacreStarted,
+			_plunderStarted,
+			_hasPendingAftermath,
+			_pendingAftermath.ToString());
 	}
 
 	internal static string NormalizeSiegeInterventionPostprocessTagsForExternal(string raw, List<PostprocessRuleEntry> rules)
