@@ -415,7 +415,7 @@ public class SiegeAiInterventionBehavior : CampaignBehaviorBase
 	{
 		try
 		{
-			string text = string.IsNullOrWhiteSpace(_completedSummaryText) ? "攻城后的入城处置已经完成。按继续结束本次攻城遭遇。" : _completedSummaryText;
+			string text = string.IsNullOrWhiteSpace(_completedSummaryText) ? SiegeInterventionCompletionUiProfile.DoneMenuFallbackText : _completedSummaryText;
 			MBTextManager.SetTextVariable("AF_SIEGE_DONE_TEXT", text, false);
 			args?.MenuContext?.SetBackgroundMeshName("encounter_win");
 		}
@@ -6940,8 +6940,7 @@ public class SiegeAiInterventionBehavior : CampaignBehaviorBase
 		{
 			ApplyCulturalRepopulationNow("massacre_victory");
 		}
-		string text = "【攻城处置】血洗完成：城内残余抵抗已经肃清。离场后将结算战利品和第纳尔。";
-		InformationManager.DisplayMessage(new InformationMessage(text, Color.FromUint(0xFFFF7777u)));
+		InformationManager.DisplayMessage(new InformationMessage(SiegeInterventionCompletionUiProfile.MassacreVictoryMessage, Color.FromUint(SiegeInterventionCompletionUiProfile.MassacreVictoryMessageColor)));
 		ShowMassacreVictoryLootMessages();
 		try
 		{
@@ -7913,7 +7912,7 @@ public class SiegeAiInterventionBehavior : CampaignBehaviorBase
 		}
 		catch
 		{
-			_completedSummaryText = "攻城后的入城处置已经完成，正在结束本次攻城遭遇。";
+			_completedSummaryText = SiegeInterventionCompletionUiProfile.CompletedSummaryFallbackText;
 		}
 	}
 

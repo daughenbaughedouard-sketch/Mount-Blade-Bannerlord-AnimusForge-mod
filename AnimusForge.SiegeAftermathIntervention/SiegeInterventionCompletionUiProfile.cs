@@ -8,6 +8,14 @@ public static class SiegeInterventionCompletionUiProfile
 {
     public const uint CompletionMessageColor = 0xFFB6F7A8u;
 
+    public const uint MassacreVictoryMessageColor = 0xFFFF7777u;
+
+    public const string DoneMenuFallbackText = "攻城后的入城处置已经完成。按继续结束本次攻城遭遇。";
+
+    public const string CompletedSummaryFallbackText = "攻城后的入城处置已经完成，正在结束本次攻城遭遇。";
+
+    public const string MassacreVictoryMessage = "【攻城处置】血洗完成：城内残余抵抗已经肃清。离场后将结算战利品和第纳尔。";
+
     public const string MassacreVictoryQuickText = "血洗完成，离场后结算战利品。";
 
     public const string LeaveEncounterQuickText = "攻城后处置已完成，正在离开攻城遭遇。";
