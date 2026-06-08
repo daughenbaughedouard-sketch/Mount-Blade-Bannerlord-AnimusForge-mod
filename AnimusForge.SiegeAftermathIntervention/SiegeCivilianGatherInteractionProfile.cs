@@ -1,7 +1,7 @@
 namespace AnimusForge.SiegeAftermathIntervention;
 
 /// <summary>
-/// Dependency-free runtime parameters for GCCZ civilian-gather interactions.
+/// Dependency-free runtime parameters and source codes for GCCZ civilian-gather interactions.
 /// AF adapters still own live mission-agent selection, messenger speech triggering, formation control, and side effects.
 /// </summary>
 public static class SiegeCivilianGatherInteractionProfile
@@ -33,4 +33,10 @@ public static class SiegeCivilianGatherInteractionProfile
     public const int MessengerSpeechMinCount = 2;
 
     public const int MessengerSpeechMaxCount = 3;
+
+    public const string TargetWaitSource = "gather_target_wait";
+
+    public const string MessengerMoveSource = "gather_messenger_move";
+
+    public const string FollowPrepareSource = "gather_follow_prepare_once";
 }

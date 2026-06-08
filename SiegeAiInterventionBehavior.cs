@@ -3924,7 +3924,7 @@ public class SiegeAiInterventionBehavior : CampaignBehaviorBase
 					ActiveCivilianGatherInteractions.Remove(interaction.TargetAgentIndex);
 					continue;
 				}
-				NeutralizeCivilianDailyUsableBehavior(target, "gather_target_wait");
+				NeutralizeCivilianDailyUsableBehavior(target, SiegeCivilianGatherInteractionProfile.TargetWaitSource);
 				if (interaction.TalkStartedAt < 0f)
 				{
 					PrepareGatherMessengerMove(messenger, target);
@@ -3997,7 +3997,7 @@ public class SiegeAiInterventionBehavior : CampaignBehaviorBase
 			}
 			else
 			{
-				NeutralizeCivilianDailyUsableBehavior(messenger, "gather_messenger_move");
+				NeutralizeCivilianDailyUsableBehavior(messenger, SiegeCivilianGatherInteractionProfile.MessengerMoveSource);
 			}
 			messenger.SetWatchState(Agent.WatchState.Patrolling);
 			messenger.SetMaximumSpeedLimit(CivilianGatherMessengerMoveSpeedLimit, false);
@@ -4187,7 +4187,7 @@ public class SiegeAiInterventionBehavior : CampaignBehaviorBase
 			bool firstMovePrepare = CivilianGatherMovePreparedAgentIndexes.Add(agent.Index);
 			if (firstMovePrepare)
 			{
-				NeutralizeCivilianDailyUsableBehavior(agent, "gather_follow_prepare_once");
+				NeutralizeCivilianDailyUsableBehavior(agent, SiegeCivilianGatherInteractionProfile.FollowPrepareSource);
 				ClearCivilianUpperBodyActionForMovement(agent);
 			}
 			bool targetChanged = !LastCivilianGatherFollowTargets.TryGetValue(agent.Index, out Vec3 lastTarget) || lastTarget.DistanceSquared(target) > 1.44f;
