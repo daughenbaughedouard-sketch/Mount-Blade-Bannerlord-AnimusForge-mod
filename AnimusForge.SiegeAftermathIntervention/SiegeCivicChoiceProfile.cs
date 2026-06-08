@@ -78,6 +78,8 @@ public sealed class SiegeCivicChoiceProfile
 
     public string SharedPoolEffectReason { get; }
 
+    public string StopReversiblePlunderReason => SharedPoolEffectReason;
+
     public string GatherSource { get; }
 
     public string MessageKey { get; }

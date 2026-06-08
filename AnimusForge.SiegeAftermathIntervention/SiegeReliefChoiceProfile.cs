@@ -18,6 +18,8 @@ public sealed class SiegeReliefChoiceProfile
 
     public const string BlockedAfterDestructiveActionName = "安抚";
 
+    public const string StopReversiblePlunderReason = "relief";
+
     private SiegeReliefChoiceProfile(
         bool hasSharedPool,
         string soldierAppeasementReason,

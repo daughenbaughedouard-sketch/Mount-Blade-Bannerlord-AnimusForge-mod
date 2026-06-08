@@ -2730,7 +2730,7 @@ public class SiegeAiInterventionBehavior : CampaignBehaviorBase
 				return false;
 			}
 			SiegeReliefChoiceProfile reliefProfile = SiegeReliefChoiceProfile.Build(hasSharedPool, civilianVerbalOnly, DescribeSharedCivilianReliefPoolForContext());
-			StopReversiblePlunderForMercyTrack("relief");
+			StopReversiblePlunderForMercyTrack(SiegeReliefChoiceProfile.StopReversiblePlunderReason);
 			if (_reliefChoiceApplied)
 			{
 				if (reliefProfile.HasSharedPool && !string.IsNullOrWhiteSpace(reliefProfile.RepeatSharedPoolEffectReason))
@@ -2770,7 +2770,7 @@ public class SiegeAiInterventionBehavior : CampaignBehaviorBase
 				return false;
 			}
 			SiegeCivicChoiceProfile civicProfile = SiegeCivicChoiceProfile.BuildInspiration();
-			StopReversiblePlunderForMercyTrack("inspiration");
+			StopReversiblePlunderForMercyTrack(civicProfile.StopReversiblePlunderReason);
 			if (_inspirationLevelApplied >= 1)
 			{
 				ApplySharedCivilianReliefPoolEffects(ResolveCurrentSettlement(), civicProfile.RepeatSharedPoolEffectReason);
@@ -2834,7 +2834,7 @@ public class SiegeAiInterventionBehavior : CampaignBehaviorBase
 				return false;
 			}
 			SiegeCivicChoiceProfile civicProfile = SiegeCivicChoiceProfile.BuildRallyOath(_inspirationLevelApplied);
-			StopReversiblePlunderForMercyTrack("rally_oath");
+			StopReversiblePlunderForMercyTrack(civicProfile.StopReversiblePlunderReason);
 			if (_inspirationLevelApplied >= 2)
 			{
 				ApplySharedCivilianReliefPoolEffects(ResolveCurrentSettlement(), civicProfile.RepeatSharedPoolEffectReason);
