@@ -145,7 +145,7 @@ Follow-up isolation: mission-entry battle-equipment and allied-summon UI now als
 Follow-up isolation: scene-entry menu option text now also lives in mirrored `SiegeInterventionEntryProfile`. The fused tree routes the user-facing entry label through the core while preserving AF-side menu IDs, registration, and callbacks.
 
 
-Follow-up isolation: entry auto-summon/default selection limits now also live in mirrored `SiegeInterventionEntryProfile`. The fused tree routes `AutoSummonCount` and `MaxSummonPerAction` through the core while preserving AF-side roster selection, soldier spawning, formation placement, and encounter-summary side effects.
+Follow-up isolation: entry auto-summon/default selection limits and troop-selection mission-entry source codes now also live in mirrored `SiegeInterventionEntryProfile`. The fused tree routes `AutoSummonCount`, `MaxSummonPerAction`, selection-unavailable source, and troop-selection-done source through the core while preserving AF-side roster selection, mission opening, soldier spawning, formation placement, and encounter-summary side effects.
 
 
 Follow-up isolation: pending native aftermath selection now lives in mirrored `SiegeAftermathResolutionKind` and `SiegeAftermathSelectionPolicy`. The fused tree routes native aftermath severity and replacement decisions through that core while preserving AF-side enum mapping and side effects.

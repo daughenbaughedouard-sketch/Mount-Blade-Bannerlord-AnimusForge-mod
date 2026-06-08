@@ -26,6 +26,10 @@ public static class SiegeInterventionEntryProfile
 
     public const string EntryMenuOptionText = "亲自进城决定";
 
+    public const string SelectionUnavailableMissionSource = "selection_unavailable";
+
+    public const string TroopSelectionDoneMissionSource = "game_menu_troop_selection_done";
+
     public static readonly string EnabledTooltip = "{=!}暂不立即处置战后事务；你将披甲带约" + DefaultAutoSummonCount + "名健康士兵进城，普通民众仍散在城内街区，再由现场对话或行动决定安抚、宽恕、搜掠或血洗。";
 
     public const string MissingSceneTooltip = "{=!}当前没有可进入的攻城胜利定居点场景。";

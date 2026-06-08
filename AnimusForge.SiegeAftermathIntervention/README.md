@@ -61,6 +61,11 @@ Second extraction slice:
 `SiegePlunderInteractionProfile` owns dependency-free runtime parameters and source codes for GCCZ 搜掠 soldier assignment, approach distance, concurrent interactions, talk duration, allied assignment restore, and target follow operations. AF adapters still own live mission-agent selection, movement, timing application, and side effects.
 
 
+## Intervention entry profile
+
+`SiegeInterventionEntryProfile` owns dependency-free scene-entry tooltip, missing-scene UI wording, and troop-selection mission-entry source codes for the GCCZ intervention menu. AF adapters still resolve Bannerlord settlements, locations, menu args, and display side effects.
+
+
 ## Mercy choice profile
 
 `SiegeMercyChoiceProfile` owns dependency-free stop-plunder reason, soldier appeasement reason, shared-pool effect reason, message, memory text, loyalty bonus, and destructive-lock display action name for the simple 宽恕 choice. AF adapters still apply Bannerlord aftermath, shared-pool, UI, memory, and settlement side effects.

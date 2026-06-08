@@ -518,7 +518,7 @@ public class SiegeAiInterventionBehavior : CampaignBehaviorBase
 			InformationManager.DisplayMessage(new InformationMessage(SiegeInterventionEntryProfile.DecisionPolicyMessage, Color.FromUint(SiegeInterventionEntryProfile.EntryInstructionMessageColor)));
 			if (!TryOpenInterventionTroopSelection(args, location))
 			{
-				OpenInterventionMissionNow(location, "selection_unavailable");
+				OpenInterventionMissionNow(location, SiegeInterventionEntryProfile.SelectionUnavailableMissionSource);
 			}
 		}
 		catch (Exception ex)
@@ -559,7 +559,7 @@ public class SiegeAiInterventionBehavior : CampaignBehaviorBase
 					{
 						InformationManager.DisplayMessage(new InformationMessage(SiegeInterventionEntryProfile.SelectionFallbackMessage, Color.FromUint(SiegeInterventionEntryProfile.SelectionFallbackMessageColor)));
 					}
-					OpenInterventionMissionNow(location, "game_menu_troop_selection_done");
+					OpenInterventionMissionNow(location, SiegeInterventionEntryProfile.TroopSelectionDoneMissionSource);
 				},
 				AutoSummonCount,
 				0);
