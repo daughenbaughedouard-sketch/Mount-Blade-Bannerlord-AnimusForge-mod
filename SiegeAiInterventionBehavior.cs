@@ -5853,7 +5853,7 @@ public class SiegeAiInterventionBehavior : CampaignBehaviorBase
 				if (_plunderStarted && !_massacreStarted && IsSoldierAssignedToPlunder(agent.Index))
 				{
 					CordonReadyAgentIndexes.Remove(agent.Index);
-					RestoreAlliedSoldierFriendlyState(agent, 0f, "allied_plunder_assignment_tick", forceFollow: false, clearTarget: false);
+					RestoreAlliedSoldierFriendlyState(agent, 0f, SiegePlunderInteractionProfile.AlliedAssignmentRestoreSource, forceFollow: false, clearTarget: false);
 					agent.SetWatchState(Agent.WatchState.Alarmed);
 					continue;
 				}
@@ -6110,7 +6110,7 @@ public class SiegeAiInterventionBehavior : CampaignBehaviorBase
 				return;
 			}
 			soldier.SetWatchState(Agent.WatchState.Alarmed);
-			TryApplyAgentFollowTarget(soldier, target, "plunder_target_follow", lookAtTarget: false);
+			TryApplyAgentFollowTarget(soldier, target, SiegePlunderInteractionProfile.TargetFollowSource, lookAtTarget: false);
 		}
 		catch
 		{

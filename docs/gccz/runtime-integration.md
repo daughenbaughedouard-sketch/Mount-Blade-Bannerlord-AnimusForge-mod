@@ -114,7 +114,7 @@ Follow-up isolation: market-loot settlement reasons and capture ratios now also 
 Follow-up isolation: civilian/hero gold amount constants for 搜掠/血洗 now also use `SiegeLootAccountingProfile`; the fused AF adapter keeps target validation, random sampling, Bannerlord gold transfer, and display side effects while delegating non-hero/hero amount constants to the isolated GCCZ source area.
 
 
-Follow-up isolation: 搜掠 soldier-assignment and interaction timing parameters now use `SiegePlunderInteractionProfile`; the fused AF adapter keeps live mission-agent selection, movement, timing application, and side effects while delegating max concurrent interactions, assignment ratio, approach distance, and talk duration to the isolated GCCZ source area.
+Follow-up isolation: 搜掠 soldier-assignment, interaction timing parameters, and movement/follow source codes now use `SiegePlunderInteractionProfile`; the fused AF adapter keeps live mission-agent selection, movement, timing application, and side effects while delegating max concurrent interactions, assignment ratio, approach distance, talk duration, allied assignment restore source, and target follow source to the isolated GCCZ source area.
 
 
 Follow-up isolation: scene-entry tooltip and missing-scene UI now use `SiegeInterventionEntryProfile`; the fused AF adapter keeps settlement/location/menu checks and display side effects while delegating entry wording to the isolated GCCZ source area.

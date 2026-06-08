@@ -130,7 +130,7 @@ Follow-up isolation: market-loot settlement reasons and capture ratios now also 
 Follow-up isolation: civilian/hero gold amount constants for 搜掠/血洗 now also live in mirrored `SiegeLootAccountingProfile`. The fused tree routes non-hero plunder range, non-hero massacre amount, and hero fallback amount through that core while preserving AF-side target validation, random sampling, Bannerlord gold transfer, and display.
 
 
-Follow-up isolation: 搜掠 soldier-assignment and interaction timing parameters now live in mirrored `SiegePlunderInteractionProfile`. The fused tree routes max concurrent interactions, soldier assignment ratio, approach distance, and talk duration through that core while preserving AF-side live mission-agent selection, movement, timing application, and side effects.
+Follow-up isolation: 搜掠 soldier-assignment, interaction timing parameters, and movement/follow source codes now live in mirrored `SiegePlunderInteractionProfile`. The fused tree routes max concurrent interactions, soldier assignment ratio, approach distance, talk duration, allied assignment restore source, and target follow source through that core while preserving AF-side live mission-agent selection, movement, timing application, and side effects.
 
 
 Follow-up isolation: scene-entry tooltip and missing-scene UI now live in mirrored `SiegeInterventionEntryProfile`. The fused tree routes entry wording through that core while preserving AF-side settlement/location/menu checks and display side effects.

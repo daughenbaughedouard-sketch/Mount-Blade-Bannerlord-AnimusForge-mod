@@ -58,7 +58,7 @@ Second extraction slice:
 
 ## Plunder interaction profile
 
-`SiegePlunderInteractionProfile` owns dependency-free runtime parameters for GCCZ 搜掠 soldier assignment, approach distance, concurrent interactions, and talk duration. AF adapters still own live mission-agent selection, movement, timing application, and side effects.
+`SiegePlunderInteractionProfile` owns dependency-free runtime parameters and source codes for GCCZ 搜掠 soldier assignment, approach distance, concurrent interactions, talk duration, allied assignment restore, and target follow operations. AF adapters still own live mission-agent selection, movement, timing application, and side effects.
 
 
 ## Mercy choice profile
