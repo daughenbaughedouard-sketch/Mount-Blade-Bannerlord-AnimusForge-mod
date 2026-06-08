@@ -3180,8 +3180,11 @@ public class SiegeAiInterventionBehavior : CampaignBehaviorBase
 			ReplaceTownNotablesForCulturalRepopulation(settlement, targetCulture, source, out killedNotables, out spawnedNotables);
 			_lastKilledNotables += killedNotables;
 			_culturalRepopulationApplied = true;
-			string notableResultText = settlement.IsTown ? (" 旧要人已处死 " + killedNotables + " 人，新要人已扶立 " + spawnedNotables + " 人。") : "";
-			InformationManager.DisplayMessage(new InformationMessage("【攻城处置】屠民迁殖完成：" + (settlement.Name?.ToString() ?? "该定居点") + " 已被强行改为 " + DescribeCultureForMessage(targetCulture, targetCultureSource) + "。" + notableResultText, Color.FromUint(0xFFFF7777u)));
+			SiegeCulturalRepopulationProfile repopulationProfile = new SiegeCulturalRepopulationProfile();
+			string notableResultText = repopulationProfile.BuildCompletedNotableResultText(settlement.IsTown, killedNotables, spawnedNotables);
+			string settlementName = settlement.Name?.ToString();
+			string targetCultureText = DescribeCultureForMessage(targetCulture, targetCultureSource);
+			InformationManager.DisplayMessage(new InformationMessage(repopulationProfile.BuildCompletedMessageText(settlementName, targetCultureText, notableResultText), Color.FromUint(repopulationProfile.CompletedMessageColor)));
 			Logger.Log("SiegeAiIntervention", "Applied purge repopulation. Source=" + (source ?? "N/A") + ", Settlement=" + (settlement.StringId ?? "N/A") + ", OldCulture=" + (oldCulture?.StringId ?? "N/A") + ", NewCulture=" + (targetCulture.StringId ?? "N/A") + ", TargetCultureSource=" + (targetCultureSource ?? "N/A") + ", BoundVillages=" + boundVillagesChanged + ", KilledNotables=" + killedNotables + ", SpawnedNotables=" + spawnedNotables);
 			return true;
 		}

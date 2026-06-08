@@ -16,6 +16,8 @@ public sealed class SiegeCulturalRepopulationProfile
 
     public uint PendingMessageColor { get; } = 0xFFFF7777u;
 
+    public uint CompletedMessageColor { get; } = 0xFFFF7777u;
+
     public string BuildRequestMemoryText(string targetCultureText)
     {
         return "玩家通过己方士兵触发屠民迁殖，要求清除原住民并把定居点强行改为 " + NormalizeTargetCultureText(targetCultureText) + "；这是最高级不可逆处置。";
@@ -26,8 +28,28 @@ public sealed class SiegeCulturalRepopulationProfile
         return "【攻城处置】屠民迁殖已列入处置：这是最高级不可逆处置，离场结算后此地将强行改为 " + NormalizeTargetCultureText(targetCultureText) + "。";
     }
 
+    public string BuildCompletedMessageText(string settlementName, string targetCultureText, string notableResultText)
+    {
+        return "【攻城处置】屠民迁殖完成：" + NormalizeSettlementName(settlementName) + " 已被强行改为 " + NormalizeTargetCultureText(targetCultureText) + "。" + (notableResultText ?? string.Empty);
+    }
+
+    public string BuildCompletedNotableResultText(bool isTown, int killedNotables, int spawnedNotables)
+    {
+        if (!isTown)
+        {
+            return string.Empty;
+        }
+
+        return " 旧要人已处死 " + killedNotables + " 人，新要人已扶立 " + spawnedNotables + " 人。";
+    }
+
     private static string NormalizeTargetCultureText(string targetCultureText)
     {
         return string.IsNullOrWhiteSpace(targetCultureText) ? "目标文化" : targetCultureText.Trim();
+    }
+
+    private static string NormalizeSettlementName(string settlementName)
+    {
+        return string.IsNullOrWhiteSpace(settlementName) ? "该定居点" : settlementName.Trim();
     }
 }
