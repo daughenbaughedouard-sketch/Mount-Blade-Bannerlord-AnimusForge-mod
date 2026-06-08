@@ -982,9 +982,9 @@ public class SiegeAiInterventionBehavior : CampaignBehaviorBase
 			}
 			if (!_pendingEncounterFinish)
 			{
-				QueueEncounterFinishAfterIntervention(aftermath, "campaign_tick_post_mission", 0, forceDelay: false);
+				QueueEncounterFinishAfterIntervention(aftermath, SiegeAftermathTransitionSourceProfile.CampaignTickPostMissionFinishSource, 0, forceDelay: false);
 			}
-			if (!TryFinishPlayerEncounterAfterInterventionNow(aftermath, "campaign_tick_post_mission"))
+			if (!TryFinishPlayerEncounterAfterInterventionNow(aftermath, SiegeAftermathTransitionSourceProfile.CampaignTickPostMissionFinishSource))
 			{
 				keepPending = true;
 				return;
@@ -7864,8 +7864,8 @@ public class SiegeAiInterventionBehavior : CampaignBehaviorBase
 	{
 		try
 		{
-			QueueEncounterFinishAfterIntervention(aftermath, "af_done_menu_continue", 0, forceDelay: true);
-			TryFinishPlayerEncounterAfterInterventionNow(aftermath, "af_done_menu_continue");
+			QueueEncounterFinishAfterIntervention(aftermath, SiegeAftermathTransitionSourceProfile.DoneMenuContinueFinishSource, 0, forceDelay: true);
+			TryFinishPlayerEncounterAfterInterventionNow(aftermath, SiegeAftermathTransitionSourceProfile.DoneMenuContinueFinishSource);
 		}
 		catch (Exception ex)
 		{

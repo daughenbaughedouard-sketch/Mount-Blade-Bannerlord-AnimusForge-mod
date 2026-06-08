@@ -12,6 +12,10 @@ public static class SiegeAftermathTransitionSourceProfile
 
     public const string MissionEndNoPendingAftermathSource = "mission_end_no_pending_aftermath";
 
+    public const string CampaignTickPostMissionFinishSource = "campaign_tick_post_mission";
+
+    public const string DoneMenuContinueFinishSource = "af_done_menu_continue";
+
     public const string NativeDevastateSummaryContinueLootSource = "native_devastate_summary_continue_loot";
 
     public const string NativeDevastateSummaryContinueNoLootSource = "native_devastate_summary_continue_no_loot";
