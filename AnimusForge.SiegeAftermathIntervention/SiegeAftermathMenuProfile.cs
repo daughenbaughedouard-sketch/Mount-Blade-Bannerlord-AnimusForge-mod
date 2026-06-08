@@ -14,6 +14,8 @@ public static class SiegeAftermathMenuProfile
 
     public const string ContextualSummaryMenuId = "siege_aftermath_contextual_summary";
 
+    public const string ContextualSummarySourceMarker = "contextual_summary";
+
     public const string EntryMenuOptionId = "AnimusForge_siege_ai_intervention_entry";
 
     public static bool IsNativeSettlementTakenMenuId(string menuId)

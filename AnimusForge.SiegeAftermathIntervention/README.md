@@ -121,4 +121,4 @@ Second extraction slice:
 
 ## Aftermath menu profile
 
-`SiegeAftermathMenuProfile` owns dependency-free menu identifiers for GCCZ aftermath entry, native settlement-taken routing, and contextual summary routing. AF adapters still own Bannerlord menu registration, switching, and live menu side effects.
+`SiegeAftermathMenuProfile` owns dependency-free menu identifiers and contextual-summary source marker for GCCZ aftermath entry, native settlement-taken routing, and contextual summary routing. AF adapters still own Bannerlord menu registration, switching, and live menu side effects.

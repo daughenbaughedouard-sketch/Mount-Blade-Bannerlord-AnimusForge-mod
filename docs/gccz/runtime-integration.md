@@ -211,4 +211,4 @@ Follow-up isolation: mission-end, session-load runtime guard reset, post-mission
 
 Follow-up isolation: native flee/order bridge, commandable-agent probing, control-tick order-controller priming, and order-controller source codes now use `SiegeNativeBridgeSourceProfile`; the fused AF adapter keeps Harmony patch registration, mission-view construction, order-controller binding, and live agent side effects while delegating source strings to the isolated GCCZ source area.
 
-Follow-up isolation: GCCZ aftermath menu IDs now use `SiegeAftermathMenuProfile`; the fused AF adapter keeps Bannerlord menu registration, switching, and live menu side effects while delegating menu identifier strings and matching helpers to the isolated GCCZ source area.
+Follow-up isolation: GCCZ aftermath menu IDs and contextual-summary source marker now use `SiegeAftermathMenuProfile`; the fused AF adapter keeps Bannerlord menu registration, switching, and live menu side effects while delegating menu identifier strings, source marker, and matching helpers to the isolated GCCZ source area.

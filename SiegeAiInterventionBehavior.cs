@@ -1978,7 +1978,7 @@ public class SiegeAiInterventionBehavior : CampaignBehaviorBase
 			if (_nativeDevastateAftermathFlowActive && _completedAftermath == SiegeAftermathAction.SiegeAftermath.Devastate)
 			{
 				TrySetNativePlayerEncounterAftermathForSummary(SiegeAftermathAction.SiegeAftermath.Devastate);
-				if ((source ?? "").IndexOf("contextual_summary", StringComparison.OrdinalIgnoreCase) >= 0)
+				if ((source ?? "").IndexOf(SiegeAftermathMenuProfile.ContextualSummarySourceMarker, StringComparison.OrdinalIgnoreCase) >= 0)
 				{
 					Logger.Log("SiegeAiIntervention", "Allowing native Devastate contextual summary init for AF massacre. Source=" + (source ?? "N/A"));
 					return false;
