@@ -93,6 +93,9 @@ Follow-up isolation: pending native aftermath selection now uses `SiegeAftermath
 Follow-up isolation: action-tag routing now uses `SiegeActionRoutingFacts`, `SiegeActionRoutingDecision`, and `SiegeActionRoutingPolicy`; the fused AF adapter passes raw action text and live target/material/lock facts, then delegates destructive/mercy-track detection and soldier relief routing to the isolated GCCZ source area.
 
 
+Follow-up isolation: mercy-track transition UI now uses `SiegeMercyTrackTransitionProfile`; the fused AF adapter keeps destructive-lock checks, plunder-state clearing, logging, and `InformationMessage` display while delegating blocked-action and reversible-plunder-stop wording to the isolated GCCZ source area.
+
+
 Follow-up isolation: relief/appeasement profile selection now uses `SiegeReliefChoiceProfile`; the fused AF adapter delegates relief deltas, message/memory wording, soldier appeasement reason, and shared-pool effect reason to the isolated GCCZ source area before applying Bannerlord side effects.
 
 

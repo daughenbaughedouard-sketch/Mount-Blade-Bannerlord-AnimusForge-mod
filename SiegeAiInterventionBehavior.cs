@@ -2477,7 +2477,7 @@ public class SiegeAiInterventionBehavior : CampaignBehaviorBase
 		{
 			return false;
 		}
-		InformationManager.DisplayMessage(new InformationMessage("【攻城处置】" + (actionName ?? "安抚") + "不能覆盖已经升级的处置；血洗和屠民迁殖不可逆，不能回退。", Color.FromUint(0xFFFFD27Fu)));
+		InformationManager.DisplayMessage(new InformationMessage(SiegeMercyTrackTransitionProfile.BuildBlockedAfterDestructiveMessage(actionName), Color.FromUint(SiegeMercyTrackTransitionProfile.BlockedAfterDestructiveMessageColor)));
 		return true;
 	}
 
@@ -2492,7 +2492,7 @@ public class SiegeAiInterventionBehavior : CampaignBehaviorBase
 			_plunderStarted = false;
 			ActivePlunderInteractions.Clear();
 			LastMassacreSoldierFollowOrderTimes.Clear();
-			InformationManager.DisplayMessage(new InformationMessage("【攻城处置】搜掠已被后续宽恕/宣抚类指令覆盖，士兵停止索财；离场将按当前正向处置结算。", Color.FromUint(0xFFB6F7A8u)));
+			InformationManager.DisplayMessage(new InformationMessage(SiegeMercyTrackTransitionProfile.ReversiblePlunderStoppedMessage, Color.FromUint(SiegeMercyTrackTransitionProfile.ReversiblePlunderStoppedMessageColor)));
 			Logger.Log("SiegeAiIntervention", "Reversible plunder stopped by mercy track. Reason=" + (reason ?? "N/A"));
 		}
 		catch (Exception ex)
