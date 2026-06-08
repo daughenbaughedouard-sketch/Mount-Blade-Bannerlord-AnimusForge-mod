@@ -102,6 +102,8 @@ Follow-up isolation: civilian gather interaction timing, formation-control param
 
 Follow-up isolation: civilian assembly target counts, scene caps, extra-spawn gating, grid layout, mission-start assembly source, and control-tick assembly source now live in mirrored `SiegeCivilianAssemblyProfile`. The fused tree routes desired counts, scene caps, extra-spawn flag, forward offset, spacing, columns, mission-start assembly source, and control-tick assembly source through that core while preserving AF-side scene capacity checks, spawn gating, formation slot projection, and mission side effects.
 
+Follow-up isolation: scene-agent suppression reasons now live in mirrored `SiegeSceneAgentSuppressionProfile`. The fused tree routes unsafe/criminal/protected/player-companion/guard removal reason codes through that core while preserving AF-side live agent classification, `ShoutBehavior` cancellation, fade-out, and slot cleanup side effects.
+
 
 Follow-up isolation: soldier cordon positioning, refresh parameters, allied/default-follow source codes, spawn friendly-state restore source, spawn-follow source codes, and spawn-batch order-controller source now live in mirrored `SiegeSoldierCordonProfile`. The fused tree routes radius, padding, teleport threshold, move/settle tolerance, order/look refresh timing, allied control tick, default infantry follow, spawn friendly-state restore, spawn follow, and spawn-batch order-controller source through that core while preserving AF-side live soldier selection, target-slot projection, movement orders, and look-at side effects.
 

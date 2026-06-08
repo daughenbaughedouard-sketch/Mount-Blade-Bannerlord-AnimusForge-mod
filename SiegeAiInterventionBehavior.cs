@@ -3287,7 +3287,7 @@ public class SiegeAiInterventionBehavior : CampaignBehaviorBase
 				}
 				if (IsBackstreetOrCriminalCharacter(agent.Character as CharacterObject))
 				{
-					ShoutBehavior.CancelAgentSpeechForRemovalExternal(agent.Index, "siege_intervention_backstreet_criminal_removed");
+					ShoutBehavior.CancelAgentSpeechForRemovalExternal(agent.Index, SiegeSceneAgentSuppressionProfile.BackstreetCriminalRemovedReason);
 					agent.FadeOut(hideInstantly: true, hideMount: true);
 				}
 			}
@@ -3318,7 +3318,7 @@ public class SiegeAiInterventionBehavior : CampaignBehaviorBase
 				}
 				if (IsUnsafeAssemblyCivilianTemplate(character))
 				{
-					ShoutBehavior.CancelAgentSpeechForRemovalExternal(agent.Index, "siege_intervention_unsafe_or_naked_civilian_removed");
+					ShoutBehavior.CancelAgentSpeechForRemovalExternal(agent.Index, SiegeSceneAgentSuppressionProfile.UnsafeOrNakedCivilianRemovedReason);
 					agent.FadeOut(hideInstantly: true, hideMount: true);
 					SceneCivilianAgentIndexes.Remove(agent.Index);
 					CivilianAssemblySlots.Remove(agent.Index);
@@ -3354,7 +3354,7 @@ public class SiegeAiInterventionBehavior : CampaignBehaviorBase
 				}
 				if (IsProtectedChildAgent(agent) || IsProtectedNotableAgent(agent))
 				{
-					ShoutBehavior.CancelAgentSpeechForRemovalExternal(agent.Index, "siege_intervention_protected_agent_suppressed");
+					ShoutBehavior.CancelAgentSpeechForRemovalExternal(agent.Index, SiegeSceneAgentSuppressionProfile.ProtectedAgentSuppressedReason);
 					agent.FadeOut(hideInstantly: true, hideMount: true);
 				}
 			}
@@ -3378,7 +3378,7 @@ public class SiegeAiInterventionBehavior : CampaignBehaviorBase
 				{
 					continue;
 				}
-				ShoutBehavior.CancelAgentSpeechForRemovalExternal(agent.Index, "siege_intervention_player_companion_scene_spawn_suppressed");
+				ShoutBehavior.CancelAgentSpeechForRemovalExternal(agent.Index, SiegeSceneAgentSuppressionProfile.PlayerCompanionSceneSpawnSuppressedReason);
 				agent.FadeOut(hideInstantly: true, hideMount: true);
 			}
 			catch
@@ -3421,7 +3421,7 @@ public class SiegeAiInterventionBehavior : CampaignBehaviorBase
 			{
 				return;
 			}
-			ShoutBehavior.CancelAgentSpeechForRemovalExternal(agent.Index, "siege_intervention_guard_removed");
+			ShoutBehavior.CancelAgentSpeechForRemovalExternal(agent.Index, SiegeSceneAgentSuppressionProfile.GuardRemovedReason);
 			agent.FadeOut(hideInstantly: true, hideMount: true);
 		}
 		catch
