@@ -205,7 +205,7 @@ Follow-up isolation: mission-exit fallback aftermath selection now routes throug
 
 Follow-up isolation: direct AF aftermath campaign tick, native-menu intercept, external-pump, script-phase, and direct loot-screen defer source codes now use `SiegeDirectAftermathSourceProfile`; the fused AF adapter keeps campaign tick callbacks, loot-screen timing, pending-script state, and encounter transition side effects while delegating those source-code strings to the isolated GCCZ source area.
 
-Follow-up isolation: mission-end, post-mission encounter finish, done-menu continue finish, native menu init/detection, and native devastate summary transition source codes now use `SiegeAftermathTransitionSourceProfile`; the fused AF adapter keeps mission lifecycle, native menu handling, loot-screen timing, and encounter transition side effects while delegating those source-code strings to the isolated GCCZ source area.
+Follow-up isolation: mission-end, session-load runtime guard reset, post-mission encounter finish, done-menu continue finish, native menu init/detection, and native devastate summary transition source codes now use `SiegeAftermathTransitionSourceProfile`; the fused AF adapter keeps mission lifecycle, native menu handling, loot-screen timing, and encounter transition side effects while delegating those source-code strings to the isolated GCCZ source area.
 
 Follow-up isolation: native flee/order bridge, commandable-agent probing, control-tick order-controller priming, and order-controller source codes now use `SiegeNativeBridgeSourceProfile`; the fused AF adapter keeps Harmony patch registration, mission-view construction, order-controller binding, and live agent side effects while delegating source strings to the isolated GCCZ source area.
 

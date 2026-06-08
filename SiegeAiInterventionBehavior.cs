@@ -379,17 +379,17 @@ public class SiegeAiInterventionBehavior : CampaignBehaviorBase
 
 	private void OnNewGameCreated(CampaignGameStarter starter)
 	{
-		ResetAftermathRuntimeGuards("new_game_created");
+		ResetAftermathRuntimeGuards(SiegeAftermathTransitionSourceProfile.ResetNewGameCreatedSource);
 	}
 
 	private void OnGameLoaded(CampaignGameStarter starter)
 	{
-		ResetAftermathRuntimeGuards("game_loaded");
+		ResetAftermathRuntimeGuards(SiegeAftermathTransitionSourceProfile.ResetGameLoadedSource);
 	}
 
 	private void OnGameLoadFinished()
 	{
-		ResetAftermathRuntimeGuards("game_load_finished");
+		ResetAftermathRuntimeGuards(SiegeAftermathTransitionSourceProfile.ResetGameLoadFinishedSource);
 	}
 
 	private void AddGameMenus(CampaignGameStarter starter)

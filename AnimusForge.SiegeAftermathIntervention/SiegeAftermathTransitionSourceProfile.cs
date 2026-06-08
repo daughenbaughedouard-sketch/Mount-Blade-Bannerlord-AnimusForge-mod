@@ -16,6 +16,12 @@ public static class SiegeAftermathTransitionSourceProfile
 
     public const string DoneMenuContinueFinishSource = "af_done_menu_continue";
 
+    public const string ResetNewGameCreatedSource = "new_game_created";
+
+    public const string ResetGameLoadedSource = "game_loaded";
+
+    public const string ResetGameLoadFinishedSource = "game_load_finished";
+
     public const string NativeDevastateSummaryContinueLootSource = "native_devastate_summary_continue_loot";
 
     public const string NativeDevastateSummaryContinueNoLootSource = "native_devastate_summary_continue_no_loot";
