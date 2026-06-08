@@ -78,6 +78,9 @@ Follow-up isolation: civilian gather runtime context now uses `SiegeCivilianGath
 Follow-up isolation: civilian gather UI/memory now uses `SiegeCivilianGatherUiProfile`; the fused AF adapter keeps mission-agent tracking, messenger/formation state, `ShoutBehavior`, `InformationMessage`, and memory recording side effects while delegating prepared-count, messenger, queue, ready wording, immediate messenger speech prompt, and fallback names to the isolated GCCZ source area.
 
 
+Follow-up isolation: civilian gather interaction timing and formation-control parameters now use `SiegeCivilianGatherInteractionProfile`; the fused AF adapter keeps live mission-agent selection, `ShoutBehavior`, movement, formation control, and side effects while delegating messenger speech count, talk duration, approach/follow timing, fallback timing, soldier messenger ratio, messenger speed, and formation-control batching to the isolated GCCZ source area.
+
+
 Follow-up isolation: intervention memory context formatting and the max retained memory-event count now use `SiegeInterventionMemoryContextBuilder`; the fused AF adapter keeps event collection, de-duplication, trim application, and logging while delegating prompt context wording plus the trim-limit constant to the isolated GCCZ source area.
 
 

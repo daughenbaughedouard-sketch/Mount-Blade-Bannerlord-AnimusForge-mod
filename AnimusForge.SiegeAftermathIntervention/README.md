@@ -64,3 +64,8 @@ Second extraction slice:
 ## Massacre interaction profile
 
 `SiegeMassacreInteractionProfile` owns dependency-free runtime parameters for GCCZ 血洗 civilian hide distance, hide refresh timing, soldier follow refresh, and soldier target refresh. AF adapters still own live mission-agent routing, order timing application, hide-point projection, and combat side effects.
+
+
+## Civilian gather interaction profile
+
+`SiegeCivilianGatherInteractionProfile` owns dependency-free runtime parameters for GCCZ 民众召集 messenger speech, follow refresh, fallback timing, approach distance, soldier messenger ratio, messenger speed, and formation-control batching. AF adapters still own live mission-agent selection, `ShoutBehavior` triggering, movement, formation control, and side effects.
