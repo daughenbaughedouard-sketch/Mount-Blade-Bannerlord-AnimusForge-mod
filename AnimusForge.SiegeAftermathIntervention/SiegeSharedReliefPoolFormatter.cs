@@ -11,6 +11,8 @@ public static class SiegeSharedReliefPoolFormatter
 
     public const uint ReturnedToPlayerMessageColor = 0xFFFFD27Fu;
 
+    public const uint CapturedTransferMessageColor = 0xFFB6F7A8u;
+
     public const string ReturnedToPlayerMemoryTitle = "返还";
 
     public static bool HasAnyMaterial(SiegeSharedReliefPoolFacts facts)
@@ -61,6 +63,11 @@ public static class SiegeSharedReliefPoolFormatter
         return "【攻城处置】已将AF给予的共享物资纳入本次安抚结算：" + NormalizePoolDescription(poolDescription) + "。";
     }
 
+    public static string BuildCapturedTransferMessage(string transferSummary)
+    {
+        return "【攻城处置】已将给予的" + NormalizeTransferSummary(transferSummary) + "计入全城平民共享安抚物资。";
+    }
+
     public static string BuildReturnedToPlayerMemoryText(string summary)
     {
         return "玩家先前交付的平民共享安抚物资因负面处置被退还；返还内容：" + NormalizeReturnSummary(summary) + "。";
@@ -74,5 +81,10 @@ public static class SiegeSharedReliefPoolFormatter
     private static string NormalizePoolDescription(string poolDescription)
     {
         return string.IsNullOrWhiteSpace(poolDescription) ? "尚未通过AF给予功能交付共享物资" : poolDescription.Trim();
+    }
+
+    private static string NormalizeTransferSummary(string transferSummary)
+    {
+        return string.IsNullOrWhiteSpace(transferSummary) ? "物资" : transferSummary.Trim();
     }
 }

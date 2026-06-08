@@ -54,6 +54,9 @@ Follow-up isolation: negative-outcome shared-pool refund UI and memory wording n
 Follow-up isolation: shared-pool applied-effect UI now also uses `SiegeSharedReliefPoolFormatter`; the fused AF adapter keeps live pool description and display side effects.
 
 
+Follow-up isolation: shared-pool capture UI now also uses `SiegeSharedReliefPoolFormatter`; the fused AF adapter keeps Bannerlord gold/item summary collection and `InformationMessage` display while delegating captured-transfer wording to the isolated GCCZ source area.
+
+
 Follow-up isolation: newly applied shared-pool settlement-effect deltas now use `SiegeSharedReliefPoolEffectCalculator`; the fused AF adapter keeps Bannerlord town food-stock mutation and settlement delta application.
 
 

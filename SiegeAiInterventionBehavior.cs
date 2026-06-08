@@ -2560,7 +2560,7 @@ public class SiegeAiInterventionBehavior : CampaignBehaviorBase
 				string itemText = itemAmount > 0 ? (itemAmount + " 个 " + (item?.Name?.ToString() ?? itemId ?? "物资")) : "";
 				string goldText = goldAmount > 0 ? (goldAmount + " 第纳尔") : "";
 				string joined = string.Join("、", new[] { goldText, itemText }.Where(x => !string.IsNullOrWhiteSpace(x)));
-				InformationManager.DisplayMessage(new InformationMessage("【攻城处置】已将给予的" + joined + "计入全城平民共享安抚物资。", Color.FromUint(0xFFB6F7A8u)));
+				InformationManager.DisplayMessage(new InformationMessage(SiegeSharedReliefPoolFormatter.BuildCapturedTransferMessage(joined), Color.FromUint(SiegeSharedReliefPoolFormatter.CapturedTransferMessageColor)));
 				Logger.Log("SiegeAiIntervention", "Recorded shared civilian relief transfer. Source=" + (source ?? "N/A") + ", TargetAgent=" + targetAgentIndex + ", Gold=" + goldAmount + ", Item=" + (itemId ?? "") + ", Amount=" + itemAmount + ", Pool=" + DescribeSharedCivilianReliefPoolForContext());
 			}
 			return recorded;
