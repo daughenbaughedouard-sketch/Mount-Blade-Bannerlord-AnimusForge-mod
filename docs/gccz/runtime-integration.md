@@ -131,7 +131,7 @@ Follow-up isolation: mission-entry battle-equipment and allied-summon UI now als
 Follow-up isolation: scene-entry menu option text now also uses `SiegeInterventionEntryProfile`; the fused AF adapter keeps only menu IDs, registration, and condition/consequence callbacks while delegating the user-facing label to the isolated GCCZ source area.
 
 
-Follow-up isolation: entry auto-summon/default selection limits plus troop-selection, scene-cleanup, and auto-enter summon source codes now also use `SiegeInterventionEntryProfile`; the fused AF adapter keeps taunt-state cleanup calls, roster selection, mission opening, soldier spawning, formation placement, and encounter-summary side effects while delegating the GCCZ count/source constants to the isolated source area.
+Follow-up isolation: entry auto-summon/default selection limits plus troop-selection, scene-cleanup, auto-enter summon, and ensure-allied-troops summon source codes now also use `SiegeInterventionEntryProfile`; the fused AF adapter keeps taunt-state cleanup calls, roster selection, mission opening, soldier spawning, formation placement, and encounter-summary side effects while delegating the GCCZ count/source constants to the isolated source area.
 
 
 Follow-up isolation: pending native aftermath selection now uses `SiegeAftermathResolutionKind` and `SiegeAftermathSelectionPolicy`; the fused AF adapter maps TaleWorlds aftermath enum values and delegates severity/replacement checks to the isolated GCCZ source area.

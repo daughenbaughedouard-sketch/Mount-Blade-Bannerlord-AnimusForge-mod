@@ -3223,7 +3223,7 @@ public class SiegeAiInterventionBehavior : CampaignBehaviorBase
 		if (!_alliedTroopsAutoSummoned)
 		{
 			_alliedTroopsAutoSummoned = true;
-			SummonAlliedTroops(AutoSummonCount, "ensure");
+			SummonAlliedTroops(AutoSummonCount, SiegeInterventionEntryProfile.EnsureAlliedTroopsSummonSource);
 		}
 	}
 
