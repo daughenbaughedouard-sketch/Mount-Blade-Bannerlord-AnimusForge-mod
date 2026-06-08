@@ -33,6 +33,9 @@ Verified after the first runtime bridge: 0 warnings, 0 errors.
 Follow-up isolation: canonical tag order and alias table now live in `SiegeActionTagCatalog`, removing duplicate switch helpers from the AF adapter.
 
 
+Follow-up isolation: ACTION tag regex patterns now also live in mirrored `SiegeActionTagCatalog`; the fused AF adapter keeps only compiled `Regex` instances and replacement side effects while delegating the tag vocabulary/pattern strings to the isolated GCCZ source area.
+
+
 Follow-up isolation: postprocess-rule filtering now lives in `SiegePostprocessRuleFilter`; `SiegeAiInterventionBehavior` passes only runtime booleans and no longer duplicates destructive/mercy/安兵 tag classification.
 
 

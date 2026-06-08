@@ -187,16 +187,16 @@ public class SiegeAiInterventionBehavior : CampaignBehaviorBase
 	private const string SiegeInterventionRuleId = "siege_intervention_aftermath";
 	private const int MaxInterventionMemoryEvents = 10;
 
-	private static readonly Regex MercyTagRegex = new Regex("\\[ACTION:(?:SIEGE_MERCY|宽恕)\\]", RegexOptions.IgnoreCase | RegexOptions.Compiled);
-	private static readonly Regex ReliefTagRegex = new Regex("\\[ACTION:(?:SIEGE_RELIEF|救济)\\]", RegexOptions.IgnoreCase | RegexOptions.Compiled);
-	private static readonly Regex InspireTagRegex = new Regex("\\[ACTION:(?:SIEGE_INSPIRE|宣抚)\\]", RegexOptions.IgnoreCase | RegexOptions.Compiled);
-	private static readonly Regex RallyOathTagRegex = new Regex("\\[ACTION:(?:SIEGE_RALLY_OATH|盟誓)\\]", RegexOptions.IgnoreCase | RegexOptions.Compiled);
-	private static readonly Regex SoldierAppeasementTagRegex = new Regex("\\[ACTION:(?:SIEGE_APPEASE_SOLDIERS|安兵)\\]", RegexOptions.IgnoreCase | RegexOptions.Compiled);
-	private static readonly Regex RepopulationTagRegex = new Regex("\\[ACTION:(?:SIEGE_CULTURAL_REPOPULATION|SIEGE_PURGE_REPOPULATION|殖民)\\]", RegexOptions.IgnoreCase | RegexOptions.Compiled);
-	private static readonly Regex GatherCiviliansTagRegex = new Regex("\\[ACTION:(?:SIEGE_GATHER_CIVILIANS|召集)\\]", RegexOptions.IgnoreCase | RegexOptions.Compiled);
-	private static readonly Regex PlunderTagRegex = new Regex("\\[ACTION:(?:SIEGE_PLUNDER|搜掠)\\]", RegexOptions.IgnoreCase | RegexOptions.Compiled);
-	private static readonly Regex MassacreTagRegex = new Regex("\\[ACTION:(?:SIEGE_MASSACRE|血洗)\\]", RegexOptions.IgnoreCase | RegexOptions.Compiled);
-	private static readonly Regex AnySiegeTagRegex = new Regex("\\[ACTION:(?:SIEGE_[A-Z_]+|宽恕|救济|宣抚|盟誓|安兵|召集|搜掠|血洗|殖民)(?::\\d+)?\\]", RegexOptions.IgnoreCase | RegexOptions.Compiled);
+	private static readonly Regex MercyTagRegex = new Regex(SiegeActionTagCatalog.MercyTagPattern, RegexOptions.IgnoreCase | RegexOptions.Compiled);
+	private static readonly Regex ReliefTagRegex = new Regex(SiegeActionTagCatalog.ReliefTagPattern, RegexOptions.IgnoreCase | RegexOptions.Compiled);
+	private static readonly Regex InspireTagRegex = new Regex(SiegeActionTagCatalog.InspireTagPattern, RegexOptions.IgnoreCase | RegexOptions.Compiled);
+	private static readonly Regex RallyOathTagRegex = new Regex(SiegeActionTagCatalog.RallyOathTagPattern, RegexOptions.IgnoreCase | RegexOptions.Compiled);
+	private static readonly Regex SoldierAppeasementTagRegex = new Regex(SiegeActionTagCatalog.SoldierAppeasementTagPattern, RegexOptions.IgnoreCase | RegexOptions.Compiled);
+	private static readonly Regex RepopulationTagRegex = new Regex(SiegeActionTagCatalog.CulturalRepopulationTagPattern, RegexOptions.IgnoreCase | RegexOptions.Compiled);
+	private static readonly Regex GatherCiviliansTagRegex = new Regex(SiegeActionTagCatalog.GatherCiviliansTagPattern, RegexOptions.IgnoreCase | RegexOptions.Compiled);
+	private static readonly Regex PlunderTagRegex = new Regex(SiegeActionTagCatalog.PlunderTagPattern, RegexOptions.IgnoreCase | RegexOptions.Compiled);
+	private static readonly Regex MassacreTagRegex = new Regex(SiegeActionTagCatalog.MassacreTagPattern, RegexOptions.IgnoreCase | RegexOptions.Compiled);
+	private static readonly Regex AnySiegeTagRegex = new Regex(SiegeActionTagCatalog.AnyActionTagPattern, RegexOptions.IgnoreCase | RegexOptions.Compiled);
 
 	private static InterventionMode _activeMode = InterventionMode.None;
 	private static InterventionMode _pendingMode = InterventionMode.None;

@@ -10,6 +10,26 @@ namespace AnimusForge.SiegeAftermathIntervention;
 /// </summary>
 public static class SiegeActionTagCatalog
 {
+    public const string MercyTagPattern = @"\[ACTION:(?:SIEGE_MERCY|宽恕)\]";
+
+    public const string ReliefTagPattern = @"\[ACTION:(?:SIEGE_RELIEF|救济)\]";
+
+    public const string InspireTagPattern = @"\[ACTION:(?:SIEGE_INSPIRE|宣抚)\]";
+
+    public const string RallyOathTagPattern = @"\[ACTION:(?:SIEGE_RALLY_OATH|盟誓)\]";
+
+    public const string SoldierAppeasementTagPattern = @"\[ACTION:(?:SIEGE_APPEASE_SOLDIERS|安兵)\]";
+
+    public const string GatherCiviliansTagPattern = @"\[ACTION:(?:SIEGE_GATHER_CIVILIANS|召集)\]";
+
+    public const string PlunderTagPattern = @"\[ACTION:(?:SIEGE_PLUNDER|搜掠)\]";
+
+    public const string MassacreTagPattern = @"\[ACTION:(?:SIEGE_MASSACRE|血洗)\]";
+
+    public const string CulturalRepopulationTagPattern = @"\[ACTION:(?:SIEGE_CULTURAL_REPOPULATION|SIEGE_PURGE_REPOPULATION|殖民)\]";
+
+    public const string AnyActionTagPattern = @"\[ACTION:(?:SIEGE_[A-Z_]+|宽恕|救济|宣抚|盟誓|安兵|召集|搜掠|血洗|殖民)(?::\d+)?\]";
+
     private static readonly Regex ActionTagRegex = new Regex(
         @"\[ACTION:(?<name>SIEGE_[A-Z_]+|宽恕|救济|宣抚|盟誓|安兵|召集|搜掠|血洗|殖民)(?::\d+)?\]",
         RegexOptions.IgnoreCase | RegexOptions.Compiled);
