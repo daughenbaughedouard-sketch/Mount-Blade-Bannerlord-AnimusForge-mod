@@ -94,6 +94,9 @@ Follow-up isolation: completed intervention summary now lives in mirrored `Siege
 Follow-up isolation: scene-entry tooltip and missing-scene UI now live in mirrored `SiegeInterventionEntryProfile`. The fused tree routes entry wording through that core while preserving AF-side settlement/location/menu checks and display side effects.
 
 
+Follow-up isolation: scene-entry troop-selection instructions and selection-result UI now also live in mirrored `SiegeInterventionEntryProfile`. The fused tree routes entry instructions, decision-policy text, failure text, and selected/fallback troop-selection messages through the core while preserving AF-side menu callbacks and selected-roster storage.
+
+
 Follow-up isolation: pending native aftermath selection now lives in mirrored `SiegeAftermathResolutionKind` and `SiegeAftermathSelectionPolicy`. The fused tree routes native aftermath severity and replacement decisions through that core while preserving AF-side enum mapping and side effects.
 
 

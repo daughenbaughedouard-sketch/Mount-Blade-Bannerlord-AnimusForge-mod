@@ -78,6 +78,9 @@ Follow-up isolation: completed intervention summary now uses `SiegeCompletedInte
 Follow-up isolation: scene-entry tooltip and missing-scene UI now use `SiegeInterventionEntryProfile`; the fused AF adapter keeps settlement/location/menu checks and display side effects while delegating entry wording to the isolated GCCZ source area.
 
 
+Follow-up isolation: scene-entry troop-selection instructions and selection-result UI now also use `SiegeInterventionEntryProfile`; the fused AF adapter keeps Bannerlord troop-selection callbacks, selected-roster storage, and `InformationMessage` display while delegating wording/colors to the isolated GCCZ source area.
+
+
 Follow-up isolation: pending native aftermath selection now uses `SiegeAftermathResolutionKind` and `SiegeAftermathSelectionPolicy`; the fused AF adapter maps TaleWorlds aftermath enum values and delegates severity/replacement checks to the isolated GCCZ source area.
 
 

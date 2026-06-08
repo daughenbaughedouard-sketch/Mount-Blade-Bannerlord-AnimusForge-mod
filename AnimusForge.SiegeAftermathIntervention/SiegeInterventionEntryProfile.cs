@@ -8,9 +8,33 @@ public static class SiegeInterventionEntryProfile
 {
     public const uint MissingSceneMessageColor = 0xFFFF7777u;
 
+    public const uint EntryInstructionMessageColor = 0xFFB6F7A8u;
+
+    public const uint SelectionConfirmedMessageColor = 0xFFB6F7A8u;
+
+    public const uint SelectionFallbackMessageColor = 0xFFFFD27Fu;
+
     public const string EnabledTooltip = "{=!}暂不立即处置战后事务；你将披甲带约50名健康士兵进城，普通民众仍散在城内街区，再由现场对话或行动决定安抚、宽恕、搜掠或血洗。";
 
     public const string MissingSceneTooltip = "{=!}当前没有可进入的攻城胜利定居点场景。";
 
     public const string MissingSceneMessage = "【攻城处置】当前没有可进入的被攻陷定居点场景。";
+
+    public const string DecisionPolicyMessage = "【攻城处置】处置方式由你现场决定：直接离场按搜掠结算；明确宽恕、安抚或宣抚会按对应处置结算；搜掠仍可因后续宽恕/宣抚回退，血洗和屠民迁殖不可逆。";
+
+    public const string EntryFailedMessage = "【攻城处置】暂时无法进入被攻陷的定居点场景。";
+
+    public const string SelectionFallbackMessage = "【攻城处置】未选择随行队员，将自动带入健康普通士兵。";
+
+    public static string BuildTroopSelectionInstructionMessage(int maxCount)
+    {
+        int safeMaxCount = maxCount < 0 ? 0 : maxCount;
+        return "【攻城处置】先选择最多 " + safeMaxCount + " 名入城随行士兵或同伴；未选择则自动带入健康普通士兵。";
+    }
+
+    public static string BuildSelectionConfirmedMessage(int selectedCount)
+    {
+        int safeSelectedCount = selectedCount < 0 ? 0 : selectedCount;
+        return "【攻城处置】已选择 " + safeSelectedCount + " 名随行队员入城。";
+    }
 }

@@ -515,8 +515,8 @@ public class SiegeAiInterventionBehavior : CampaignBehaviorBase
 			SceneTauntBehavior.ClearPendingLocalDungeonCaptivityForExternal("siege_intervention_enter_isolated_scene");
 			SceneTauntBehavior.ClearPendingForcedPlayerExecutionForExternal("siege_intervention_enter_isolated_scene");
 			SceneTauntBehavior.ClearPendingMainHeroBattleDeathForExternal("siege_intervention_enter_isolated_scene");
-			InformationManager.DisplayMessage(new InformationMessage("【攻城处置】先选择最多 " + AutoSummonCount + " 名入城随行士兵或同伴；未选择则自动带入健康普通士兵。", Color.FromUint(0xFFB6F7A8u)));
-			InformationManager.DisplayMessage(new InformationMessage("【攻城处置】处置方式由你现场决定：直接离场按搜掠结算；明确宽恕、安抚或宣抚会按对应处置结算；搜掠仍可因后续宽恕/宣抚回退，血洗和屠民迁殖不可逆。", Color.FromUint(0xFFB6F7A8u)));
+			InformationManager.DisplayMessage(new InformationMessage(SiegeInterventionEntryProfile.BuildTroopSelectionInstructionMessage(AutoSummonCount), Color.FromUint(SiegeInterventionEntryProfile.EntryInstructionMessageColor)));
+			InformationManager.DisplayMessage(new InformationMessage(SiegeInterventionEntryProfile.DecisionPolicyMessage, Color.FromUint(SiegeInterventionEntryProfile.EntryInstructionMessageColor)));
 			if (!TryOpenInterventionTroopSelection(args, location))
 			{
 				OpenInterventionMissionNow(location, "selection_unavailable");
@@ -525,7 +525,7 @@ public class SiegeAiInterventionBehavior : CampaignBehaviorBase
 		catch (Exception ex)
 		{
 			Logger.Log("SiegeAiIntervention", "EnterIntervention failed: " + ex);
-			InformationManager.DisplayMessage(new InformationMessage("【攻城处置】暂时无法进入被攻陷的定居点场景。", Color.FromUint(0xFFFF7777u)));
+			InformationManager.DisplayMessage(new InformationMessage(SiegeInterventionEntryProfile.EntryFailedMessage, Color.FromUint(SiegeInterventionEntryProfile.MissingSceneMessageColor)));
 		}
 	}
 
@@ -554,11 +554,11 @@ public class SiegeAiInterventionBehavior : CampaignBehaviorBase
 					int selectedCount = _selectedInterventionRoster?.TotalManCount ?? 0;
 					if (selectedCount > 0)
 					{
-						InformationManager.DisplayMessage(new InformationMessage("【攻城处置】已选择 " + selectedCount + " 名随行队员入城。", Color.FromUint(0xFFB6F7A8u)));
+						InformationManager.DisplayMessage(new InformationMessage(SiegeInterventionEntryProfile.BuildSelectionConfirmedMessage(selectedCount), Color.FromUint(SiegeInterventionEntryProfile.SelectionConfirmedMessageColor)));
 					}
 					else
 					{
-						InformationManager.DisplayMessage(new InformationMessage("【攻城处置】未选择随行队员，将自动带入健康普通士兵。", Color.FromUint(0xFFFFD27Fu)));
+						InformationManager.DisplayMessage(new InformationMessage(SiegeInterventionEntryProfile.SelectionFallbackMessage, Color.FromUint(SiegeInterventionEntryProfile.SelectionFallbackMessageColor)));
 					}
 					OpenInterventionMissionNow(location, "game_menu_troop_selection_done");
 				},
