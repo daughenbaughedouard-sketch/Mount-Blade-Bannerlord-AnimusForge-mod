@@ -1,0 +1,33 @@
+namespace AnimusForge.SiegeAftermathIntervention;
+
+/// <summary>
+/// Dependency-free profile for GCCZ cultural repopulation request handling.
+/// AF adapters resolve Bannerlord cultures, mutate settlements, and run mission/combat side effects.
+/// </summary>
+public sealed class SiegeCulturalRepopulationProfile
+{
+    public SiegeAftermathResolutionKind AftermathKind { get; } = SiegeAftermathResolutionKind.Devastate;
+
+    public string MassacreTriggerSource { get; } = "场景对话屠民迁殖触发血洗";
+
+    public string MassacreTriggerDetail { get; } = "玩家通过己方士兵直接下令屠民迁殖；士兵立即按血洗方式屠戮原住民，离场按毁坏/迁殖结算。";
+
+    public string MemoryTitle { get; } = "殖民";
+
+    public uint PendingMessageColor { get; } = 0xFFFF7777u;
+
+    public string BuildRequestMemoryText(string targetCultureText)
+    {
+        return "玩家通过己方士兵触发屠民迁殖，要求清除原住民并把定居点强行改为 " + NormalizeTargetCultureText(targetCultureText) + "；这是最高级不可逆处置。";
+    }
+
+    public string BuildPendingMessageText(string targetCultureText)
+    {
+        return "【攻城处置】屠民迁殖已列入处置：这是最高级不可逆处置，离场结算后此地将强行改为 " + NormalizeTargetCultureText(targetCultureText) + "。";
+    }
+
+    private static string NormalizeTargetCultureText(string targetCultureText)
+    {
+        return string.IsNullOrWhiteSpace(targetCultureText) ? "目标文化" : targetCultureText.Trim();
+    }
+}

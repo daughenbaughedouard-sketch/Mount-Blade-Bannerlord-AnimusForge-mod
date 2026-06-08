@@ -3113,22 +3113,23 @@ public class SiegeAiInterventionBehavior : CampaignBehaviorBase
 				return false;
 			}
 			bool handled = true;
+			SiegeCulturalRepopulationProfile repopulationProfile = new SiegeCulturalRepopulationProfile();
 			if (!_massacreStarted)
 			{
-				handled |= StartMassacre("场景对话屠民迁殖触发血洗", "玩家通过己方士兵直接下令屠民迁殖；士兵立即按血洗方式屠戮原住民，离场按毁坏/迁殖结算。");
+				handled |= StartMassacre(repopulationProfile.MassacreTriggerSource, repopulationProfile.MassacreTriggerDetail);
 			}
 			CultureObject targetCulture = ResolveCulturalRepopulationTargetCulture(out string targetCultureSource);
 			string targetCultureText = DescribeCultureForMessage(targetCulture, targetCultureSource);
 			_culturalRepopulationRequested = true;
-			MarkPendingAftermath(SiegeAftermathAction.SiegeAftermath.Devastate, triggerSource, triggerDetail);
-			RecordInterventionMemory("殖民", "玩家通过己方士兵触发屠民迁殖，要求清除原住民并把定居点强行改为 " + targetCultureText + "；这是最高级不可逆处置。");
+			MarkPendingAftermath(ToNativeAftermathKind(repopulationProfile.AftermathKind), triggerSource, triggerDetail);
+			RecordInterventionMemory(repopulationProfile.MemoryTitle, repopulationProfile.BuildRequestMemoryText(targetCultureText));
 			if (_massacreVictoryReached)
 			{
 				handled |= ApplyCulturalRepopulationNow("victory_already_reached");
 			}
 			else
 			{
-				InformationManager.DisplayMessage(new InformationMessage("【攻城处置】屠民迁殖已列入处置：这是最高级不可逆处置，离场结算后此地将强行改为 " + targetCultureText + "。", Color.FromUint(0xFFFF7777u)));
+				InformationManager.DisplayMessage(new InformationMessage(repopulationProfile.BuildPendingMessageText(targetCultureText), Color.FromUint(repopulationProfile.PendingMessageColor)));
 			}
 			return handled;
 		}
