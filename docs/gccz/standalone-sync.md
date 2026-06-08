@@ -76,7 +76,7 @@ Follow-up isolation: negative-outcome shared-pool refund UI and memory wording n
 Follow-up isolation: shared-pool applied-effect UI now also lives in mirrored `SiegeSharedReliefPoolFormatter`. The fused tree routes the displayed effect message through that core while preserving AF-side pool description and display.
 
 
-Follow-up isolation: shared-pool capture UI now also lives in mirrored `SiegeSharedReliefPoolFormatter`. The fused tree routes captured-transfer wording through the core while preserving AF-side Bannerlord gold/item summary collection and display side effects.
+Follow-up isolation: shared-pool capture/refund summaries now also live in mirrored `SiegeSharedReliefPoolFormatter`. The fused tree routes gold/item amount lines, summary joining, unavailable-stats fallback, and captured-transfer wording through the core while preserving AF-side Bannerlord gold/item mutation, live item lookup, and display side effects.
 
 
 Follow-up isolation: newly applied shared-pool settlement-effect deltas now live in mirrored `SiegeSharedReliefPoolEffectCalculator` and `SiegeSharedReliefPoolEffectDeltas`. The fused tree routes relief material delta formulas through that core while preserving AF-side town food-stock mutation and settlement application.

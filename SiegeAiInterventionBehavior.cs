@@ -2501,9 +2501,9 @@ public class SiegeAiInterventionBehavior : CampaignBehaviorBase
 			if (recorded)
 			{
 				_sharedCivilianReliefReturned = false;
-				string itemText = itemAmount > 0 ? (itemAmount + " 个 " + (item?.Name?.ToString() ?? itemId ?? "物资")) : "";
-				string goldText = goldAmount > 0 ? (goldAmount + " 第纳尔") : "";
-				string joined = string.Join("、", new[] { goldText, itemText }.Where(x => !string.IsNullOrWhiteSpace(x)));
+				string itemText = SiegeSharedReliefPoolFormatter.BuildItemAmountText(itemAmount, item?.Name?.ToString() ?? itemId);
+				string goldText = SiegeSharedReliefPoolFormatter.BuildGoldAmountText(goldAmount);
+				string joined = SiegeSharedReliefPoolFormatter.JoinAmountParts(goldText, itemText);
 				InformationManager.DisplayMessage(new InformationMessage(SiegeSharedReliefPoolFormatter.BuildCapturedTransferMessage(joined), Color.FromUint(SiegeSharedReliefPoolFormatter.CapturedTransferMessageColor)));
 				Logger.Log("SiegeAiIntervention", "Recorded shared civilian relief transfer. Source=" + (source ?? "N/A") + ", TargetAgent=" + targetAgentIndex + ", Gold=" + goldAmount + ", Item=" + (itemId ?? "") + ", Amount=" + itemAmount + ", Pool=" + DescribeSharedCivilianReliefPoolForContext());
 			}
@@ -2524,7 +2524,7 @@ public class SiegeAiInterventionBehavior : CampaignBehaviorBase
 		}
 		catch
 		{
-			return "共享物资统计不可用";
+			return SiegeSharedReliefPoolFormatter.UnavailableStatsDescription;
 		}
 	}
 
@@ -2597,7 +2597,7 @@ public class SiegeAiInterventionBehavior : CampaignBehaviorBase
 			if (returnedGold > 0)
 			{
 				AwardGoldToPlayer(returnedGold, "shared_relief_refund_" + (reason ?? "negative"));
-				returnedParts.Add(returnedGold + " 第纳尔");
+				returnedParts.Add(SiegeSharedReliefPoolFormatter.BuildGoldAmountText(returnedGold));
 			}
 			MobileParty mainParty = MobileParty.MainParty ?? Hero.MainHero?.PartyBelongedTo;
 			ItemRoster itemRoster = mainParty?.ItemRoster;
@@ -2616,7 +2616,7 @@ public class SiegeAiInterventionBehavior : CampaignBehaviorBase
 				}
 				itemRoster.AddToCounts(item, amount);
 				returnedItems += amount;
-				returnedParts.Add(amount + " 个 " + (item.Name?.ToString() ?? pair.Key));
+				returnedParts.Add(SiegeSharedReliefPoolFormatter.BuildItemAmountText(amount, item.Name?.ToString() ?? pair.Key));
 			}
 			if (returnedGold <= 0 && returnedItems <= 0)
 			{
@@ -2632,7 +2632,7 @@ public class SiegeAiInterventionBehavior : CampaignBehaviorBase
 			_appliedSharedCivilianReliefItemValue = 0L;
 			SharedCivilianReliefItems.Clear();
 			SharedCivilianReliefItemObjects.Clear();
-			string summary = string.Join("、", returnedParts.Where(x => !string.IsNullOrWhiteSpace(x)));
+			string summary = SiegeSharedReliefPoolFormatter.JoinAmountParts(returnedParts.ToArray());
 			InformationManager.DisplayMessage(new InformationMessage(SiegeSharedReliefPoolFormatter.BuildReturnedToPlayerMessage(summary), Color.FromUint(SiegeSharedReliefPoolFormatter.ReturnedToPlayerMessageColor)));
 			RecordInterventionMemory(SiegeSharedReliefPoolFormatter.ReturnedToPlayerMemoryTitle, SiegeSharedReliefPoolFormatter.BuildReturnedToPlayerMemoryText(summary));
 			Logger.Log("SiegeAiIntervention", "Returned shared civilian relief pool to player due to negative outcome. Reason=" + (reason ?? "N/A") + ", Summary=" + summary);

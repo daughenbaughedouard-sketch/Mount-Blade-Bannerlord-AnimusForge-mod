@@ -15,6 +15,8 @@ public static class SiegeSharedReliefPoolFormatter
 
     public const string ReturnedToPlayerMemoryTitle = "返还";
 
+    public const string UnavailableStatsDescription = "共享物资统计不可用";
+
     public static bool HasAnyMaterial(SiegeSharedReliefPoolFacts facts)
     {
         return facts != null
@@ -68,6 +70,35 @@ public static class SiegeSharedReliefPoolFormatter
         return "【攻城处置】已将给予的" + NormalizeTransferSummary(transferSummary) + "计入全城平民共享安抚物资。";
     }
 
+    public static string BuildGoldAmountText(int goldAmount)
+    {
+        return goldAmount > 0 ? goldAmount + " 第纳尔" : string.Empty;
+    }
+
+    public static string BuildItemAmountText(int itemAmount, string itemNameOrId)
+    {
+        return itemAmount > 0 ? itemAmount + " 个 " + NormalizeItemName(itemNameOrId) : string.Empty;
+    }
+
+    public static string JoinAmountParts(params string[] parts)
+    {
+        if (parts == null || parts.Length == 0)
+        {
+            return string.Empty;
+        }
+
+        var normalizedParts = new List<string>();
+        foreach (string part in parts)
+        {
+            if (!string.IsNullOrWhiteSpace(part))
+            {
+                normalizedParts.Add(part.Trim());
+            }
+        }
+
+        return string.Join("、", normalizedParts);
+    }
+
     public static string BuildReturnedToPlayerMemoryText(string summary)
     {
         return "玩家先前交付的平民共享安抚物资因负面处置被退还；返还内容：" + NormalizeReturnSummary(summary) + "。";
@@ -86,5 +117,10 @@ public static class SiegeSharedReliefPoolFormatter
     private static string NormalizeTransferSummary(string transferSummary)
     {
         return string.IsNullOrWhiteSpace(transferSummary) ? "物资" : transferSummary.Trim();
+    }
+
+    private static string NormalizeItemName(string itemNameOrId)
+    {
+        return string.IsNullOrWhiteSpace(itemNameOrId) ? "物资" : itemNameOrId.Trim();
     }
 }
