@@ -3300,7 +3300,7 @@ public class SiegeAiInterventionBehavior : CampaignBehaviorBase
 			main.UpdateSpawnEquipmentAndRefreshVisuals(equipment);
 			main.WieldInitialWeapons(Agent.WeaponWieldActionType.InstantAfterPickUp, Equipment.InitialWeaponEquipPreference.Any);
 			_playerBattleEquipmentApplied = true;
-			InformationManager.DisplayMessage(new InformationMessage("【攻城处置】你已披甲执兵入城。", Color.FromUint(0xFFB6F7A8u)));
+			InformationManager.DisplayMessage(new InformationMessage(SiegeInterventionEntryProfile.BattleEquipmentAppliedMessage, Color.FromUint(SiegeInterventionEntryProfile.BattleEquipmentAppliedMessageColor)));
 		}
 		catch (Exception ex)
 		{
@@ -7212,7 +7212,7 @@ public class SiegeAiInterventionBehavior : CampaignBehaviorBase
 		List<CharacterObject> troops = PickInterventionTroops(count);
 		if (troops.Count == 0)
 		{
-			InformationManager.DisplayMessage(new InformationMessage("【攻城处置】主部队没有可入城的健康士兵或同伴。", Color.FromUint(0xFFFFD27Fu)));
+			InformationManager.DisplayMessage(new InformationMessage(SiegeInterventionEntryProfile.NoHealthyTroopsMessage, Color.FromUint(SiegeInterventionEntryProfile.NoHealthyTroopsMessageColor)));
 			return false;
 		}
 		int spawned = 0;
@@ -7316,7 +7316,7 @@ public class SiegeAiInterventionBehavior : CampaignBehaviorBase
 		{
 			TrySetPlayerFormationFollowOrder(FormationClass.Infantry, "spawn_follow_after_batch");
 			TryPrimePlayerOrderController(mission, "spawn_allied_batch", force: true);
-			InformationManager.DisplayMessage(new InformationMessage("【攻城处置】已带入 " + spawned + " 名随行士兵/同伴，默认编入一队并保持列队跟随。", Color.FromUint(0xFFB6F7A8u)));
+			InformationManager.DisplayMessage(new InformationMessage(SiegeInterventionEntryProfile.BuildSummonedTroopsMessage(spawned), Color.FromUint(SiegeInterventionEntryProfile.SummonedTroopsMessageColor)));
 			return true;
 		}
 		return false;
