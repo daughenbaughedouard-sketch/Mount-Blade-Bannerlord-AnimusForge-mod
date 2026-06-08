@@ -8000,13 +8000,13 @@ public class SiegeAiInterventionBehavior : CampaignBehaviorBase
 			_directMassacreScriptTicks++;
 			if (_hasPendingAftermath)
 			{
-				FinalizePendingAftermath("direct_massacre_script_pending_aftermath");
+				FinalizePendingAftermath(SiegeDirectAftermathSourceProfile.DirectMassacrePendingAftermathSource);
 			}
 			if (!_afAftermathResolved)
 			{
 				return true;
 			}
-			string pumpSource = source ?? "direct_massacre_script";
+			string pumpSource = source ?? SiegeDirectAftermathSourceProfile.DirectMassacreFallbackPumpSource;
 			if (!IsSafeToOpenDirectMassacreLootScreen(pumpSource))
 			{
 				return true;
@@ -8030,8 +8030,8 @@ public class SiegeAiInterventionBehavior : CampaignBehaviorBase
 					return true;
 				}
 				_directMassacreWaitingForLootClose = false;
-				QueueEncounterFinishAfterIntervention(SiegeAftermathAction.SiegeAftermath.Devastate, "direct_massacre_script_after_loot", 0, forceDelay: true);
-				if (!TryFinishPlayerEncounterAfterInterventionNow(SiegeAftermathAction.SiegeAftermath.Devastate, "direct_massacre_script_after_loot"))
+				QueueEncounterFinishAfterIntervention(SiegeAftermathAction.SiegeAftermath.Devastate, SiegeDirectAftermathSourceProfile.DirectMassacreAfterLootSource, 0, forceDelay: true);
+				if (!TryFinishPlayerEncounterAfterInterventionNow(SiegeAftermathAction.SiegeAftermath.Devastate, SiegeDirectAftermathSourceProfile.DirectMassacreAfterLootSource))
 				{
 					return true;
 				}
@@ -8047,8 +8047,8 @@ public class SiegeAiInterventionBehavior : CampaignBehaviorBase
 				return true;
 			}
 			ShowDirectMassacreLootMessage();
-			QueueEncounterFinishAfterIntervention(SiegeAftermathAction.SiegeAftermath.Devastate, "direct_massacre_script_no_loot", 0, forceDelay: true);
-			if (!TryFinishPlayerEncounterAfterInterventionNow(SiegeAftermathAction.SiegeAftermath.Devastate, "direct_massacre_script_no_loot"))
+			QueueEncounterFinishAfterIntervention(SiegeAftermathAction.SiegeAftermath.Devastate, SiegeDirectAftermathSourceProfile.DirectMassacreNoLootSource, 0, forceDelay: true);
+			if (!TryFinishPlayerEncounterAfterInterventionNow(SiegeAftermathAction.SiegeAftermath.Devastate, SiegeDirectAftermathSourceProfile.DirectMassacreNoLootSource))
 			{
 				return true;
 			}
@@ -8098,13 +8098,13 @@ public class SiegeAiInterventionBehavior : CampaignBehaviorBase
 			_directPlunderScriptTicks++;
 			if (_hasPendingAftermath)
 			{
-				FinalizePendingAftermath("direct_plunder_script_pending_aftermath");
+				FinalizePendingAftermath(SiegeDirectAftermathSourceProfile.DirectPlunderPendingAftermathSource);
 			}
 			if (!_afAftermathResolved)
 			{
 				return true;
 			}
-			string pumpSource = source ?? "direct_plunder_script";
+			string pumpSource = source ?? SiegeDirectAftermathSourceProfile.DirectPlunderFallbackPumpSource;
 			if (!IsSafeToOpenDirectPlunderLootScreen(pumpSource))
 			{
 				return true;
@@ -8126,8 +8126,8 @@ public class SiegeAiInterventionBehavior : CampaignBehaviorBase
 					return true;
 				}
 				_directPlunderWaitingForLootClose = false;
-				QueueEncounterFinishAfterIntervention(SiegeAftermathAction.SiegeAftermath.Pillage, "direct_plunder_script_after_loot", 0, forceDelay: true);
-				if (!TryFinishPlayerEncounterAfterInterventionNow(SiegeAftermathAction.SiegeAftermath.Pillage, "direct_plunder_script_after_loot"))
+				QueueEncounterFinishAfterIntervention(SiegeAftermathAction.SiegeAftermath.Pillage, SiegeDirectAftermathSourceProfile.DirectPlunderAfterLootSource, 0, forceDelay: true);
+				if (!TryFinishPlayerEncounterAfterInterventionNow(SiegeAftermathAction.SiegeAftermath.Pillage, SiegeDirectAftermathSourceProfile.DirectPlunderAfterLootSource))
 				{
 					return true;
 				}
@@ -8143,8 +8143,8 @@ public class SiegeAiInterventionBehavior : CampaignBehaviorBase
 				return true;
 			}
 			ShowDirectPlunderLootMessage();
-			QueueEncounterFinishAfterIntervention(SiegeAftermathAction.SiegeAftermath.Pillage, "direct_plunder_script_no_loot", 0, forceDelay: true);
-			if (!TryFinishPlayerEncounterAfterInterventionNow(SiegeAftermathAction.SiegeAftermath.Pillage, "direct_plunder_script_no_loot"))
+			QueueEncounterFinishAfterIntervention(SiegeAftermathAction.SiegeAftermath.Pillage, SiegeDirectAftermathSourceProfile.DirectPlunderNoLootSource, 0, forceDelay: true);
+			if (!TryFinishPlayerEncounterAfterInterventionNow(SiegeAftermathAction.SiegeAftermath.Pillage, SiegeDirectAftermathSourceProfile.DirectPlunderNoLootSource))
 			{
 				return true;
 			}
