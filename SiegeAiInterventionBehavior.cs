@@ -1547,14 +1547,14 @@ public class SiegeAiInterventionBehavior : CampaignBehaviorBase
 			}
 			string text = raw.Replace("\r", "");
 			IReadOnlyList<SiegeInterventionActionKind> extractedKinds = SiegeActionTagCatalog.ExtractKinds(text);
-			foreach (SiegeInterventionActionKind kind in GetStandaloneActionTagOrder())
+			foreach (SiegeInterventionActionKind kind in SiegeActionTagCatalog.GetCanonicalOrder())
 			{
 				if (!extractedKinds.Contains(kind))
 				{
 					continue;
 				}
-				string[] aliases = GetStandaloneActionTagAliases(kind);
-				if (aliases.Length > 0 && AllowsAny(aliases) && SiegeActionTagCatalog.TryGetCanonicalTag(kind, out string canonicalTag))
+				IReadOnlyList<string> aliases = SiegeActionTagCatalog.GetAliases(kind);
+				if (aliases.Count > 0 && AllowsAny(aliases.ToArray()) && SiegeActionTagCatalog.TryGetCanonicalTag(kind, out string canonicalTag))
 				{
 					Add(canonicalTag);
 				}
@@ -2593,48 +2593,6 @@ public class SiegeAiInterventionBehavior : CampaignBehaviorBase
 		return SiegeActionTagCatalog.ExtractKinds(text).Any(SiegeInterventionActionRules.IsMercyTrack);
 	}
 
-	private static SiegeInterventionActionKind[] GetStandaloneActionTagOrder()
-	{
-		return new[]
-		{
-			SiegeInterventionActionKind.Mercy,
-			SiegeInterventionActionKind.Relief,
-			SiegeInterventionActionKind.Inspire,
-			SiegeInterventionActionKind.RallyOath,
-			SiegeInterventionActionKind.AppeaseSoldiers,
-			SiegeInterventionActionKind.GatherCivilians,
-			SiegeInterventionActionKind.Plunder,
-			SiegeInterventionActionKind.Massacre,
-			SiegeInterventionActionKind.CulturalRepopulation,
-		};
-	}
-
-	private static string[] GetStandaloneActionTagAliases(SiegeInterventionActionKind kind)
-	{
-		switch (kind)
-		{
-			case SiegeInterventionActionKind.Mercy:
-				return new[] { "[ACTION:宽恕]", "[ACTION:SIEGE_MERCY]" };
-			case SiegeInterventionActionKind.Relief:
-				return new[] { "[ACTION:救济]", "[ACTION:SIEGE_RELIEF]" };
-			case SiegeInterventionActionKind.Inspire:
-				return new[] { "[ACTION:宣抚]", "[ACTION:SIEGE_INSPIRE]" };
-			case SiegeInterventionActionKind.RallyOath:
-				return new[] { "[ACTION:盟誓]", "[ACTION:SIEGE_RALLY_OATH]" };
-			case SiegeInterventionActionKind.AppeaseSoldiers:
-				return new[] { "[ACTION:安兵]", "[ACTION:SIEGE_APPEASE_SOLDIERS]" };
-			case SiegeInterventionActionKind.GatherCivilians:
-				return new[] { "[ACTION:召集]", "[ACTION:SIEGE_GATHER_CIVILIANS]" };
-			case SiegeInterventionActionKind.Plunder:
-				return new[] { "[ACTION:搜掠]", "[ACTION:SIEGE_PLUNDER]" };
-			case SiegeInterventionActionKind.Massacre:
-				return new[] { "[ACTION:血洗]", "[ACTION:SIEGE_MASSACRE]" };
-			case SiegeInterventionActionKind.CulturalRepopulation:
-				return new[] { "[ACTION:殖民]", "[ACTION:SIEGE_PURGE_REPOPULATION]", "[ACTION:SIEGE_CULTURAL_REPOPULATION]" };
-			default:
-				return Array.Empty<string>();
-		}
-	}
 
 	private static bool TryBlockMercyTrackAfterDestructive(string actionName)
 	{

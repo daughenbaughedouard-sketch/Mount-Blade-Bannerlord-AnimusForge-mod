@@ -28,3 +28,6 @@ G:\AFMOD\.dotnet-sdk\dotnet.exe build G:\AFMOD\new-\AnimusForge.csproj -v:minima
 Verified after the first runtime bridge: 0 warnings, 0 errors.
 
 `G:\AFMOD\new-\原版游戏本体代码1.3.x` is treated as read-only Bannerlord 1.3.x source reference; it is not a dependency DLL directory and must not be edited for GCCZ integration.
+
+
+Follow-up isolation: canonical tag order and alias table now live in `SiegeActionTagCatalog`, removing duplicate switch helpers from the AF adapter.

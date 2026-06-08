@@ -38,6 +38,19 @@ public static class SiegeActionTagCatalog
             ["殖民"] = SiegeInterventionActionKind.CulturalRepopulation,
         };
 
+    private static readonly SiegeInterventionActionKind[] CanonicalOrder =
+    {
+        SiegeInterventionActionKind.Mercy,
+        SiegeInterventionActionKind.Relief,
+        SiegeInterventionActionKind.Inspire,
+        SiegeInterventionActionKind.RallyOath,
+        SiegeInterventionActionKind.AppeaseSoldiers,
+        SiegeInterventionActionKind.GatherCivilians,
+        SiegeInterventionActionKind.Plunder,
+        SiegeInterventionActionKind.Massacre,
+        SiegeInterventionActionKind.CulturalRepopulation,
+    };
+
     private static readonly IReadOnlyDictionary<SiegeInterventionActionKind, string> KindToCanonicalTag =
         new Dictionary<SiegeInterventionActionKind, string>
         {
@@ -50,6 +63,20 @@ public static class SiegeActionTagCatalog
             [SiegeInterventionActionKind.Plunder] = "[ACTION:搜掠]",
             [SiegeInterventionActionKind.Massacre] = "[ACTION:血洗]",
             [SiegeInterventionActionKind.CulturalRepopulation] = "[ACTION:殖民]",
+        };
+
+    private static readonly IReadOnlyDictionary<SiegeInterventionActionKind, string[]> KindToAliases =
+        new Dictionary<SiegeInterventionActionKind, string[]>
+        {
+            [SiegeInterventionActionKind.Mercy] = new[] { "[ACTION:宽恕]", "[ACTION:SIEGE_MERCY]" },
+            [SiegeInterventionActionKind.Relief] = new[] { "[ACTION:救济]", "[ACTION:SIEGE_RELIEF]" },
+            [SiegeInterventionActionKind.Inspire] = new[] { "[ACTION:宣抚]", "[ACTION:SIEGE_INSPIRE]" },
+            [SiegeInterventionActionKind.RallyOath] = new[] { "[ACTION:盟誓]", "[ACTION:SIEGE_RALLY_OATH]" },
+            [SiegeInterventionActionKind.AppeaseSoldiers] = new[] { "[ACTION:安兵]", "[ACTION:SIEGE_APPEASE_SOLDIERS]" },
+            [SiegeInterventionActionKind.GatherCivilians] = new[] { "[ACTION:召集]", "[ACTION:SIEGE_GATHER_CIVILIANS]" },
+            [SiegeInterventionActionKind.Plunder] = new[] { "[ACTION:搜掠]", "[ACTION:SIEGE_PLUNDER]" },
+            [SiegeInterventionActionKind.Massacre] = new[] { "[ACTION:血洗]", "[ACTION:SIEGE_MASSACRE]" },
+            [SiegeInterventionActionKind.CulturalRepopulation] = new[] { "[ACTION:殖民]", "[ACTION:SIEGE_PURGE_REPOPULATION]", "[ACTION:SIEGE_CULTURAL_REPOPULATION]" },
         };
 
     public static bool TryParseName(string tagName, out SiegeInterventionActionKind kind)
@@ -66,6 +93,16 @@ public static class SiegeActionTagCatalog
     public static bool TryGetCanonicalTag(SiegeInterventionActionKind kind, out string canonicalTag)
     {
         return KindToCanonicalTag.TryGetValue(kind, out canonicalTag);
+    }
+
+    public static IReadOnlyList<SiegeInterventionActionKind> GetCanonicalOrder()
+    {
+        return CanonicalOrder;
+    }
+
+    public static IReadOnlyList<string> GetAliases(SiegeInterventionActionKind kind)
+    {
+        return KindToAliases.TryGetValue(kind, out var aliases) ? aliases : Array.Empty<string>();
     }
 
     public static IReadOnlyList<SiegeInterventionActionKind> ExtractKinds(string text)
