@@ -19,4 +19,6 @@ public static class SiegeMassacreInteractionProfile
     public const string CombatPrepareSource = "massacre_combat_prepare";
 
     public const string AlliedCombatDriveSource = "massacre_drive";
+
+    public const string AllTargetsDownVictorySource = "all_targets_down";
 }

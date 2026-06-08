@@ -6868,7 +6868,7 @@ public class SiegeAiInterventionBehavior : CampaignBehaviorBase
 		{
 			return;
 		}
-		CompleteMassacreVictory(mission, "all_targets_down");
+		CompleteMassacreVictory(mission, SiegeMassacreInteractionProfile.AllTargetsDownVictorySource);
 	}
 
 	private static void CompleteMassacreVictory(Mission mission, string reason)
