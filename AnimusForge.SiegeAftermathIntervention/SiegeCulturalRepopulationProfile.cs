@@ -20,6 +20,14 @@ public sealed class SiegeCulturalRepopulationProfile
 
     public const string PlayerCultureFallbackLabel = "玩家文化";
 
+    public const string VictoryAlreadyReachedApplySource = "victory_already_reached";
+
+    public const string MassacreVictoryApplySource = "massacre_victory";
+
+    public const string FinalizeAftermathApplySource = "finalize_aftermath";
+
+    public const string DirectMassacreLootMessageApplySource = "direct_massacre_loot_message";
+
     public SiegeAftermathResolutionKind AftermathKind { get; } = SiegeAftermathResolutionKind.Devastate;
 
     public string MassacreTriggerSource { get; } = "场景对话屠民迁殖触发血洗";

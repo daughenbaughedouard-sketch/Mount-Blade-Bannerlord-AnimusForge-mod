@@ -183,7 +183,7 @@ Follow-up isolation: cultural repopulation completion UI now also uses `SiegeCul
 Follow-up isolation: cultural repopulation policy/target validation UI now also uses `SiegeCulturalRepopulationProfile`; the fused AF adapter keeps only live policy checks, allied-soldier validation, and display side effects.
 
 
-Follow-up isolation: cultural repopulation target-culture labels now also use `SiegeCulturalRepopulationProfile`; the fused AF adapter keeps Bannerlord `CultureObject` resolution while delegating source labels, fallback wording, and display formatting to the isolated GCCZ source area.
+Follow-up isolation: cultural repopulation target-culture labels and apply source codes now also use `SiegeCulturalRepopulationProfile`; the fused AF adapter keeps Bannerlord `CultureObject` resolution and settlement mutation calls while delegating source labels, fallback wording, display formatting, and repopulation apply source strings to the isolated GCCZ source area.
 
 
 Follow-up isolation: runtime prompt wording now uses `SiegeRuntimePromptProfile`; the fused AF adapter keeps live agent lookup, classification, gather/memory context collection, and outcome state flags while delegating the long active-scene prompt wording to the isolated GCCZ source area.

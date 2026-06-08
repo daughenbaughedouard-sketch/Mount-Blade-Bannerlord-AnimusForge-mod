@@ -3034,7 +3034,7 @@ public class SiegeAiInterventionBehavior : CampaignBehaviorBase
 			RecordInterventionMemory(repopulationProfile.MemoryTitle, repopulationProfile.BuildRequestMemoryText(targetCultureText));
 			if (_massacreVictoryReached)
 			{
-				handled |= ApplyCulturalRepopulationNow("victory_already_reached");
+				handled |= ApplyCulturalRepopulationNow(SiegeCulturalRepopulationProfile.VictoryAlreadyReachedApplySource);
 			}
 			else
 			{
@@ -6882,7 +6882,7 @@ public class SiegeAiInterventionBehavior : CampaignBehaviorBase
 		KeepAlliedVictoryCheer(mission);
 		if (_culturalRepopulationRequested)
 		{
-			ApplyCulturalRepopulationNow("massacre_victory");
+			ApplyCulturalRepopulationNow(SiegeCulturalRepopulationProfile.MassacreVictoryApplySource);
 		}
 		InformationManager.DisplayMessage(new InformationMessage(SiegeInterventionCompletionUiProfile.MassacreVictoryMessage, Color.FromUint(SiegeInterventionCompletionUiProfile.MassacreVictoryMessageColor)));
 		ShowMassacreVictoryLootMessages();
@@ -7625,7 +7625,7 @@ public class SiegeAiInterventionBehavior : CampaignBehaviorBase
 			}
 			if (aftermath == SiegeAftermathAction.SiegeAftermath.Devastate && _culturalRepopulationRequested)
 			{
-				ApplyCulturalRepopulationNow("finalize_aftermath");
+				ApplyCulturalRepopulationNow(SiegeCulturalRepopulationProfile.FinalizeAftermathApplySource);
 			}
 			if (aftermath == SiegeAftermathAction.SiegeAftermath.ShowMercy && settlement.Town != null)
 			{
@@ -8384,7 +8384,7 @@ public class SiegeAiInterventionBehavior : CampaignBehaviorBase
 		}
 		if (_culturalRepopulationRequested && !_culturalRepopulationApplied)
 		{
-			ApplyCulturalRepopulationNow("direct_massacre_loot_message");
+			ApplyCulturalRepopulationNow(SiegeCulturalRepopulationProfile.DirectMassacreLootMessageApplySource);
 		}
 		_directMassacreScriptMessageShown = true;
 		try

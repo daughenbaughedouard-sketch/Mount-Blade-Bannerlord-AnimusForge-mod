@@ -199,7 +199,7 @@ Follow-up isolation: cultural repopulation completion UI now also lives in mirro
 Follow-up isolation: cultural repopulation policy/target validation messages now also live in mirrored `SiegeCulturalRepopulationProfile`. The fused tree routes blocked-policy and invalid-target UI text through that core while preserving AF-side policy and allied-soldier validation.
 
 
-Follow-up isolation: cultural repopulation target-culture labels now also live in mirrored `SiegeCulturalRepopulationProfile`. The fused tree routes player/kingdom/clan source labels, fallback wording, and display formatting through the core while preserving AF-side Bannerlord culture resolution.
+Follow-up isolation: cultural repopulation target-culture labels and apply source codes now also live in mirrored `SiegeCulturalRepopulationProfile`. The fused tree routes player/kingdom/clan source labels, fallback wording, display formatting, and repopulation apply source strings through the core while preserving AF-side Bannerlord culture resolution and settlement mutation calls.
 
 
 Follow-up isolation: runtime prompt wording now lives in mirrored `SiegeRuntimePromptProfile`. The fused tree routes the long active-scene prompt through that core while preserving AF-side agent lookup, allied/guard/civilian classification, gather/memory context collection, and outcome state flags.

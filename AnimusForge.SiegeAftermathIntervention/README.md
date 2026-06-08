@@ -76,6 +76,11 @@ Second extraction slice:
 `SiegeMassacreInteractionProfile` owns dependency-free runtime parameters and source codes for GCCZ 血洗 civilian hide distance, hide refresh timing, soldier follow refresh, soldier target refresh, occupation follow, and combat preparation operations. AF adapters still own live mission-agent routing, order timing application, hide-point projection, and combat side effects.
 
 
+## Cultural repopulation profile
+
+SiegeCulturalRepopulationProfile owns dependency-free aftermath kind, massacre trigger wording, request memory text, pending UI message, completion UI message, target-culture labels, validation text, and apply source codes for 屠民迁殖. AF adapters still resolve Bannerlord cultures, mutate settlements/villages/notables, and run mission/combat side effects.
+
+
 ## Civilian gather interaction profile
 
 `SiegeCivilianGatherInteractionProfile` owns dependency-free runtime parameters for GCCZ 民众召集 messenger speech, follow refresh, fallback timing, approach distance, soldier messenger ratio, messenger speed, and formation-control batching. AF adapters still own live mission-agent selection, `ShoutBehavior` triggering, movement, formation control, and side effects.
