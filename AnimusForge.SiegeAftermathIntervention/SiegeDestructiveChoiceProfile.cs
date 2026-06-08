@@ -18,7 +18,9 @@ public sealed class SiegeDestructiveChoiceProfile
         string firstMemoryText,
         string repeatMemoryText,
         int publicTrustDelta,
-        string publicTrustReason)
+        string publicTrustReason,
+        int finalizedPublicTrustDelta,
+        string finalizedPublicTrustReason)
     {
         AftermathKind = aftermathKind;
         AssemblySource = assemblySource;
@@ -30,6 +32,8 @@ public sealed class SiegeDestructiveChoiceProfile
         RepeatMemoryText = repeatMemoryText;
         PublicTrustDelta = publicTrustDelta;
         PublicTrustReason = publicTrustReason;
+        FinalizedPublicTrustDelta = finalizedPublicTrustDelta;
+        FinalizedPublicTrustReason = finalizedPublicTrustReason;
     }
 
     public SiegeAftermathResolutionKind AftermathKind { get; }
@@ -52,6 +56,10 @@ public sealed class SiegeDestructiveChoiceProfile
 
     public string PublicTrustReason { get; }
 
+    public int FinalizedPublicTrustDelta { get; }
+
+    public string FinalizedPublicTrustReason { get; }
+
     public static SiegeDestructiveChoiceProfile BuildPlunder()
     {
         return new SiegeDestructiveChoiceProfile(
@@ -64,7 +72,9 @@ public sealed class SiegeDestructiveChoiceProfile
             firstMemoryText: "玩家已下令搜掠或收缴战利品，士兵开始向民众盘问并索取财物；该处置尚可被后续宽恕/救济/宣抚覆盖。",
             repeatMemoryText: "玩家继续维持搜掠/收缴财物处置，后续NPC应承认士兵正在执行搜掠。",
             publicTrustDelta: 0,
-            publicTrustReason: string.Empty);
+            publicTrustReason: string.Empty,
+            finalizedPublicTrustDelta: -10,
+            finalizedPublicTrustReason: "siege_ai_plunder_finalized");
     }
 
     public static SiegeDestructiveChoiceProfile BuildMassacre()
@@ -79,7 +89,9 @@ public sealed class SiegeDestructiveChoiceProfile
             firstMemoryText: string.Empty,
             repeatMemoryText: string.Empty,
             publicTrustDelta: -25,
-            publicTrustReason: "siege_ai_massacre");
+            publicTrustReason: "siege_ai_massacre",
+            finalizedPublicTrustDelta: 0,
+            finalizedPublicTrustReason: string.Empty);
     }
 
     public static string DescribeMassacreMemorySource(string triggerSource)

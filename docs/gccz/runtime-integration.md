@@ -72,6 +72,9 @@ Follow-up isolation: mercy profile selection now uses `SiegeMercyChoiceProfile`;
 Follow-up isolation: destructive profile selection now uses `SiegeDestructiveChoiceProfile`; the fused AF adapter maps the standalone aftermath kind back to TaleWorlds' native aftermath enum, then preserves the existing mission, settlement trust, UI, memory, and massacre-combat side effects.
 
 
+Follow-up isolation: plunder finalized trust penalty now also uses `SiegeDestructiveChoiceProfile`; the fused AF adapter preserves the Bannerlord settlement mutation call while delegating the delta and reason string to the isolated GCCZ source area.
+
+
 Follow-up isolation: soldier appeasement now uses `SiegeSoldierAppeasementProfile`; the fused AF adapter delegates 安兵 success wording and fallback morale-penalty text/amount to the isolated GCCZ source area before applying Bannerlord party morale, UI, and memory side effects.
 
 

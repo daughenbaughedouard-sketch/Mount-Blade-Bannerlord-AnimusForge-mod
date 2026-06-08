@@ -7722,7 +7722,8 @@ public class SiegeAiInterventionBehavior : CampaignBehaviorBase
 			}
 			if (aftermath == SiegeAftermathAction.SiegeAftermath.Pillage && _plunderStarted)
 			{
-				AdjustSettlementPublicTrustOnly(settlement, -10, "siege_ai_plunder_finalized");
+				SiegeDestructiveChoiceProfile plunderProfile = SiegeDestructiveChoiceProfile.BuildPlunder();
+				AdjustSettlementPublicTrustOnly(settlement, plunderProfile.FinalizedPublicTrustDelta, plunderProfile.FinalizedPublicTrustReason);
 			}
 			ApplyPendingMarketLootForFinalAftermath(aftermath);
 			TrySetNativePlayerEncounterAftermathForSummary(aftermath);
