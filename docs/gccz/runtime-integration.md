@@ -141,7 +141,7 @@ Follow-up isolation: relief validation UI for invalid soldier targets and missin
 Follow-up isolation: civic profile selection now uses `SiegeCivicChoiceProfile`; the fused AF adapter delegates 安民宣抚/归心盟誓 deltas, notable effects, message/memory wording, gather source, soldier appeasement reason, and shared-pool effect reason to the isolated GCCZ source area before applying Bannerlord side effects.
 
 
-Follow-up isolation: mercy profile selection now uses `SiegeMercyChoiceProfile`; the fused AF adapter delegates stop-plunder reason, soldier appeasement reason, shared-pool effect reason, message text, and memory text to the isolated GCCZ source area before applying Bannerlord side effects.
+Follow-up isolation: mercy profile selection now uses `SiegeMercyChoiceProfile`; the fused AF adapter delegates stop-plunder reason, soldier appeasement reason, shared-pool effect reason, message text, memory text, and loyalty bonus to the isolated GCCZ source area before applying Bannerlord side effects.
 
 
 Follow-up isolation: destructive profile selection now uses `SiegeDestructiveChoiceProfile`; the fused AF adapter maps the standalone aftermath kind back to TaleWorlds' native aftermath enum, then preserves the existing mission, settlement trust, UI, memory, and massacre-combat side effects.

@@ -54,3 +54,8 @@ Second extraction slice:
 ## Plunder interaction profile
 
 `SiegePlunderInteractionProfile` owns dependency-free runtime parameters for GCCZ 搜掠 soldier assignment, approach distance, concurrent interactions, and talk duration. AF adapters still own live mission-agent selection, movement, timing application, and side effects.
+
+
+## Mercy choice profile
+
+`SiegeMercyChoiceProfile` owns dependency-free stop-plunder reason, soldier appeasement reason, shared-pool effect reason, message, memory text, and loyalty bonus for the simple 宽恕 choice. AF adapters still apply Bannerlord aftermath, shared-pool, UI, memory, and settlement side effects.

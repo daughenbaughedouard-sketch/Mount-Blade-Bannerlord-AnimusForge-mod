@@ -8,6 +8,8 @@ public sealed class SiegeMercyChoiceProfile
 {
     private const uint PositiveMessageColor = 0xFFB6F7A8u;
 
+    public const float LoyaltyBonus = 15f;
+
     public string StopPlunderReason => "mercy";
 
     public string SoldierAppeasementReason => "宽恕";
