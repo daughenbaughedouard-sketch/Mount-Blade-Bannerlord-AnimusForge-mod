@@ -29,3 +29,8 @@ Second extraction slice:
 ## Fallback postprocess rule catalog
 
 `SiegePostprocessRuleCatalog` owns the dependency-free fallback postprocess rule definitions. Fused AF maps these definitions to `PostprocessRuleEntry` instead of keeping rule wording inside `SiegeAiInterventionBehavior`.
+
+
+## Postprocess context builder
+
+`SiegePostprocessContextBuilder` owns dependency-free formatting for postprocess runtime facts. The AF adapter now only gathers live objects and passes `SiegePostprocessContextFacts`.
