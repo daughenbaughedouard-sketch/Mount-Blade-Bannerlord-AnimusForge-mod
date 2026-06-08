@@ -23,4 +23,10 @@ public static class SiegeNativeBridgeSourceProfile
     public const string OrderPlacerAfterStartSource = "order_placer_after_start";
 
     public const string InjectNativeOrderViewsSource = "inject_native_order_views";
+
+    public const string OrderUiReadySource = "order_ui_ready";
+
+    public const string ResolveOrderControllerSource = "resolve_order_controller";
+
+    public const string MissionOrderVmTeamSource = "mission_order_vm_team";
 }

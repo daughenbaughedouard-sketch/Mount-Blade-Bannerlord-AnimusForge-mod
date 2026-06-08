@@ -5255,7 +5255,7 @@ public class SiegeAiInterventionBehavior : CampaignBehaviorBase
 			bool frequentOrderUiPoll = string.Equals(source, SiegeNativeBridgeSourceProfile.MissionOrderVmCheckOpenSource, StringComparison.Ordinal)
 				|| string.Equals(source, SiegeNativeBridgeSourceProfile.MissionOrderVmHasTroopsSource, StringComparison.Ordinal)
 				|| string.Equals(source, SiegeNativeBridgeSourceProfile.MissionOrderVmControllerSource, StringComparison.Ordinal);
-			TryPrimePlayerOrderController(mission, source ?? "order_ui_ready", force: !frequentOrderUiPoll, preserveSelection: true);
+			TryPrimePlayerOrderController(mission, source ?? SiegeNativeBridgeSourceProfile.OrderUiReadySource, force: !frequentOrderUiPoll, preserveSelection: true);
 			return commandable > 0 && TryResolveNativeOrderControllerForExternal(mission) != null;
 		}
 		catch (Exception ex)
@@ -5347,7 +5347,7 @@ public class SiegeAiInterventionBehavior : CampaignBehaviorBase
 			{
 				EnsureInterventionPlayerCommandTeam(mission);
 			}
-			Team playerTeam = ResolveInterventionPlayerCommandTeamForExternal(mission, "resolve_order_controller") ?? mission.PlayerTeam ?? _interventionPlayerCommandTeam ?? Agent.Main?.Team ?? mission.MainAgent?.Team;
+			Team playerTeam = ResolveInterventionPlayerCommandTeamForExternal(mission, SiegeNativeBridgeSourceProfile.ResolveOrderControllerSource) ?? mission.PlayerTeam ?? _interventionPlayerCommandTeam ?? Agent.Main?.Team ?? mission.MainAgent?.Team;
 			return playerTeam?.PlayerOrderController ?? playerTeam?.MasterOrderController;
 		}
 		catch
@@ -9371,7 +9371,7 @@ public class SiegeAiInterventionBehavior : CampaignBehaviorBase
 				{
 					return true;
 				}
-				__result = SiegeAiInterventionBehavior.ResolveInterventionPlayerCommandTeamForExternal(Mission.Current, "mission_order_vm_team");
+				__result = SiegeAiInterventionBehavior.ResolveInterventionPlayerCommandTeamForExternal(Mission.Current, SiegeNativeBridgeSourceProfile.MissionOrderVmTeamSource);
 				return __result == null;
 			}
 			catch
