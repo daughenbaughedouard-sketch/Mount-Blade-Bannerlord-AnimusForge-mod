@@ -87,7 +87,7 @@ Follow-up isolation: civilian gather interaction timing, formation-control param
 Follow-up isolation: civilian assembly target counts, scene caps, extra-spawn gating, and grid layout now use `SiegeCivilianAssemblyProfile`; the fused AF adapter keeps scene capacity checks, spawn gating, formation slot projection, and mission side effects while delegating desired counts, scene caps, extra-spawn flag, forward offset, spacing, and columns to the isolated GCCZ source area.
 
 
-Follow-up isolation: soldier cordon positioning and refresh parameters now use `SiegeSoldierCordonProfile`; the fused AF adapter keeps live soldier selection, target-slot projection, movement orders, and look-at side effects while delegating radius, padding, teleport threshold, move/settle tolerance, and order/look refresh timing to the isolated GCCZ source area.
+Follow-up isolation: soldier cordon positioning, refresh parameters, allied/default-follow source codes, spawn-follow source codes, and spawn-batch order-controller source now use `SiegeSoldierCordonProfile`; the fused AF adapter keeps live soldier selection, target-slot projection, movement orders, and look-at side effects while delegating radius, padding, teleport threshold, move/settle tolerance, order/look refresh timing, allied control tick, default infantry follow, spawn follow, and spawn-batch order-controller source to the isolated GCCZ source area.
 
 
 Follow-up isolation: intervention memory context formatting and the max retained memory-event count now use `SiegeInterventionMemoryContextBuilder`; the fused AF adapter keeps event collection, de-duplication, trim application, and logging while delegating prompt context wording plus the trim-limit constant to the isolated GCCZ source area.

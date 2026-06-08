@@ -5857,7 +5857,7 @@ public class SiegeAiInterventionBehavior : CampaignBehaviorBase
 					agent.SetWatchState(Agent.WatchState.Alarmed);
 					continue;
 				}
-				RestoreAlliedSoldierFriendlyState(agent, 0f, "allied_control_tick", forceFollow: false, clearTarget: false);
+				RestoreAlliedSoldierFriendlyState(agent, 0f, SiegeSoldierCordonProfile.AlliedControlTickSource, forceFollow: false, clearTarget: false);
 				if (agent.Formation == null || agent.Team != (mission.PlayerTeam ?? main.Team))
 				{
 					AssignAgentToPlayerFormation(agent, FormationClass.Infantry);
@@ -5887,7 +5887,7 @@ public class SiegeAiInterventionBehavior : CampaignBehaviorBase
 						AssignAgentToPlayerFormation(agent, FormationClass.Infantry);
 						if (!_soldierDefaultFollowOrderIssued)
 						{
-							_soldierDefaultFollowOrderIssued = TrySetPlayerFormationFollowOrder(FormationClass.Infantry, "allied_default_follow");
+							_soldierDefaultFollowOrderIssued = TrySetPlayerFormationFollowOrder(FormationClass.Infantry, SiegeSoldierCordonProfile.AlliedDefaultFollowSource);
 						}
 						agent.WieldInitialWeapons(Agent.WeaponWieldActionType.InstantAfterPickUp, Equipment.InitialWeaponEquipPreference.Any);
 					}
@@ -7236,7 +7236,7 @@ public class SiegeAiInterventionBehavior : CampaignBehaviorBase
 						spawnedAgent.SetWatchState(Agent.WatchState.Patrolling);
 						if (!_soldierDefaultFollowOrderIssued)
 						{
-							_soldierDefaultFollowOrderIssued = TrySetPlayerFormationFollowOrder(FormationClass.Infantry, "spawn_default_follow");
+							_soldierDefaultFollowOrderIssued = TrySetPlayerFormationFollowOrder(FormationClass.Infantry, SiegeSoldierCordonProfile.SpawnDefaultFollowSource);
 						}
 					}
 					else
@@ -7244,7 +7244,7 @@ public class SiegeAiInterventionBehavior : CampaignBehaviorBase
 						DisableCompanionStyleFollow(spawnedAgent);
 						if (!_soldierDefaultFollowOrderIssued)
 						{
-							_soldierDefaultFollowOrderIssued = TrySetPlayerFormationFollowOrder(FormationClass.Infantry, "spawn_default_follow");
+							_soldierDefaultFollowOrderIssued = TrySetPlayerFormationFollowOrder(FormationClass.Infantry, SiegeSoldierCordonProfile.SpawnDefaultFollowSource);
 						}
 					}
 				}
@@ -7256,8 +7256,8 @@ public class SiegeAiInterventionBehavior : CampaignBehaviorBase
 		}
 		if (spawned > 0)
 		{
-			TrySetPlayerFormationFollowOrder(FormationClass.Infantry, "spawn_follow_after_batch");
-			TryPrimePlayerOrderController(mission, "spawn_allied_batch", force: true);
+			TrySetPlayerFormationFollowOrder(FormationClass.Infantry, SiegeSoldierCordonProfile.SpawnFollowAfterBatchSource);
+			TryPrimePlayerOrderController(mission, SiegeSoldierCordonProfile.SpawnAlliedBatchOrderControllerSource, force: true);
 			InformationManager.DisplayMessage(new InformationMessage(SiegeInterventionEntryProfile.BuildSummonedTroopsMessage(spawned), Color.FromUint(SiegeInterventionEntryProfile.SummonedTroopsMessageColor)));
 			return true;
 		}
