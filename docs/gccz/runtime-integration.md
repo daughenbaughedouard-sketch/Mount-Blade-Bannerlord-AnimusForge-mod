@@ -117,6 +117,9 @@ Follow-up isolation: destructive same-culture/policy validation UI for blocked �
 Follow-up isolation: same-culture destructive-policy wording for scene entry and postprocess destructive batches now also uses `SiegeDestructiveChoiceProfile`; the fused AF adapter keeps only `TextObject`/`InformationMessage` display and live policy decisions.
 
 
+Follow-up isolation: direct player-attack bloodbath trigger wording now also uses `SiegeDestructiveChoiceProfile`; the fused AF adapter keeps input/damage detection, pending-aftermath mutation, and combat side effects while delegating UI text, trigger source, and trigger detail wording to the isolated GCCZ source area.
+
+
 Follow-up isolation: cultural repopulation request handling now uses `SiegeCulturalRepopulationProfile`; the fused AF adapter keeps target validation, culture resolution, pending aftermath mutation, and later settlement/notable mutation while delegating the 屠民迁殖 request wording and devastate aftermath kind to the isolated GCCZ source area.
 
 

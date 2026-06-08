@@ -10,6 +10,8 @@ public sealed class SiegeDestructiveChoiceProfile
 {
     public const uint ValidationMessageColor = 0xFFFFD27Fu;
 
+    public const uint DirectMassacreTriggerMessageColor = 0xFFFF7777u;
+
     public const string PlunderPolicyBlockedMessage = "【攻城处置】该定居点与你当前阵营文化相同，军纪禁止掠夺。";
 
     public const string MassacrePolicyBlockedMessage = "【攻城处置】该定居点与你当前阵营文化相同，军纪禁止毁坏或血洗。";
@@ -19,6 +21,10 @@ public sealed class SiegeDestructiveChoiceProfile
     public const string SameCultureEntryBlockedMessage = "【攻城处置】该定居点与你当前阵营文化相同，军纪禁止掠夺或毁坏；本次只能宽恕或安抚。";
 
     public const string SameCultureActionBatchBlockedMessage = "【攻城处置】该定居点与你当前阵营文化相同，军纪禁止掠夺或毁坏，本次只能宽恕或安抚。";
+
+    public const string PlayerWeaponAttackTriggerSource = "玩家直接攻击平民触发血洗";
+
+    public const string PlayerHitTriggerSource = "玩家主动攻击NPC触发血洗";
 
     private SiegeDestructiveChoiceProfile(
         SiegeAftermathResolutionKind aftermathKind,
@@ -127,5 +133,30 @@ public sealed class SiegeDestructiveChoiceProfile
     public string BuildMassacreMemoryText(string triggerSource)
     {
         return DescribeMassacreMemorySource(triggerSource) + "，本次处置已不可逆升级为毁坏/血洗。";
+    }
+
+    public static string BuildPlayerWeaponAttackMessage(string targetName)
+    {
+        return "【攻城处置】你挥武器攻击 " + NormalizeTargetName(targetName, "一名平民") + "，本次入城处置转为血洗。";
+    }
+
+    public static string BuildPlayerWeaponAttackTriggerDetail(string targetName)
+    {
+        return "玩家在攻城后亲自进城时直接挥武器攻击" + NormalizeTargetName(targetName, "一名平民") + "，本次处置按血洗处理。";
+    }
+
+    public static string BuildPlayerHitMessage(string targetName)
+    {
+        return "【攻城处置】你击中了 " + NormalizeTargetName(targetName, "一名NPC") + "，本次入城处置进入血洗。";
+    }
+
+    public static string BuildPlayerHitTriggerDetail(string targetName)
+    {
+        return "玩家在攻城后亲自进城期间主动攻击了" + NormalizeTargetName(targetName, "一名NPC") + "，本次处置按血洗处理。";
+    }
+
+    private static string NormalizeTargetName(string targetName, string fallback)
+    {
+        return string.IsNullOrWhiteSpace(targetName) ? fallback : targetName.Trim();
     }
 }

@@ -1613,12 +1613,12 @@ public class SiegeAiInterventionBehavior : CampaignBehaviorBase
 					Agent target = friendlyBlocker == null ? FindFacingMassacreAttackTarget(mission) : null;
 					if (target != null && target.IsActive())
 					{
-						string targetName = target.Name?.ToString() ?? "一名平民";
+						string targetName = target.Name?.ToString();
 						if (!_massacreStarted)
 						{
-							InformationManager.DisplayMessage(new InformationMessage("【攻城处置】你挥武器攻击 " + targetName + "，本次入城处置转为血洗。", Color.FromUint(0xFFFF7777u)));
+							InformationManager.DisplayMessage(new InformationMessage(SiegeDestructiveChoiceProfile.BuildPlayerWeaponAttackMessage(targetName), Color.FromUint(SiegeDestructiveChoiceProfile.DirectMassacreTriggerMessageColor)));
 						}
-						bool started = StartMassacre("玩家直接攻击平民触发血洗", "玩家在攻城后亲自进城时直接挥武器攻击" + targetName + "，本次处置按血洗处理。");
+						bool started = StartMassacre(SiegeDestructiveChoiceProfile.PlayerWeaponAttackTriggerSource, SiegeDestructiveChoiceProfile.BuildPlayerWeaponAttackTriggerDetail(targetName));
 						if (started || _massacreStarted)
 						{
 							PrepareCivilianForMassacreCombat(target, mission);
@@ -2208,13 +2208,13 @@ public class SiegeAiInterventionBehavior : CampaignBehaviorBase
 		{
 			return false;
 		}
-		string targetName = affectedAgent.Name?.ToString() ?? "一名NPC";
+		string targetName = affectedAgent.Name?.ToString();
 		if (!_massacreStarted)
 		{
-			InformationManager.DisplayMessage(new InformationMessage("【攻城处置】你击中了 " + targetName + "，本次入城处置进入血洗。", Color.FromUint(0xFFFF7777u)));
+			InformationManager.DisplayMessage(new InformationMessage(SiegeDestructiveChoiceProfile.BuildPlayerHitMessage(targetName), Color.FromUint(SiegeDestructiveChoiceProfile.DirectMassacreTriggerMessageColor)));
 		}
 		bool wasMassacreStarted = _massacreStarted;
-		bool startedNow = StartMassacre("玩家主动攻击NPC触发血洗", "玩家在攻城后亲自进城期间主动攻击了" + targetName + "，本次处置按血洗处理。");
+		bool startedNow = StartMassacre(SiegeDestructiveChoiceProfile.PlayerHitTriggerSource, SiegeDestructiveChoiceProfile.BuildPlayerHitTriggerDetail(targetName));
 		if (!startedNow && !wasMassacreStarted)
 		{
 			return false;

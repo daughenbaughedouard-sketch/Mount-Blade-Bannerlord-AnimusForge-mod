@@ -133,6 +133,9 @@ Follow-up isolation: destructive same-culture/policy validation messages now als
 Follow-up isolation: same-culture destructive-policy scene-entry and postprocess-batch messages now also live in mirrored `SiegeDestructiveChoiceProfile`. The fused tree routes that wording through the core while preserving AF-side `TextObject`/`InformationMessage` display and live policy checks.
 
 
+Follow-up isolation: direct player-attack bloodbath trigger UI and pending-aftermath detail wording now also live in mirrored `SiegeDestructiveChoiceProfile`. The fused tree routes weapon-attack/hit messages, trigger sources, and trigger details through the core while preserving AF-side input/damage detection and combat side effects.
+
+
 Follow-up isolation: cultural repopulation request handling now lives in mirrored `SiegeCulturalRepopulationProfile`. The fused tree routes 屠民迁殖 request wording and devastate aftermath kind through that core while preserving AF-side validation, culture resolution, and settlement/notable mutation.
 
 
