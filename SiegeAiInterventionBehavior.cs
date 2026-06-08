@@ -165,16 +165,6 @@ public class SiegeAiInterventionBehavior : CampaignBehaviorBase
 	private const int CivilianFormationControlBatchSize = 8;
 	private const int CivilianGatherMessengerSpeechMinCount = 2;
 	private const int CivilianGatherMessengerSpeechMaxCount = 3;
-	private const float InspirationLoyaltyBonus = 12f;
-	private const float InspirationSecurityBonus = 4f;
-	private const int InspirationPublicTrustBonus = 12;
-	private const int InspirationNotableRelationBonus = 4;
-	private const float InspirationNotablePowerBonus = 2f;
-	private const float RallyOathLoyaltyBonus = 28f;
-	private const float RallyOathSecurityBonus = 10f;
-	private const int RallyOathPublicTrustBonus = 32;
-	private const int RallyOathNotableRelationBonus = 12;
-	private const float RallyOathNotablePowerBonus = 8f;
 	private const int MinDesiredCivilianAssemblyCount = 180;
 	private const int MaxDesiredCivilianAssemblyCount = 220;
 	private const int TownCivilianAssemblySceneCap = 140;
@@ -2882,20 +2872,21 @@ public class SiegeAiInterventionBehavior : CampaignBehaviorBase
 			{
 				return false;
 			}
+			SiegeCivicChoiceProfile civicProfile = SiegeCivicChoiceProfile.BuildInspiration();
 			StopReversiblePlunderForMercyTrack("inspiration");
 			if (_inspirationLevelApplied >= 1)
 			{
-				ApplySharedCivilianReliefPoolEffects(ResolveCurrentSettlement(), "inspiration_repeat");
-				RecordInterventionMemory("宣抚", "玩家继续维持安民宣抚路线，NPC应承认民众已被安抚和宣示新秩序。");
+				ApplySharedCivilianReliefPoolEffects(ResolveCurrentSettlement(), civicProfile.RepeatSharedPoolEffectReason);
+				RecordInterventionMemory(civicProfile.RepeatMemoryTitle, civicProfile.RepeatMemoryText);
 				return true;
 			}
 			Settlement settlement = ResolveCurrentSettlement();
 			_activeMode = InterventionMode.MercyRelief;
 			MarkPendingAftermath(SiegeAftermathAction.SiegeAftermath.ShowMercy, triggerSource, triggerDetail);
-			MaybeTriggerSoldierAppeasementNeed("宣抚");
-			AdjustSettlementAfterRelief(settlement, InspirationPublicTrustBonus, InspirationLoyaltyBonus, InspirationSecurityBonus);
-			ApplySharedCivilianReliefPoolEffects(settlement, "inspiration");
-			_inspirationLevelApplied = 1;
+			MaybeTriggerSoldierAppeasementNeed(civicProfile.SoldierAppeasementReason);
+			AdjustSettlementAfterRelief(settlement, civicProfile.PublicTrustDelta, civicProfile.LoyaltyDelta, civicProfile.SecurityDelta);
+			ApplySharedCivilianReliefPoolEffects(settlement, civicProfile.SharedPoolEffectReason);
+			_inspirationLevelApplied = civicProfile.ResultingInspirationLevel;
 			int relationAdjusted = 0;
 			int powerAdjusted = 0;
 			if (settlement?.Notables != null)
@@ -2908,7 +2899,7 @@ public class SiegeAiInterventionBehavior : CampaignBehaviorBase
 					}
 					try
 					{
-						ChangeRelationAction.ApplyPlayerRelation(notable, InspirationNotableRelationBonus, true, true);
+						ChangeRelationAction.ApplyPlayerRelation(notable, civicProfile.NotableRelationDelta, true, true);
 						relationAdjusted++;
 					}
 					catch
@@ -2916,7 +2907,7 @@ public class SiegeAiInterventionBehavior : CampaignBehaviorBase
 					}
 					try
 					{
-						notable.AddPower(InspirationNotablePowerBonus);
+						notable.AddPower(civicProfile.NotablePowerDelta);
 						powerAdjusted++;
 					}
 					catch
@@ -2924,9 +2915,9 @@ public class SiegeAiInterventionBehavior : CampaignBehaviorBase
 					}
 				}
 			}
-			GatherCiviliansForSpeech("inspiration");
-			ShowOutcomeMessageOnce("inspiration", "【攻城处置】安民宣抚完成：忠诚度有所提升，本地要人对你更愿意合作。", 0xFFB6F7A8u);
-			RecordInterventionMemory("宣抚", "玩家已进行安民宣抚，召集民众并宣示新秩序，要求后续NPC承认这条宽恕/安抚路线。");
+			GatherCiviliansForSpeech(civicProfile.GatherSource);
+			ShowOutcomeMessageOnce(civicProfile.MessageKey, civicProfile.MessageText, civicProfile.MessageColor);
+			RecordInterventionMemory(civicProfile.MemoryTitle, civicProfile.MemoryText);
 			Logger.Log("SiegeAiIntervention", "Applied inspiration choice. Settlement=" + (settlement?.StringId ?? "N/A") + ", RelationAdjusted=" + relationAdjusted + ", PowerAdjusted=" + powerAdjusted);
 			return true;
 		}
@@ -2945,25 +2936,21 @@ public class SiegeAiInterventionBehavior : CampaignBehaviorBase
 			{
 				return false;
 			}
+			SiegeCivicChoiceProfile civicProfile = SiegeCivicChoiceProfile.BuildRallyOath(_inspirationLevelApplied);
 			StopReversiblePlunderForMercyTrack("rally_oath");
 			if (_inspirationLevelApplied >= 2)
 			{
-				ApplySharedCivilianReliefPoolEffects(ResolveCurrentSettlement(), "rally_oath_repeat");
-				RecordInterventionMemory("盟誓", "玩家继续维持归心盟誓路线，本地民众和要人应被视为已被公开争取归附。");
+				ApplySharedCivilianReliefPoolEffects(ResolveCurrentSettlement(), civicProfile.RepeatSharedPoolEffectReason);
+				RecordInterventionMemory(civicProfile.RepeatMemoryTitle, civicProfile.RepeatMemoryText);
 				return true;
 			}
 			Settlement settlement = ResolveCurrentSettlement();
 			_activeMode = InterventionMode.MercyRelief;
 			MarkPendingAftermath(SiegeAftermathAction.SiegeAftermath.ShowMercy, triggerSource, triggerDetail);
-			MaybeTriggerSoldierAppeasementNeed("盟誓");
-			int publicTrustDelta = _inspirationLevelApplied >= 1 ? Math.Max(0, RallyOathPublicTrustBonus - InspirationPublicTrustBonus) : RallyOathPublicTrustBonus;
-			float loyaltyDelta = _inspirationLevelApplied >= 1 ? Math.Max(0f, RallyOathLoyaltyBonus - InspirationLoyaltyBonus) : RallyOathLoyaltyBonus;
-			float securityDelta = _inspirationLevelApplied >= 1 ? Math.Max(0f, RallyOathSecurityBonus - InspirationSecurityBonus) : RallyOathSecurityBonus;
-			int relationDelta = _inspirationLevelApplied >= 1 ? Math.Max(0, RallyOathNotableRelationBonus - InspirationNotableRelationBonus) : RallyOathNotableRelationBonus;
-			float powerDelta = _inspirationLevelApplied >= 1 ? Math.Max(0f, RallyOathNotablePowerBonus - InspirationNotablePowerBonus) : RallyOathNotablePowerBonus;
-			AdjustSettlementAfterRelief(settlement, publicTrustDelta, loyaltyDelta, securityDelta);
-			ApplySharedCivilianReliefPoolEffects(settlement, "rally_oath");
-			_inspirationLevelApplied = 2;
+			MaybeTriggerSoldierAppeasementNeed(civicProfile.SoldierAppeasementReason);
+			AdjustSettlementAfterRelief(settlement, civicProfile.PublicTrustDelta, civicProfile.LoyaltyDelta, civicProfile.SecurityDelta);
+			ApplySharedCivilianReliefPoolEffects(settlement, civicProfile.SharedPoolEffectReason);
+			_inspirationLevelApplied = civicProfile.ResultingInspirationLevel;
 			int relationAdjusted = 0;
 			int powerAdjusted = 0;
 			if (settlement?.Notables != null)
@@ -2976,9 +2963,9 @@ public class SiegeAiInterventionBehavior : CampaignBehaviorBase
 					}
 					try
 					{
-						if (relationDelta > 0)
+						if (civicProfile.NotableRelationDelta > 0)
 						{
-							ChangeRelationAction.ApplyPlayerRelation(notable, relationDelta, true, true);
+							ChangeRelationAction.ApplyPlayerRelation(notable, civicProfile.NotableRelationDelta, true, true);
 							relationAdjusted++;
 						}
 					}
@@ -2987,9 +2974,9 @@ public class SiegeAiInterventionBehavior : CampaignBehaviorBase
 					}
 					try
 					{
-						if (powerDelta > 0f)
+						if (civicProfile.NotablePowerDelta > 0f)
 						{
-							notable.AddPower(powerDelta);
+							notable.AddPower(civicProfile.NotablePowerDelta);
 							powerAdjusted++;
 						}
 					}
@@ -2998,9 +2985,9 @@ public class SiegeAiInterventionBehavior : CampaignBehaviorBase
 					}
 				}
 			}
-			GatherCiviliansForSpeech("rally_oath");
-			ShowOutcomeMessageOnce("rally_oath", "【攻城处置】归心盟誓完成：忠诚度与治安显著提升，本地要人更倾向协助招兵和治理。", 0xFFB6F7A8u);
-			RecordInterventionMemory("盟誓", "玩家已组织公开归心盟誓，强力争取民众和本地要人归附。");
+			GatherCiviliansForSpeech(civicProfile.GatherSource);
+			ShowOutcomeMessageOnce(civicProfile.MessageKey, civicProfile.MessageText, civicProfile.MessageColor);
+			RecordInterventionMemory(civicProfile.MemoryTitle, civicProfile.MemoryText);
 			Logger.Log("SiegeAiIntervention", "Applied rally oath choice. Settlement=" + (settlement?.StringId ?? "N/A") + ", RelationAdjusted=" + relationAdjusted + ", PowerAdjusted=" + powerAdjusted);
 			return true;
 		}

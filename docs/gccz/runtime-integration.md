@@ -61,3 +61,6 @@ Follow-up isolation: action-tag routing now uses `SiegeActionRoutingFacts`, `Sie
 
 
 Follow-up isolation: relief/appeasement profile selection now uses `SiegeReliefChoiceProfile`; the fused AF adapter delegates relief deltas, message/memory wording, soldier appeasement reason, and shared-pool effect reason to the isolated GCCZ source area before applying Bannerlord side effects.
+
+
+Follow-up isolation: civic profile selection now uses `SiegeCivicChoiceProfile`; the fused AF adapter delegates 安民宣抚/归心盟誓 deltas, notable effects, message/memory wording, gather source, soldier appeasement reason, and shared-pool effect reason to the isolated GCCZ source area before applying Bannerlord side effects.
