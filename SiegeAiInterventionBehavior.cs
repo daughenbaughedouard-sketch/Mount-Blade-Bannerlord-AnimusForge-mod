@@ -906,31 +906,23 @@ public class SiegeAiInterventionBehavior : CampaignBehaviorBase
 	{
 		try
 		{
-			if (_culturalRepopulationRequested)
-			{
-				MarkPendingAftermath(SiegeAftermathAction.SiegeAftermath.Devastate, "场景离场屠民迁殖", "玩家已触发屠民迁殖处置，本次离场按最高级不可逆处置结算。");
-				return;
-			}
-			if (_massacreStarted)
-			{
-				MarkPendingAftermath(SiegeAftermathAction.SiegeAftermath.Devastate, "场景离场血洗", "玩家已触发血洗，本次离场按毁坏/血洗结算。");
-				return;
-			}
-			if (_plunderStarted)
-			{
-				MarkPendingAftermath(SiegeAftermathAction.SiegeAftermath.Pillage, "场景离场搜掠", "玩家已触发搜掠，本次离场按搜掠结算。");
-				return;
-			}
-			if (_hasPendingAftermath)
+			bool needsFallbackPolicy = !_culturalRepopulationRequested && !_massacreStarted && !_plunderStarted && !_hasPendingAftermath;
+			SiegeMissionExitOutcomeDecision decision = SiegeMissionExitOutcomeProfile.Resolve(
+				_culturalRepopulationRequested,
+				_massacreStarted,
+				_plunderStarted,
+				_hasPendingAftermath,
+				needsFallbackPolicy && IsDestructiveInterventionAllowed());
+			if (!decision.HasDecision)
 			{
 				return;
 			}
-			if (IsDestructiveInterventionAllowed())
+			if (decision.ShouldStartPlunder)
 			{
-				StartPlunder("未选择处置直接离场", "玩家进入攻城后定居点场景后未明确安抚、宽恕或升级处置便离场，按默认搜掠结算。");
+				StartPlunder(decision.TriggerSource, decision.TriggerDetail);
 				return;
 			}
-			MarkPendingAftermath(SiegeAftermathAction.SiegeAftermath.ShowMercy, "未选择处置直接离场", "同文化或不可掠夺场景未选择处置直接离场，按宽恕结算。");
+			MarkPendingAftermath(ToNativeAftermathKind(decision.AftermathKind), decision.TriggerSource, decision.TriggerDetail);
 		}
 		catch (Exception ex)
 		{

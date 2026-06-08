@@ -176,3 +176,6 @@ Follow-up isolation: soldier appeasement target validation now also lives in mir
 
 
 Follow-up isolation: final completion and encounter-exit UI now lives in mirrored `SiegeInterventionCompletionUiProfile`. The fused tree routes completed-menu fallbacks, massacre-victory message/quick text, completed-aftermath labels/text, loot-settlement summary, and leave-encounter quick text through the core while preserving AF-side enum mapping, state checks, and display side effects.
+
+
+Follow-up isolation: mission-exit fallback aftermath selection now lives in mirrored `SiegeMissionExitOutcomeProfile`. The fused tree routes the exit priority order and trigger source/detail text through the core while preserving AF-side state flags, native enum mapping, plunder side effects, and pending-aftermath mutation.
