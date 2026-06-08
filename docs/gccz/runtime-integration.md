@@ -90,6 +90,9 @@ Follow-up isolation: market/civilian-spoils loot UI now also uses `SiegeLootAcco
 Follow-up isolation: direct aftermath loot status UI now also uses `SiegeLootAccountingProfile`; the fused AF adapter keeps direct loot-screen timing/state flags and display side effects while delegating direct devastate/plunder settlement notices plus credited loot summary wording to the isolated GCCZ source area.
 
 
+Follow-up isolation: market-loot settlement reasons and capture ratios now also use `SiegeLootAccountingProfile`; the fused AF adapter keeps town gold/inventory mutation and one-time guards while delegating plunder/massacre labels and percentage constants to the isolated GCCZ source area.
+
+
 Follow-up isolation: scene-entry tooltip and missing-scene UI now use `SiegeInterventionEntryProfile`; the fused AF adapter keeps settlement/location/menu checks and display side effects while delegating entry wording to the isolated GCCZ source area.
 
 

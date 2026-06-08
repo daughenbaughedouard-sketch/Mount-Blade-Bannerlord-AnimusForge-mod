@@ -12,6 +12,22 @@ public static class SiegeLootAccountingProfile
 
     public const uint DirectPlunderSettlementMessageColor = 0xFFFFC46Bu;
 
+    public const string MassacreActionName = "血洗";
+
+    public const string CulturalRepopulationActionName = "屠民迁殖";
+
+    public const string PlunderSettlementLootReason = "搜掠结算";
+
+    public const string MassacreSettlementLootReason = "血洗结算";
+
+    public const float PlunderMarketInventoryMinRatio = 0.20f;
+
+    public const float PlunderMarketInventoryMaxRatio = 0.50f;
+
+    public const float MassacreMarketInventoryMinRatio = 0.90f;
+
+    public const float MassacreMarketInventoryMaxRatio = 1.00f;
+
     public static string BuildDirectDevastateSettlementMessage(string actionName)
     {
         return "【攻城处置】" + NormalizeActionName(actionName, "血洗")

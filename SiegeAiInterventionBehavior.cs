@@ -6979,11 +6979,11 @@ public class SiegeAiInterventionBehavior : CampaignBehaviorBase
 		{
 			if (_lastMarketGoldLoot > 0)
 			{
-				InformationManager.DisplayMessage(new InformationMessage(SiegeLootAccountingProfile.BuildMarketGoldMessage("血洗", _lastMarketGoldLoot), Color.FromUint(SiegeLootAccountingProfile.LootMessageColor)));
+				InformationManager.DisplayMessage(new InformationMessage(SiegeLootAccountingProfile.BuildMarketGoldMessage(SiegeLootAccountingProfile.MassacreActionName, _lastMarketGoldLoot), Color.FromUint(SiegeLootAccountingProfile.LootMessageColor)));
 			}
 			if (_lastLootItemTotal > 0)
 			{
-				InformationManager.DisplayMessage(new InformationMessage(SiegeLootAccountingProfile.BuildMarketInventoryMessage("血洗", _lastLootItemTotal, _lastLootStackKinds, _lastLootValue), Color.FromUint(SiegeLootAccountingProfile.LootMessageColor)));
+				InformationManager.DisplayMessage(new InformationMessage(SiegeLootAccountingProfile.BuildMarketInventoryMessage(SiegeLootAccountingProfile.MassacreActionName, _lastLootItemTotal, _lastLootStackKinds, _lastLootValue), Color.FromUint(SiegeLootAccountingProfile.LootMessageColor)));
 			}
 			if (_lastCivilianGoldLoot > 0)
 			{
@@ -7615,12 +7615,12 @@ public class SiegeAiInterventionBehavior : CampaignBehaviorBase
 				if (!_marketGoldLootApplied)
 				{
 					_marketGoldLootApplied = true;
-					LootSettlementMarketGold("搜掠结算");
+					LootSettlementMarketGold(SiegeLootAccountingProfile.PlunderSettlementLootReason);
 				}
 				if (!_marketGoodsLootAppliedForPlunder)
 				{
 					_marketGoodsLootAppliedForPlunder = true;
-					LootSettlementMarketInventory(0.20f, 0.50f, "搜掠结算");
+					LootSettlementMarketInventory(SiegeLootAccountingProfile.PlunderMarketInventoryMinRatio, SiegeLootAccountingProfile.PlunderMarketInventoryMaxRatio, SiegeLootAccountingProfile.PlunderSettlementLootReason);
 				}
 			}
 			else if (aftermath == SiegeAftermathAction.SiegeAftermath.Devastate)
@@ -7628,12 +7628,12 @@ public class SiegeAiInterventionBehavior : CampaignBehaviorBase
 				if (!_marketGoldLootApplied)
 				{
 					_marketGoldLootApplied = true;
-					LootSettlementMarketGold("血洗结算");
+					LootSettlementMarketGold(SiegeLootAccountingProfile.MassacreSettlementLootReason);
 				}
 				if (!_marketGoodsLootAppliedForMassacre)
 				{
 					_marketGoodsLootAppliedForMassacre = true;
-					LootSettlementMarketInventory(0.90f, 1.00f, "血洗结算");
+					LootSettlementMarketInventory(SiegeLootAccountingProfile.MassacreMarketInventoryMinRatio, SiegeLootAccountingProfile.MassacreMarketInventoryMaxRatio, SiegeLootAccountingProfile.MassacreSettlementLootReason);
 				}
 			}
 		}
@@ -8445,7 +8445,7 @@ public class SiegeAiInterventionBehavior : CampaignBehaviorBase
 		_directMassacreScriptMessageShown = true;
 		try
 		{
-			string action = _culturalRepopulationRequested || _culturalRepopulationApplied ? "屠民迁殖" : "血洗";
+			string action = _culturalRepopulationRequested || _culturalRepopulationApplied ? SiegeLootAccountingProfile.CulturalRepopulationActionName : SiegeLootAccountingProfile.MassacreActionName;
 			InformationManager.DisplayMessage(new InformationMessage(SiegeLootAccountingProfile.BuildDirectDevastateSettlementMessage(action), Color.FromUint(SiegeLootAccountingProfile.DirectDevastateSettlementMessageColor)));
 			InformationManager.DisplayMessage(new InformationMessage(SiegeLootAccountingProfile.BuildLootCreditedSummaryMessage(_lastMarketGoldLoot, _lastCivilianGoldLoot, _lastLootItemTotal, _lastLootStackKinds), Color.FromUint(SiegeLootAccountingProfile.LootMessageColor)));
 		}

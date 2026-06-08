@@ -106,6 +106,9 @@ Follow-up isolation: market/civilian-spoils loot UI now also lives in mirrored `
 Follow-up isolation: direct aftermath loot status UI now also lives in mirrored `SiegeLootAccountingProfile`. The fused tree routes direct devastate/plunder settlement notices and credited loot summary wording through the core while preserving AF-side direct loot-screen timing/state flags and display side effects.
 
 
+Follow-up isolation: market-loot settlement reasons and capture ratios now also live in mirrored `SiegeLootAccountingProfile`. The fused tree routes plunder/massacre market-loot labels and percentage constants through that core while preserving AF-side town gold/inventory mutation and one-time guards.
+
+
 Follow-up isolation: scene-entry tooltip and missing-scene UI now live in mirrored `SiegeInterventionEntryProfile`. The fused tree routes entry wording through that core while preserving AF-side settlement/location/menu checks and display side effects.
 
 
