@@ -8447,8 +8447,8 @@ public class SiegeAiInterventionBehavior : CampaignBehaviorBase
 		try
 		{
 			string action = _culturalRepopulationRequested || _culturalRepopulationApplied ? "屠民迁殖" : "血洗";
-			InformationManager.DisplayMessage(new InformationMessage("【攻城处置】" + action + "已按毁坏处置结算；城镇受到进一步毁坏影响。即将进入战利品界面领取截获物资。", Color.FromUint(0xFFFF7777u)));
-			InformationManager.DisplayMessage(new InformationMessage("【战利清点】金钱已入账：市场金库 " + _lastMarketGoldLoot + "，民众第纳尔 " + _lastCivilianGoldLoot + "；物资 " + _lastLootItemTotal + " 件 / " + _lastLootStackKinds + " 类。", Color.FromUint(0xFFFFC46Bu)));
+			InformationManager.DisplayMessage(new InformationMessage(SiegeLootAccountingProfile.BuildDirectDevastateSettlementMessage(action), Color.FromUint(SiegeLootAccountingProfile.DirectDevastateSettlementMessageColor)));
+			InformationManager.DisplayMessage(new InformationMessage(SiegeLootAccountingProfile.BuildLootCreditedSummaryMessage(_lastMarketGoldLoot, _lastCivilianGoldLoot, _lastLootItemTotal, _lastLootStackKinds), Color.FromUint(SiegeLootAccountingProfile.LootMessageColor)));
 		}
 		catch
 		{
@@ -8464,8 +8464,8 @@ public class SiegeAiInterventionBehavior : CampaignBehaviorBase
 		_directPlunderScriptMessageShown = true;
 		try
 		{
-			InformationManager.DisplayMessage(new InformationMessage("【攻城处置】搜掠已按掠夺处置结算；即将进入战利品界面领取截获物资。", Color.FromUint(0xFFFFC46Bu)));
-			InformationManager.DisplayMessage(new InformationMessage("【战利清点】金钱已入账：市场金库 " + _lastMarketGoldLoot + "，民众第纳尔 " + _lastCivilianGoldLoot + "；物资 " + _lastLootItemTotal + " 件 / " + _lastLootStackKinds + " 类。", Color.FromUint(0xFFFFC46Bu)));
+			InformationManager.DisplayMessage(new InformationMessage(SiegeLootAccountingProfile.BuildDirectPlunderSettlementMessage(), Color.FromUint(SiegeLootAccountingProfile.DirectPlunderSettlementMessageColor)));
+			InformationManager.DisplayMessage(new InformationMessage(SiegeLootAccountingProfile.BuildLootCreditedSummaryMessage(_lastMarketGoldLoot, _lastCivilianGoldLoot, _lastLootItemTotal, _lastLootStackKinds), Color.FromUint(SiegeLootAccountingProfile.LootMessageColor)));
 		}
 		catch
 		{

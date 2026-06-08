@@ -8,6 +8,30 @@ public static class SiegeLootAccountingProfile
 {
     public const uint LootMessageColor = 0xFFFFC46Bu;
 
+    public const uint DirectDevastateSettlementMessageColor = 0xFFFF7777u;
+
+    public const uint DirectPlunderSettlementMessageColor = 0xFFFFC46Bu;
+
+    public static string BuildDirectDevastateSettlementMessage(string actionName)
+    {
+        return "【攻城处置】" + NormalizeActionName(actionName, "血洗")
+            + "已按毁坏处置结算；城镇受到进一步毁坏影响。即将进入战利品界面领取截获物资。";
+    }
+
+    public static string BuildDirectPlunderSettlementMessage()
+    {
+        return "【攻城处置】搜掠已按掠夺处置结算；即将进入战利品界面领取截获物资。";
+    }
+
+    public static string BuildLootCreditedSummaryMessage(int marketGold, int civilianGold, int itemTotal, int stackKinds)
+    {
+        return "【战利清点】金钱已入账：市场金库 " + ClampNonNegative(marketGold)
+            + "，民众第纳尔 " + ClampNonNegative(civilianGold)
+            + "；物资 " + ClampNonNegative(itemTotal)
+            + " 件 / " + ClampNonNegative(stackKinds)
+            + " 类。";
+    }
+
     public static string BuildCivilianExitSettlementMessage(int recordedCivilianCount, int lootedCivilianCount, int gainedGold)
     {
         return "【战利清点】本次入城处置共记录 " + ClampNonNegative(recordedCivilianCount)
@@ -54,6 +78,11 @@ public static class SiegeLootAccountingProfile
     private static string NormalizeReason(string reason)
     {
         return string.IsNullOrWhiteSpace(reason) ? string.Empty : reason.Trim();
+    }
+
+    private static string NormalizeActionName(string actionName, string fallback)
+    {
+        return string.IsNullOrWhiteSpace(actionName) ? fallback : actionName.Trim();
     }
 
     private static int ClampNonNegative(int value)
