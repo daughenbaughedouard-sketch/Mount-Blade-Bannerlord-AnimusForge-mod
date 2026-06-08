@@ -143,10 +143,10 @@ public class SiegeAiInterventionBehavior : CampaignBehaviorBase
 	private const int NonHeroPlunderMaxGold = SiegeLootAccountingProfile.NonHeroPlunderMaxGold;
 	private const int NonHeroMassacreGold = SiegeLootAccountingProfile.NonHeroMassacreGold;
 	private const int HeroMassacreFallbackGold = SiegeLootAccountingProfile.HeroMassacreFallbackGold;
-	private const int MaxConcurrentPlunderInteractions = 6;
-	private const float PlunderSoldierAssignmentRatio = 0.25f;
-	private const float PlunderApproachDistance = 3.5f;
-	private const float PlunderTalkSeconds = 1.2f;
+	private const int MaxConcurrentPlunderInteractions = SiegePlunderInteractionProfile.MaxConcurrentInteractions;
+	private const float PlunderSoldierAssignmentRatio = SiegePlunderInteractionProfile.SoldierAssignmentRatio;
+	private const float PlunderApproachDistance = SiegePlunderInteractionProfile.ApproachDistance;
+	private const float PlunderTalkSeconds = SiegePlunderInteractionProfile.TalkSeconds;
 	private const float MassacreCivilianHideDistance = 42f;
 	private const float MassacreCivilianHideRefreshSeconds = 10.0f;
 	private const float MassacreSoldierFollowRefreshSeconds = 2.0f;
