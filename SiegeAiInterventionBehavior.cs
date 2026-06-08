@@ -2705,53 +2705,35 @@ public class SiegeAiInterventionBehavior : CampaignBehaviorBase
 	{
 		try
 		{
-			int newGold = Math.Max(0, _sharedCivilianReliefGold - _appliedSharedCivilianReliefGold);
-			int newFood = Math.Max(0, _sharedCivilianReliefFoodUnits - _appliedSharedCivilianReliefFoodUnits);
-			long newMaterialValue = Math.Max(0L, _sharedCivilianReliefItemValue - _appliedSharedCivilianReliefItemValue);
-			if (newGold <= 0 && newFood <= 0 && newMaterialValue <= 0)
+			SiegeSharedReliefPoolEffectDeltas reliefEffect = SiegeSharedReliefPoolEffectCalculator.Calculate(
+				new SiegeSharedReliefPoolFacts(_sharedCivilianReliefGold, _sharedCivilianReliefFoodUnits, _sharedCivilianReliefItemTotal, _sharedCivilianReliefItemValue),
+				new SiegeSharedReliefPoolFacts(_appliedSharedCivilianReliefGold, _appliedSharedCivilianReliefFoodUnits, 0, _appliedSharedCivilianReliefItemValue));
+			if (!reliefEffect.HasNewMaterial)
 			{
 				return false;
 			}
 			_appliedSharedCivilianReliefGold = _sharedCivilianReliefGold;
 			_appliedSharedCivilianReliefFoodUnits = _sharedCivilianReliefFoodUnits;
 			_appliedSharedCivilianReliefItemValue = _sharedCivilianReliefItemValue;
-			int publicTrustDelta = 0;
-			float loyaltyDelta = 0f;
-			float securityDelta = 0f;
-			if (newGold > 0)
+			if (reliefEffect.NewFoodUnits > 0)
 			{
-				publicTrustDelta += Math.Max(1, newGold / 250);
-				loyaltyDelta += newGold / 1000f;
-				securityDelta += newGold / 1500f;
-			}
-			if (newFood > 0)
-			{
-				publicTrustDelta += Math.Max(1, newFood / 5);
-				loyaltyDelta += newFood / 20f;
-				securityDelta += newFood / 30f;
 				try
 				{
 					if (settlement?.Town != null)
 					{
-						settlement.Town.FoodStocks = Math.Min(settlement.Town.FoodStocks + newFood, settlement.Town.FoodStocksUpperLimit());
+						settlement.Town.FoodStocks = Math.Min(settlement.Town.FoodStocks + reliefEffect.NewFoodUnits, settlement.Town.FoodStocksUpperLimit());
 					}
 				}
 				catch
 				{
 				}
 			}
-			if (newMaterialValue > 0)
+			if (reliefEffect.HasSettlementDeltas)
 			{
-				publicTrustDelta += Math.Max(1, (int)Math.Min(50L, newMaterialValue / 1000L));
-				loyaltyDelta += Math.Min(12f, newMaterialValue / 5000f);
-				securityDelta += Math.Min(8f, newMaterialValue / 6000f);
-			}
-			if (publicTrustDelta != 0 || Math.Abs(loyaltyDelta) > 0.001f || Math.Abs(securityDelta) > 0.001f)
-			{
-				AdjustSettlementAfterRelief(settlement, publicTrustDelta, loyaltyDelta, securityDelta);
+				AdjustSettlementAfterRelief(settlement, reliefEffect.PublicTrustDelta, reliefEffect.LoyaltyDelta, reliefEffect.SecurityDelta);
 			}
 			InformationManager.DisplayMessage(new InformationMessage("【攻城处置】已将AF给予的共享物资纳入本次安抚结算：" + DescribeSharedCivilianReliefPoolForContext() + "。", Color.FromUint(0xFFB6F7A8u)));
-			Logger.Log("SiegeAiIntervention", "Applied shared civilian relief pool effects. Reason=" + (reason ?? "N/A") + ", NewGold=" + newGold + ", NewFood=" + newFood + ", NewMaterialValue=" + newMaterialValue + ", PublicTrustDelta=" + publicTrustDelta + ", LoyaltyDelta=" + loyaltyDelta + ", SecurityDelta=" + securityDelta);
+			Logger.Log("SiegeAiIntervention", "Applied shared civilian relief pool effects. Reason=" + (reason ?? "N/A") + ", NewGold=" + reliefEffect.NewGold + ", NewFood=" + reliefEffect.NewFoodUnits + ", NewMaterialValue=" + reliefEffect.NewMaterialValue + ", PublicTrustDelta=" + reliefEffect.PublicTrustDelta + ", LoyaltyDelta=" + reliefEffect.LoyaltyDelta + ", SecurityDelta=" + reliefEffect.SecurityDelta);
 			return true;
 		}
 		catch (Exception ex)

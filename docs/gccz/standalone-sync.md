@@ -67,6 +67,9 @@ Follow-up isolation: shared civilian relief-pool context now lives in mirrored `
 Follow-up isolation: negative-outcome shared-pool refund UI and memory wording now also live in mirrored `SiegeSharedReliefPoolFormatter`. The fused tree routes refund text through that core while preserving AF-side item/gold return side effects.
 
 
+Follow-up isolation: newly applied shared-pool settlement-effect deltas now live in mirrored `SiegeSharedReliefPoolEffectCalculator` and `SiegeSharedReliefPoolEffectDeltas`. The fused tree routes relief material delta formulas through that core while preserving AF-side town food-stock mutation and settlement application.
+
+
 Follow-up isolation: outcome message de-duplication now lives in mirrored `SiegeOutcomeMessageDeduplicator`. The fused tree routes reset/show-once decisions through that core while preserving AF-side `InformationMessage` display.
 
 
