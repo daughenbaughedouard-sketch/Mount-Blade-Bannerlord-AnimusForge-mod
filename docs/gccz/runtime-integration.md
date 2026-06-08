@@ -99,6 +99,9 @@ Follow-up isolation: direct aftermath loot status UI now also uses `SiegeLootAcc
 Follow-up isolation: market-loot settlement reasons and capture ratios now also use `SiegeLootAccountingProfile`; the fused AF adapter keeps town gold/inventory mutation and one-time guards while delegating plunder/massacre labels and percentage constants to the isolated GCCZ source area.
 
 
+Follow-up isolation: civilian/hero gold amount constants for 搜掠/血洗 now also use `SiegeLootAccountingProfile`; the fused AF adapter keeps target validation, random sampling, Bannerlord gold transfer, and display side effects while delegating non-hero/hero amount constants to the isolated GCCZ source area.
+
+
 Follow-up isolation: scene-entry tooltip and missing-scene UI now use `SiegeInterventionEntryProfile`; the fused AF adapter keeps settlement/location/menu checks and display side effects while delegating entry wording to the isolated GCCZ source area.
 
 

@@ -139,10 +139,10 @@ public class SiegeAiInterventionBehavior : CampaignBehaviorBase
 	private const int AutoSummonCount = SiegeInterventionEntryProfile.DefaultAutoSummonCount;
 	private const int MaxSummonPerAction = SiegeInterventionEntryProfile.MaxSummonPerAction;
 	private const float MercyInterventionLoyaltyBonus = 15f;
-	private const int NonHeroPlunderMinGold = 5;
-	private const int NonHeroPlunderMaxGold = 9;
-	private const int NonHeroMassacreGold = 10;
-	private const int HeroMassacreFallbackGold = 3000;
+	private const int NonHeroPlunderMinGold = SiegeLootAccountingProfile.NonHeroPlunderMinGold;
+	private const int NonHeroPlunderMaxGold = SiegeLootAccountingProfile.NonHeroPlunderMaxGold;
+	private const int NonHeroMassacreGold = SiegeLootAccountingProfile.NonHeroMassacreGold;
+	private const int HeroMassacreFallbackGold = SiegeLootAccountingProfile.HeroMassacreFallbackGold;
 	private const int MaxConcurrentPlunderInteractions = 6;
 	private const float PlunderSoldierAssignmentRatio = 0.25f;
 	private const float PlunderApproachDistance = 3.5f;

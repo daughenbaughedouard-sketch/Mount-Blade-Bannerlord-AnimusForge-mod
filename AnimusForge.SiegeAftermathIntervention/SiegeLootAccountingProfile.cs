@@ -20,6 +20,14 @@ public static class SiegeLootAccountingProfile
 
     public const string MassacreSettlementLootReason = "血洗结算";
 
+    public const int NonHeroPlunderMinGold = 5;
+
+    public const int NonHeroPlunderMaxGold = 9;
+
+    public const int NonHeroMassacreGold = 10;
+
+    public const int HeroMassacreFallbackGold = 3000;
+
     public const float PlunderMarketInventoryMinRatio = 0.20f;
 
     public const float PlunderMarketInventoryMaxRatio = 0.50f;
