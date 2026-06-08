@@ -3643,10 +3643,10 @@ public class SiegeAiInterventionBehavior : CampaignBehaviorBase
 			{
 				foreach (Agent agent in mission.Agents.ToList().Where(a => IsEligibleCivilianAgent(a, includeHeroes: true)))
 				{
-					MarkCivilianAsGatherFollower(agent, "gather_120s_fallback");
+					MarkCivilianAsGatherFollower(agent, SiegeCivilianGatherInteractionProfile.FallbackFollowerSource);
 				}
 				ActiveCivilianGatherInteractions.Clear();
-				QueueCivilianFormationControl(mission, "gather_120s_elapsed");
+				QueueCivilianFormationControl(mission, SiegeCivilianGatherInteractionProfile.FallbackElapsedFormationSource);
 				return;
 			}
 			if (_civilianGatherPropagationActive && now >= _nextCivilianGatherTickTime)
@@ -3663,7 +3663,7 @@ public class SiegeAiInterventionBehavior : CampaignBehaviorBase
 				MaintainCivilianGatherFollowers(mission, main, force: true);
 				if (AreAllCivilianGatherFollowersSettled(mission, main))
 				{
-					QueueCivilianFormationControl(mission, "all_civilians_gathered_and_settled");
+					QueueCivilianFormationControl(mission, SiegeCivilianGatherInteractionProfile.AllGatheredAndSettledFormationSource);
 					return;
 				}
 			}
@@ -3944,7 +3944,7 @@ public class SiegeAiInterventionBehavior : CampaignBehaviorBase
 					if (now - interaction.TalkStartedAt >= interaction.TalkSeconds)
 					{
 						MarkCivilianAsGatherFollower(target, SiegeCivilianGatherInteractionProfile.FakeTalkFollowerSource);
-						ReleaseGatherMessengerFromCurrentTarget(messenger, "gather_target_became_c");
+						ReleaseGatherMessengerFromCurrentTarget(messenger, SiegeCivilianGatherInteractionProfile.TargetBecameFollowerReleaseSource);
 						ActiveCivilianGatherInteractions.Remove(interaction.TargetAgentIndex);
 					}
 				}

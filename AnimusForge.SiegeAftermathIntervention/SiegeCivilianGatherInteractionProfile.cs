@@ -45,4 +45,12 @@ public static class SiegeCivilianGatherInteractionProfile
     public const string FakeTalkFollowerSource = "gather_fake_talk";
 
     public const string InteractionTimeoutReleaseSource = "gather_interaction_timeout";
+
+    public const string FallbackFollowerSource = "gather_120s_fallback";
+
+    public const string FallbackElapsedFormationSource = "gather_120s_elapsed";
+
+    public const string AllGatheredAndSettledFormationSource = "all_civilians_gathered_and_settled";
+
+    public const string TargetBecameFollowerReleaseSource = "gather_target_became_c";
 }

@@ -88,7 +88,7 @@ Second extraction slice:
 
 ## Civilian gather interaction profile
 
-`SiegeCivilianGatherInteractionProfile` owns dependency-free runtime parameters and source codes for GCCZ 民众召集 messenger speech, follow refresh, fallback timing, approach distance, soldier messenger ratio, messenger speed, formation-control batching, target waiting, messenger movement, follower preparation, interaction release, and fake-talk follower completion. AF adapters still own live mission-agent selection, `ShoutBehavior` triggering, movement, formation control, and side effects.
+`SiegeCivilianGatherInteractionProfile` owns dependency-free runtime parameters and source codes for GCCZ 民众召集 messenger speech, follow refresh, fallback timing, approach distance, soldier messenger ratio, messenger speed, formation-control batching, target waiting, messenger movement, follower preparation, interaction release, fake-talk follower completion, fallback follower marking, and formation-control reasons. AF adapters still own live mission-agent selection, `ShoutBehavior` triggering, movement, formation control, and side effects.
 
 
 ## Civilian assembly profile
