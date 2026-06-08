@@ -5912,7 +5912,7 @@ public class SiegeAiInterventionBehavior : CampaignBehaviorBase
 			if (!LastMassacreSoldierFollowOrderTimes.TryGetValue(soldier.Index, out float last) || now - last >= MassacreSoldierFollowRefreshSeconds)
 			{
 				LastMassacreSoldierFollowOrderTimes[soldier.Index] = now;
-				if (!TryApplyCompanionStyleFollow(soldier, main, "massacre_occupation_follow"))
+				if (!TryApplyCompanionStyleFollow(soldier, main, SiegeMassacreInteractionProfile.OccupationFollowSource))
 				{
 					MoveAlliedSoldierNearMainFallback(soldier, main);
 				}
@@ -6227,7 +6227,7 @@ public class SiegeAiInterventionBehavior : CampaignBehaviorBase
 			Team enemyTeam = EnsureInterventionCivilianEnemyTeam(mission) ?? mission.PlayerEnemyTeam ?? agent.Team;
 			CharacterObject character = agent.Character as CharacterObject;
 			bool canResist = ShouldCivilianResistMassacre(agent) || DoesAgentCarryRealWeapon(agent) || IsGuardOrSoldier(character);
-			NeutralizeCivilianDailyUsableBehavior(agent, "massacre_combat_prepare");
+			NeutralizeCivilianDailyUsableBehavior(agent, SiegeMassacreInteractionProfile.CombatPrepareSource);
 			agent.SetMortalityState(Agent.MortalityState.Mortal);
 			if (enemyTeam != null && agent.Team != enemyTeam)
 			{
