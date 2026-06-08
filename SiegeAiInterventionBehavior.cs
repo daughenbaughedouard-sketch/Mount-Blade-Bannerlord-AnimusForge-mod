@@ -9570,7 +9570,7 @@ public class SiegeAiInterventionBehavior : CampaignBehaviorBase
 				}
 				if (SiegeAiInterventionBehavior.IsInterventionAlliedSoldierForExternal(victim, requireActive: false))
 				{
-					SiegeAiInterventionBehavior.TryHandleFriendlyHitOnAlliedSoldier(victim, "non_enemy_damage_prefix", 0f);
+					SiegeAiInterventionBehavior.TryHandleFriendlyHitOnAlliedSoldier(victim, SiegeDestructiveChoiceProfile.NonEnemyDamagePrefixSource, 0f);
 					__result = true;
 					return false;
 				}

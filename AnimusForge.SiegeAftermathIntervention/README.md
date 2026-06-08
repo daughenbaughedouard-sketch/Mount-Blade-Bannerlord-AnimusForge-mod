@@ -78,7 +78,7 @@ Second extraction slice:
 
 ## Destructive choice profile
 
-`SiegeDestructiveChoiceProfile` owns dependency-free aftermath kind, assembly source, message text, memory text, massacre source classification, player-attack trigger wording, player-attack damage source, player-hit bridge sources, policy validation text, and public-trust deltas for 搜掠 and 血洗. AF adapters still apply Bannerlord aftermath, troop, mission, UI, settlement, damage, and memory side effects.
+`SiegeDestructiveChoiceProfile` owns dependency-free aftermath kind, assembly source, message text, memory text, massacre source classification, player-attack trigger wording, player-attack damage source, player/non-enemy hit bridge sources, policy validation text, and public-trust deltas for 搜掠 and 血洗. AF adapters still apply Bannerlord aftermath, troop, mission, UI, settlement, damage, and memory side effects.
 
 
 ## Massacre interaction profile

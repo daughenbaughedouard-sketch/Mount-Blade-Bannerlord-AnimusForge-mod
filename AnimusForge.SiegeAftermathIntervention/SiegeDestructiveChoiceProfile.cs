@@ -32,6 +32,8 @@ public sealed class SiegeDestructiveChoiceProfile
 
     public const string PlayerScoreHitBridgeSource = "intervention_score_hit";
 
+    public const string NonEnemyDamagePrefixSource = "non_enemy_damage_prefix";
+
     private SiegeDestructiveChoiceProfile(
         SiegeAftermathResolutionKind aftermathKind,
         string assemblySource,
