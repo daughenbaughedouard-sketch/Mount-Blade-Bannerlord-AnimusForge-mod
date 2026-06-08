@@ -153,6 +153,9 @@ Follow-up isolation: cultural repopulation policy/target validation UI now also 
 Follow-up isolation: cultural repopulation target-culture labels now also use `SiegeCulturalRepopulationProfile`; the fused AF adapter keeps Bannerlord `CultureObject` resolution while delegating source labels, fallback wording, and display formatting to the isolated GCCZ source area.
 
 
+Follow-up isolation: runtime prompt wording now uses `SiegeRuntimePromptProfile`; the fused AF adapter keeps live agent lookup, classification, gather/memory context collection, and outcome state flags while delegating the long active-scene prompt wording to the isolated GCCZ source area.
+
+
 Follow-up isolation: soldier appeasement now uses `SiegeSoldierAppeasementProfile`; the fused AF adapter delegates 安兵 success wording and fallback morale-penalty text/amount to the isolated GCCZ source area before applying Bannerlord party morale, UI, and memory side effects.
 
 

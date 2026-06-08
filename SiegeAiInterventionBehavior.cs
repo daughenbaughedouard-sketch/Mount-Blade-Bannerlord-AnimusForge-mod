@@ -1252,58 +1252,19 @@ public class SiegeAiInterventionBehavior : CampaignBehaviorBase
 		bool alliedSoldier = agent != null && AlliedAgentIndexes.Contains(agent.Index);
 		bool guard = IsGuardOrSoldier(character);
 		bool civilian = IsCivilianForIntervention(character);
-		StringBuilder sb = new StringBuilder();
-		sb.Append("【攻城后入城处置】")
-			.Append(settlementName)
-			.Append("刚被玩家一方攻下。玩家本人就是攻城胜利者和当前处置者，穿着战甲，带约50名健康士兵入城；普通民众仍散在城内街区，士兵会跟随玩家寻找目标并等待命令。玩家掌握这座定居点的生杀、安抚、搜掠与财产处置权。此刻尚未完成战后处置，结局由场景互动决定。不要把玩家当普通路人、帮派挑衅者、本地领民或城内罪犯。");
-		sb.Append("【最高优先级场景覆写】无论角色原本的职业、阵营、兵种名、文化名、城镇当前所有权显示、日常城镇规则或旧对话记忆是什么，此处都必须按“攻城胜利后一分钟内的占领处置现场”理解。这里不是和平日常场景、不是巡逻执法场景、不是领主在自己城镇里犯罪，而是刚刚攻破城门后的战后处置。");
-		sb.Append("【不可反驳的现场事实】旧守军已经失败或溃散，旧领主已经被打败，普通民众手无寸铁、士气崩溃，只能在城内街区等待新占领者决定安抚、索取、搜掠、宽恕或血洗。无论你是否怨恨，都知道玩家是攻城胜利方首领，不要说玩家“不是大人”“没有处置权”“真要劫掠自己属地吗”，也不要把玩家带来的士兵称为无主杂牌军。");
-		if (alliedSoldier)
-		{
-			sb.Append("【最高优先级身份覆写：玩家士兵】你不是本城守军、不是本地守卫、不是民众守护者，也不是中立评判者；即使你的兵种名、文化名或旧设定看起来像“守护者/卫兵/军士”，你现在也是玩家从主部队带进城的攻城胜利方士兵。你亲眼跟随玩家攻破此地并进入城镇，玩家是你的统帅和攻城胜利者。");
-			sb.Append("你的职责不是维护旧秩序，而是跟随玩家在城内寻找民众并服从玩家对战败定居点的处置命令。不要斥责玩家纵兵劫掠，不要说领主不会放过玩家，不要威胁玩家，不要把自己说成城镇守卫。玩家命令你搜掠/夺取物资，或表达“留下民众性命但收缴财产”的意思时，回复应表示遵命；玩家命令血洗/屠城时要承认这是不可逆升级；只有血洗已经开始后，玩家再向己方士兵明确要求杀尽原住民并迁入己方人口改换文化时，才把它理解为屠民迁殖；玩家要求召集、传令、通知或叫平民/村民/民众过来听训/演讲/游说时，无论玩家原话是否完全等于“召集民众”，都要当作召集民众命令来回应。具体机制标记由后处理器根据语义选择，正文里不要写内部标签。");
-			sb.Append("若玩家让你召集民众，你应理解为由少量传令兵去通知民众，绝不是全体士兵乱跑；机制上只会抽调约五分之一己方士兵作为传令者。若同一轮还有平民也听到并答应召集，他们也会一起去传话。");
-			sb.Append("【封臣/非王身份规则】即使玩家不是国王、不是皇帝，只是某位君主的封臣或军中领主，只要玩家本人是这支入城部队的直接统帅和攻城胜利者，你也必须执行他的现场命令。不要要求玩家去请示卢孔、国王、皇帝、军团长或上级领主；中世纪攻城胜利后的搜掠是胜利方士兵默认期待的战利权，士兵不会因为“需要问皇帝”而拒绝。");
-			sb.Append("【士兵战利权知识点】这个时代攻城胜利后掠夺平民财物被士兵视为理应获得的战利权；但只有运行时明确提示“军心/士兵不满待安抚”时，你才可对玩家宽恕、救济、宣抚或盟誓路线表现含蓄不满、阴阳怪气、失望、提醒士气或劝玩家重新考虑。无论是否不满，你都必须完全听命于玩家；不得辱骂玩家、不得使用粗俗脏话骂统帅、不得抗命、不得自动攻击平民或自行把宽恕升级成搜掠/血洗。");
-			if (_soldierAppeasementRequired && !_soldierAppeasementApplied)
-			{
-				sb.Append("【军心待安抚】本次宽恕/救济/宣抚/盟誓路线已经引发部分士兵对放弃战利品的不满。若玩家对你或其他己方士兵给出明确安抚、承诺补偿、解释军纪或保证日后战利安排，你应接受并表示服从；正文不要写标签，后处理会用安兵标签记录。");
-			}
-		}
-		else if (guard)
-		{
-			sb.Append("若你是城内守卫/士兵，视作战败旧守军、被缴械者或溃散残兵，不是仍能执法的守城卫队；不要呼叫守军、不要阻拦玩家，不要否认玩家刚攻城获胜。");
-		}
-		if (civilian)
-		{
-			sb.Append("若你是民众、商人、工匠、酒馆人员、镇民或村民，你知道本地领主/守军刚被击败，自己没有兵器和谈判筹码，只能害怕、屈从、哀求、怨恨或求生；血洗未开始前不要主动攻击玩家。若玩家要求交钱、交粮、搜掠、夺物，或表达“交出财产换取性命”的意思，即使你抗议，也必须承认占领者能强迫你交出财物；具体处置机制由后处理器判定，正文里不要写内部标签。");
-			sb.Append("若玩家让你通知、转告或召集其他民众/村民/百姓过来听训、演讲或接受处置，你可以作为传话者触发召集；你听到并答应后，就是你本人去喊人，不会让玩家士兵替你乱跑。");
-		}
 		string gatherContext = BuildCivilianGatherRuntimeContext(Mission.Current);
-		if (!string.IsNullOrWhiteSpace(gatherContext))
-		{
-			sb.Append(gatherContext);
-		}
 		string memoryContext = BuildInterventionMemoryContext();
-		if (!string.IsNullOrWhiteSpace(memoryContext))
-		{
-			sb.Append(memoryContext);
-		}
-		sb.Append("【救济安抚分流】若你是玩家己方入城士兵，只有玩家已通过AF给予功能交付第纳尔、粮食或物资，并且本轮明确命令你把这些共享物资分发给民众/村民/百姓时，才可把它理解为救济安抚；若你是战败平民/商人/工匠/镇民，玩家直接用言语承诺保护、维持军纪、安顿民众或安抚恐惧，也可理解为平民对话安抚，不强制要求已有物资。");
-		sb.Append("正文只自然说话，不要解释内部机制，也不要写任何方括号动作标签。每个 NPC 回复后都会由独立后处理器根据玩家这轮话的语义、威胁、上下文和谈判走向选择是否触发宽恕、安抚、发放救济、安民宣抚、召集民众、搜掠、血洗、屠民迁殖或安抚军心等处置；除非玩家语义足够明确，否则不要在正文里把处置说成已经完成。搜掠是可逆的临时处置：若玩家后续明确宽恕、安抚、发放救济、安民宣抚或归心盟誓，可回退为正向处置；血洗和屠民迁殖不可逆，血洗后不能降回搜掠或宽恕，屠民迁殖是最高级且不应轻描淡写。");
-		if (_plunderStarted && !_massacreStarted)
-		{
-			sb.Append("当前已进入搜掠：一部分士兵正在城内向平民、商人、工匠等普通城镇单位索取第纳尔与物资；若玩家后续明确大发善心，也可以回退到宽恕/安抚/宣抚类正向处置；若局势升级，可转为血洗。");
-			if (alliedSoldier)
-			{
-				sb.Append("你现在不是维持秩序的巡逻兵，而是在执行战后搜掠的胜利方士兵；语气可以粗鲁、急躁、威胁和贪婪，不要说“保持秩序”“请至少保持秩序”“这是不合适的掠夺法”，应说“把钱交出来”“搜他身”“把藏的物资翻出来”等贴合掠夺现场的话。");
-			}
-		}
-		if (_massacreStarted)
-		{
-			sb.Append("当前已进入血洗：城内民众不再四散逃跑，会转为敌对并集体反抗。");
-		}
-		return sb.ToString();
+		return SiegeRuntimePromptProfile.Build(new SiegeRuntimePromptFacts(
+			settlementName,
+			alliedSoldier,
+			guard,
+			civilian,
+			_soldierAppeasementRequired,
+			_soldierAppeasementApplied,
+			gatherContext,
+			memoryContext,
+			_plunderStarted,
+			_massacreStarted));
 	}
 
 	internal static string BuildRuntimePromptForPromptContext(Hero hero, CharacterObject character, int agentIndex, string cultureIdOverride = null)
