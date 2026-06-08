@@ -222,3 +222,5 @@ Follow-up isolation: mission-exit fallback aftermath selection now lives in mirr
 Follow-up isolation: direct AF aftermath campaign tick, native-menu intercept, external-pump, and script-phase source codes now live in mirrored `SiegeDirectAftermathSourceProfile`. The fused tree routes direct massacre/plunder campaign tick, native intercept, external pump, and script-transition source strings through that core while preserving AF-side campaign tick scheduling, loot-screen state, and encounter transitions.
 
 Follow-up isolation: mission-end and native devastate summary transition source codes now live in mirrored `SiegeAftermathTransitionSourceProfile`. The fused tree routes those aftermath transition source strings through that core while preserving AF-side mission lifecycle, menu handling, loot-screen timing, and encounter transitions.
+
+Follow-up isolation: native flee/order bridge source codes now live in mirrored `SiegeNativeBridgeSourceProfile`. The fused tree routes those native bridge source strings through the core while preserving AF-side Harmony patches, native order UI, and live agent/order side effects.

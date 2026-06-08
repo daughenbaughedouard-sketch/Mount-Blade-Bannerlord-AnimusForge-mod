@@ -5252,9 +5252,9 @@ public class SiegeAiInterventionBehavior : CampaignBehaviorBase
 				MarkFormationPlayerCommandable(agent.Formation, main);
 				commandable++;
 			}
-			bool frequentOrderUiPoll = string.Equals(source, "mission_order_vm_check_open", StringComparison.Ordinal)
-				|| string.Equals(source, "mission_order_vm_has_troops", StringComparison.Ordinal)
-				|| string.Equals(source, "mission_order_vm_controller", StringComparison.Ordinal);
+			bool frequentOrderUiPoll = string.Equals(source, SiegeNativeBridgeSourceProfile.MissionOrderVmCheckOpenSource, StringComparison.Ordinal)
+				|| string.Equals(source, SiegeNativeBridgeSourceProfile.MissionOrderVmHasTroopsSource, StringComparison.Ordinal)
+				|| string.Equals(source, SiegeNativeBridgeSourceProfile.MissionOrderVmControllerSource, StringComparison.Ordinal);
 			TryPrimePlayerOrderController(mission, source ?? "order_ui_ready", force: !frequentOrderUiPoll, preserveSelection: true);
 			return commandable > 0 && TryResolveNativeOrderControllerForExternal(mission) != null;
 		}
@@ -9283,7 +9283,7 @@ public class SiegeAiInterventionBehavior : CampaignBehaviorBase
 				{
 					return true;
 				}
-				SiegeAiInterventionBehavior.NeutralizeCivilianDailyUsableBehavior(agent, "usable_target_prefix");
+				SiegeAiInterventionBehavior.NeutralizeCivilianDailyUsableBehavior(agent, SiegeNativeBridgeSourceProfile.UsableTargetPrefixSource);
 				return false;
 			}
 			catch
@@ -9320,7 +9320,7 @@ public class SiegeAiInterventionBehavior : CampaignBehaviorBase
 					}
 					if (agent != null && agent.IsActive())
 					{
-						SiegeAiInterventionBehavior.NeutralizeCivilianDailyUsableBehavior(agent, "native_flee_tick_prefix");
+						SiegeAiInterventionBehavior.NeutralizeCivilianDailyUsableBehavior(agent, SiegeNativeBridgeSourceProfile.NativeFleeTickPrefixSource);
 					}
 					return false;
 				}
@@ -9356,7 +9356,7 @@ public class SiegeAiInterventionBehavior : CampaignBehaviorBase
 				{
 					return;
 				}
-				SiegeAiInterventionBehavior.EnsureInterventionCommandUiReadyForExternal(Mission.Current, "order_ui_initialize");
+				SiegeAiInterventionBehavior.EnsureInterventionCommandUiReadyForExternal(Mission.Current, SiegeNativeBridgeSourceProfile.OrderUiInitializeSource);
 			}
 			catch
 			{
@@ -9388,7 +9388,7 @@ public class SiegeAiInterventionBehavior : CampaignBehaviorBase
 				{
 					return true;
 				}
-				SiegeAiInterventionBehavior.EnsureInterventionCommandUiReadyForExternal(Mission.Current, "mission_order_vm_controller");
+				SiegeAiInterventionBehavior.EnsureInterventionCommandUiReadyForExternal(Mission.Current, SiegeNativeBridgeSourceProfile.MissionOrderVmControllerSource);
 				__result = SiegeAiInterventionBehavior.TryResolveNativeOrderControllerForExternal(Mission.Current);
 				return __result == null;
 			}
@@ -9407,7 +9407,7 @@ public class SiegeAiInterventionBehavior : CampaignBehaviorBase
 				{
 					return true;
 				}
-				SiegeAiInterventionBehavior.EnsureInterventionCommandUiReadyForExternal(Mission.Current, "mission_order_vm_has_troops");
+				SiegeAiInterventionBehavior.EnsureInterventionCommandUiReadyForExternal(Mission.Current, SiegeNativeBridgeSourceProfile.MissionOrderVmHasTroopsSource);
 				__result = SiegeAiInterventionBehavior.InterventionPlayerHasCommandableAgentsForExternal(Mission.Current);
 				return false;
 			}
@@ -9431,7 +9431,7 @@ public class SiegeAiInterventionBehavior : CampaignBehaviorBase
 				{
 					return true;
 				}
-				__result = SiegeAiInterventionBehavior.EnsureInterventionCommandUiReadyForExternal(mission, "mission_order_vm_check_open") && SiegeAiInterventionBehavior.InterventionPlayerHasCommandableAgentsForExternal(mission);
+				__result = SiegeAiInterventionBehavior.EnsureInterventionCommandUiReadyForExternal(mission, SiegeNativeBridgeSourceProfile.MissionOrderVmCheckOpenSource) && SiegeAiInterventionBehavior.InterventionPlayerHasCommandableAgentsForExternal(mission);
 				return false;
 			}
 			catch
@@ -9455,7 +9455,7 @@ public class SiegeAiInterventionBehavior : CampaignBehaviorBase
 					__result = null;
 					return false;
 				}
-				SiegeAiInterventionBehavior.TryBindNativeOrderControllerForExternal(__instance, "order_controller_getter");
+				SiegeAiInterventionBehavior.TryBindNativeOrderControllerForExternal(__instance, SiegeNativeBridgeSourceProfile.OrderControllerGetterSource);
 				__result = orderController;
 				return false;
 			}
@@ -9504,7 +9504,7 @@ public class SiegeAiInterventionBehavior : CampaignBehaviorBase
 
 		private static void BindOrderTroopPlacerAfterStartPostfix(OrderTroopPlacer __instance)
 		{
-			SiegeAiInterventionBehavior.TryBindNativeOrderControllerForExternal(__instance, "order_placer_after_start");
+			SiegeAiInterventionBehavior.TryBindNativeOrderControllerForExternal(__instance, SiegeNativeBridgeSourceProfile.OrderPlacerAfterStartSource);
 		}
 
 
@@ -9517,7 +9517,7 @@ public class SiegeAiInterventionBehavior : CampaignBehaviorBase
 					return;
 				}
 				int oldCount = __result?.Length ?? 0;
-				SiegeAiInterventionBehavior.EnsureInterventionCommandUiReadyForExternal(mission, "inject_native_order_views");
+				SiegeAiInterventionBehavior.EnsureInterventionCommandUiReadyForExternal(mission, SiegeNativeBridgeSourceProfile.InjectNativeOrderViewsSource);
 				__result = BuildInterventionNativeOrderViews(mission, __result);
 				Logger.Log("SiegeAiIntervention", "Extended intervention mission views with native order UI while preserving settlement leave view. ViewMethod=" + (__originalMethod?.Name ?? "N/A") + ", OldViews=" + oldCount + ", NewViews=" + (__result?.Length ?? 0));
 			}

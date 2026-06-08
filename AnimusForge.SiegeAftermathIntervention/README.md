@@ -107,3 +107,7 @@ Second extraction slice:
 ## Aftermath transition source profile
 
 `SiegeAftermathTransitionSourceProfile` owns dependency-free source codes for mission-end aftermath finalization and native devastate summary continuation. AF adapters still own mission lifecycle, menu switching, loot-screen timing, and encounter side effects.
+
+## Native bridge source profile
+
+`SiegeNativeBridgeSourceProfile` owns dependency-free source codes for native flee suppression, order UI initialization, order-controller binding, and injected native order views. AF adapters still own Harmony patches, mission views, and live agent/order side effects.
