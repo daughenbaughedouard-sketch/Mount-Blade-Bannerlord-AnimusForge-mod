@@ -71,3 +71,6 @@ Follow-up isolation: postprocess current-outcome wording now lives in mirrored `
 
 
 Follow-up isolation: pending native aftermath selection now lives in mirrored `SiegeAftermathResolutionKind` and `SiegeAftermathSelectionPolicy`. The fused tree routes native aftermath severity and replacement decisions through that core while preserving AF-side enum mapping and side effects.
+
+
+Follow-up isolation: action-tag routing now lives in mirrored `SiegeActionRoutingFacts`, `SiegeActionRoutingDecision`, and `SiegeActionRoutingPolicy`. The fused tree routes destructive/mercy-track detection plus soldier relief downgrade/capping decisions through that core while preserving AF-side effects.

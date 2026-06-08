@@ -1510,26 +1510,30 @@ public class SiegeAiInterventionBehavior : CampaignBehaviorBase
 				return true;
 			}
 			bool destructiveAllowed = IsDestructiveInterventionAllowed();
+			bool targetIsAlliedSoldier = targetAgentIndex >= 0 && AlliedAgentIndexes.Contains(targetAgentIndex);
+			bool hasSharedReliefPool = HasSharedCivilianReliefPool();
+			SiegeActionRoutingDecision actionRouting = SiegeActionRoutingPolicy.Evaluate(new SiegeActionRoutingFacts(
+				text,
+				HasDestructiveOutcomeLocked(),
+				targetIsAlliedSoldier,
+				hasSharedReliefPool));
 			if (!destructiveAllowed)
 			{
-				bool blockedDestructiveTag = SiegeActionTagCatalog.ExtractKinds(text).Any(SiegeInterventionActionRules.IsDestructive);
-				if (blockedDestructiveTag)
+				if (actionRouting.ContainsDestructiveAction)
 				{
 					InformationManager.DisplayMessage(new InformationMessage("【攻城处置】该定居点与你当前阵营文化相同，军纪禁止掠夺或毁坏，本次只能宽恕或安抚。", Color.FromUint(0xFFFFD27Fu)));
 					actionHandled = true;
 				}
 			}
-			bool containsDestructiveTag = SiegeActionTagCatalog.ExtractKinds(text).Any(SiegeInterventionActionRules.IsDestructive);
-			bool canApplyMercyTrack = !containsDestructiveTag && !HasDestructiveOutcomeLocked();
-			bool targetIsAlliedSoldier = targetAgentIndex >= 0 && AlliedAgentIndexes.Contains(targetAgentIndex);
+			bool containsDestructiveTag = actionRouting.ContainsDestructiveAction;
+			bool canApplyMercyTrack = actionRouting.CanApplyMercyTrack;
 			bool targetIsCivilian = IsCivilianReliefConversationTarget(targetAgentIndex, targetCharacter);
-			bool reliefRequiresMaterialButMissing = targetIsAlliedSoldier && ReliefTagRegex.IsMatch(text) && !HasSharedCivilianReliefPool();
-			if (reliefRequiresMaterialButMissing)
+			if (actionRouting.ShouldDowngradeSoldierReliefToMercy)
 			{
 				text = ReliefTagRegex.Replace(text, "[ACTION:宽恕]");
 			}
-			bool soldierPositiveCapToRelief = targetIsAlliedSoldier && canApplyMercyTrack && HasSharedCivilianReliefPool() && (InspireTagRegex.IsMatch(text) || RallyOathTagRegex.IsMatch(text));
-			if (!canApplyMercyTrack && !containsDestructiveTag && HasMercyTrackTag(text))
+			bool soldierPositiveCapToRelief = actionRouting.ShouldCapSoldierPositiveToRelief;
+			if (!canApplyMercyTrack && !containsDestructiveTag && actionRouting.HasMercyTrackAction)
 			{
 				actionHandled |= TryBlockMercyTrackAfterDestructive("降级处置");
 			}
@@ -2505,12 +2509,6 @@ public class SiegeAiInterventionBehavior : CampaignBehaviorBase
 	{
 		return SiegeInterventionActionRules.HasDestructiveOutcomeLocked(GetStandaloneOutcome(), _culturalRepopulationRequested, HasPendingDevastateAftermath());
 	}
-
-	private static bool HasMercyTrackTag(string text)
-	{
-		return SiegeActionTagCatalog.ExtractKinds(text).Any(SiegeInterventionActionRules.IsMercyTrack);
-	}
-
 
 	private static bool TryBlockMercyTrackAfterDestructive(string actionName)
 	{
