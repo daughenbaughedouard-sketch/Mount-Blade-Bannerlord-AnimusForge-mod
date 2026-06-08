@@ -2596,7 +2596,7 @@ public class SiegeAiInterventionBehavior : CampaignBehaviorBase
 			List<string> returnedParts = new List<string>();
 			if (returnedGold > 0)
 			{
-				AwardGoldToPlayer(returnedGold, "shared_relief_refund_" + (reason ?? "negative"));
+				AwardGoldToPlayer(returnedGold, SiegeSharedReliefPoolFormatter.BuildReturnedGoldSource(reason));
 				returnedParts.Add(SiegeSharedReliefPoolFormatter.BuildGoldAmountText(returnedGold));
 			}
 			MobileParty mainParty = MobileParty.MainParty ?? Hero.MainHero?.PartyBelongedTo;

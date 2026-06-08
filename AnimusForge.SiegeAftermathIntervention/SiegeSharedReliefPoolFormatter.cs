@@ -17,6 +17,10 @@ public static class SiegeSharedReliefPoolFormatter
 
     public const string UnavailableStatsDescription = "共享物资统计不可用";
 
+    public const string ReturnedGoldSourcePrefix = "shared_relief_refund_";
+
+    public const string NegativeOutcomeFallbackReason = "negative";
+
     public static bool HasAnyMaterial(SiegeSharedReliefPoolFacts facts)
     {
         return facts != null
@@ -102,6 +106,11 @@ public static class SiegeSharedReliefPoolFormatter
     public static string BuildReturnedToPlayerMemoryText(string summary)
     {
         return "玩家先前交付的平民共享安抚物资因负面处置被退还；返还内容：" + NormalizeReturnSummary(summary) + "。";
+    }
+
+    public static string BuildReturnedGoldSource(string reason)
+    {
+        return ReturnedGoldSourcePrefix + (reason ?? NegativeOutcomeFallbackReason);
     }
 
     private static string NormalizeReturnSummary(string summary)

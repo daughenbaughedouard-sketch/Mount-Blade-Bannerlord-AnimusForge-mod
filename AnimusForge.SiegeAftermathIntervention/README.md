@@ -36,6 +36,11 @@ Second extraction slice:
 `SiegePostprocessContextBuilder` owns dependency-free formatting for postprocess runtime facts plus speaker identity labels for allied soldiers, civilians, and other scene NPCs. The AF adapter now only gathers live objects and passes `SiegePostprocessContextFacts`.
 
 
+## Shared civilian relief pool
+
+`SiegeSharedReliefPoolFacts` and `SiegeSharedReliefPoolFormatter` own dependency-free checks, context wording, refund UI/memory wording, returned-gold source construction, applied-effect wording, transfer summaries, and amount formatting for the AF give-item/give-gold pool reserved for civilian relief. Bannerlord item objects, inventory/gold mutation, and display side effects stay in the AF adapter.
+
+
 ## Intervention memory context
 
 `SiegeInterventionMemoryContextBuilder` owns dependency-free formatting for the per-scene GCCZ memory context appended to AF prompts plus the max retained memory-event count. AF adapters still own event collection, de-duplication, trim application, and logging.
