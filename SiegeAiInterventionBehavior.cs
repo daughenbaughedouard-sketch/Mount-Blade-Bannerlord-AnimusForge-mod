@@ -3780,7 +3780,7 @@ public class SiegeAiInterventionBehavior : CampaignBehaviorBase
 			int added = 0;
 			if (seed != null && IsInterventionAlliedSoldierForExternal(seed, requireActive: true) && current < desired)
 			{
-				if (MarkAgentAsCivilianGatherMessenger(seed, "soldier_seed_20_percent"))
+				if (MarkAgentAsCivilianGatherMessenger(seed, SiegeCivilianGatherInteractionProfile.SoldierSeedMessengerSource))
 				{
 					added++;
 					current++;
@@ -3796,7 +3796,7 @@ public class SiegeAiInterventionBehavior : CampaignBehaviorBase
 				{
 					continue;
 				}
-				if (MarkAgentAsCivilianGatherMessenger(soldier, "soldier_20_percent"))
+				if (MarkAgentAsCivilianGatherMessenger(soldier, SiegeCivilianGatherInteractionProfile.SoldierMessengerSource))
 				{
 					added++;
 					current++;
@@ -4279,7 +4279,7 @@ public class SiegeAiInterventionBehavior : CampaignBehaviorBase
 			{
 				return;
 			}
-			StopCivilianGatherScriptFollowForCommandControl(mission, "queue:" + (reason ?? "N/A"));
+			StopCivilianGatherScriptFollowForCommandControl(mission, SiegeCivilianGatherInteractionProfile.BuildFormationQueueSource(reason));
 			TrySetPlayerFormationFollowOrder(FormationClass.Ranged, SiegeCivilianGatherInteractionProfile.FormationControlBeginSource);
 			float now = mission?.CurrentTime ?? 0f;
 			if (!_civilianFormationControlPending)

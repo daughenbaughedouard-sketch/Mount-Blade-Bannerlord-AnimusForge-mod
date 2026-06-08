@@ -62,6 +62,12 @@ public static class SiegeCivilianGatherInteractionProfile
 
     public const string GatherMessengerReturnSourcePrefix = "gather_messenger_return:";
 
+    public const string SoldierSeedMessengerSource = "soldier_seed_20_percent";
+
+    public const string SoldierMessengerSource = "soldier_20_percent";
+
+    public const string FormationQueueSourcePrefix = "queue:";
+
     public const string FormationControlBeginSource = "civilian_formation_control_begin";
 
     public const string FormationControlBatchSource = "formation_control_batch";
@@ -90,5 +96,10 @@ public static class SiegeCivilianGatherInteractionProfile
     public static string BuildGatherMessengerReturnSource(string reason)
     {
         return GatherMessengerReturnSourcePrefix + (reason ?? UnavailableSourceSuffix);
+    }
+
+    public static string BuildFormationQueueSource(string reason)
+    {
+        return FormationQueueSourcePrefix + (reason ?? UnavailableSourceSuffix);
     }
 }
