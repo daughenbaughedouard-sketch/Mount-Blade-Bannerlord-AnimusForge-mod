@@ -6945,7 +6945,7 @@ public class SiegeAiInterventionBehavior : CampaignBehaviorBase
 		ShowMassacreVictoryLootMessages();
 		try
 		{
-			MBInformationManager.AddQuickInformation(new TextObject("血洗完成，离场后结算战利品。"), 0, null, null, "event:/ui/mission/arena_victory");
+			MBInformationManager.AddQuickInformation(new TextObject(SiegeInterventionCompletionUiProfile.MassacreVictoryQuickText), 0, null, null, "event:/ui/mission/arena_victory");
 		}
 		catch
 		{
@@ -8488,10 +8488,10 @@ public class SiegeAiInterventionBehavior : CampaignBehaviorBase
 		};
 		try
 		{
-			InformationManager.DisplayMessage(new InformationMessage("【攻城处置】攻城后" + label + "已经结算完成，正在结束攻城遭遇。", Color.FromUint(0xFFB6F7A8u)));
+			InformationManager.DisplayMessage(new InformationMessage(SiegeInterventionCompletionUiProfile.BuildCompletedEncounterMessage(label), Color.FromUint(SiegeInterventionCompletionUiProfile.CompletionMessageColor)));
 			if (_lastLootItemTotal > 0 || _lastMarketGoldLoot > 0 || _lastCivilianGoldLoot > 0)
 			{
-				InformationManager.DisplayMessage(new InformationMessage("【战利清点】结算：市场物资 " + _lastLootItemTotal + " 件 / " + _lastLootStackKinds + " 类，市场金库 " + _lastMarketGoldLoot + "，民众第纳尔 " + _lastCivilianGoldLoot + "。", Color.FromUint(0xFFB6F7A8u)));
+				InformationManager.DisplayMessage(new InformationMessage(SiegeInterventionCompletionUiProfile.BuildLootSettlementSummaryMessage(_lastLootItemTotal, _lastLootStackKinds, _lastMarketGoldLoot, _lastCivilianGoldLoot), Color.FromUint(SiegeInterventionCompletionUiProfile.CompletionMessageColor)));
 			}
 		}
 		catch
@@ -8499,7 +8499,7 @@ public class SiegeAiInterventionBehavior : CampaignBehaviorBase
 		}
 		try
 		{
-			MBInformationManager.AddQuickInformation(new TextObject("攻城后处置已完成，正在离开攻城遭遇。"), 0, null, null, "event:/ui/mission/arena_victory");
+			MBInformationManager.AddQuickInformation(new TextObject(SiegeInterventionCompletionUiProfile.LeaveEncounterQuickText), 0, null, null, "event:/ui/mission/arena_victory");
 		}
 		catch
 		{
