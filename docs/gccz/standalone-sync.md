@@ -73,6 +73,9 @@ Follow-up isolation: postprocess current-outcome wording now lives in mirrored `
 Follow-up isolation: intervention memory context formatting now lives in mirrored `SiegeInterventionMemoryContextBuilder`. The fused tree routes prompt memory wording through that core while preserving AF-side event collection, de-duplication, trimming, and logging.
 
 
+Follow-up isolation: completed intervention summary now lives in mirrored `SiegeCompletedInterventionSummaryFacts` and `SiegeCompletedInterventionSummaryBuilder`. The fused tree routes completion-summary wording through that core while preserving AF-side fact collection and menu transitions.
+
+
 Follow-up isolation: pending native aftermath selection now lives in mirrored `SiegeAftermathResolutionKind` and `SiegeAftermathSelectionPolicy`. The fused tree routes native aftermath severity and replacement decisions through that core while preserving AF-side enum mapping and side effects.
 
 

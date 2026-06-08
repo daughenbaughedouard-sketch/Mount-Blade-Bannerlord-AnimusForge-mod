@@ -7926,40 +7926,26 @@ public class SiegeAiInterventionBehavior : CampaignBehaviorBase
 			{
 				settlementName = ResolveCurrentSettlement()?.Name?.ToString() ?? "这座定居点";
 			}
-			string action = aftermath switch
-			{
-				SiegeAftermathAction.SiegeAftermath.Devastate => _culturalRepopulationRequested || _culturalRepopulationApplied ? "屠民迁殖" : "血洗与毁坏",
-				SiegeAftermathAction.SiegeAftermath.Pillage => "搜掠",
-				SiegeAftermathAction.SiegeAftermath.ShowMercy => "安抚",
-				_ => "处置"
-			};
-			StringBuilder sb = new StringBuilder();
-			sb.AppendLine(settlementName + " 的攻城后" + action + "已经完成。");
-			sb.AppendLine();
-			if (_culturalRepopulationRequested || _culturalRepopulationApplied)
+			bool culturalRepopulationApplied = _culturalRepopulationRequested || _culturalRepopulationApplied;
+			string targetCultureText = "";
+			if (culturalRepopulationApplied)
 			{
 				CultureObject targetCulture = ResolveCulturalRepopulationTargetCulture(out string targetCultureSource);
-				sb.AppendLine("你选择了最高级不可逆处置：屠民迁殖。城镇将按毁坏结算，并被强行改为 " + DescribeCultureForMessage(targetCulture, targetCultureSource) + "。");
+				targetCultureText = DescribeCultureForMessage(targetCulture, targetCultureSource);
 			}
-			else if (_massacreStarted)
-			{
-				sb.AppendLine("你的士兵已完成战后处置，城内残余抵抗均已肃清。");
-			}
-			else if (_plunderStarted)
-			{
-				sb.AppendLine("你的士兵已经按胜利方战利权搜掠财物；离场结算已记录市场库存、市场金库和平民第纳尔。");
-			}
-			else
-			{
-				sb.AppendLine("你选择在场景中安抚民众，已按宽恕或安抚结果结算。");
-			}
-			sb.AppendLine();
-			sb.AppendLine("市场物资：" + _lastLootItemTotal + " 件 / " + _lastLootStackKinds + " 类，估值 " + _lastLootValue + "。");
-			sb.AppendLine("市场金库：" + _lastMarketGoldLoot + " 第纳尔。");
-			sb.AppendLine("民众第纳尔：" + _lastCivilianGoldLoot + "，目标数 " + _lastCivilianTargetsLooted + "。");
-			sb.AppendLine();
-			sb.AppendLine("正在结束本次攻城遭遇，并进入后续结算。");
-			_completedSummaryText = sb.ToString();
+			_completedSummaryText = SiegeCompletedInterventionSummaryBuilder.Build(new SiegeCompletedInterventionSummaryFacts(
+				settlementName,
+				ToStandaloneAftermathKind(aftermath),
+				culturalRepopulationApplied,
+				_massacreStarted,
+				_plunderStarted,
+				targetCultureText,
+				_lastLootItemTotal,
+				_lastLootStackKinds,
+				_lastLootValue,
+				_lastMarketGoldLoot,
+				_lastCivilianGoldLoot,
+				_lastCivilianTargetsLooted));
 		}
 		catch
 		{
