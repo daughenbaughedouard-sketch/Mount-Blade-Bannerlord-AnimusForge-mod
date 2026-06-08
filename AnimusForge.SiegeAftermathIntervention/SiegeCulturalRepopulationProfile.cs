@@ -12,6 +12,14 @@ public sealed class SiegeCulturalRepopulationProfile
 
     public const string TargetValidationMessage = "【攻城处置】屠民迁殖只能与己方士兵对话触发，不能由平民或其他NPC触发。";
 
+    public const string PlayerHeroCultureSourceLabel = "玩家角色文化";
+
+    public const string PlayerKingdomCultureSourceLabel = "玩家所属王国文化";
+
+    public const string PlayerClanCultureSourceLabel = "玩家家族文化";
+
+    public const string PlayerCultureFallbackLabel = "玩家文化";
+
     public SiegeAftermathResolutionKind AftermathKind { get; } = SiegeAftermathResolutionKind.Devastate;
 
     public string MassacreTriggerSource { get; } = "场景对话屠民迁殖触发血洗";
@@ -47,6 +55,27 @@ public sealed class SiegeCulturalRepopulationProfile
         }
 
         return " 旧要人已处死 " + killedNotables + " 人，新要人已扶立 " + spawnedNotables + " 人。";
+    }
+
+    public static string BuildTargetCultureMessageText(string cultureName, string sourceLabel)
+    {
+        if (string.IsNullOrWhiteSpace(cultureName))
+        {
+            return NormalizeCultureSourceLabel(sourceLabel);
+        }
+
+        string trimmedCultureName = cultureName.Trim();
+        if (string.IsNullOrWhiteSpace(sourceLabel))
+        {
+            return trimmedCultureName;
+        }
+
+        return trimmedCultureName + "（" + sourceLabel.Trim() + "）";
+    }
+
+    public static string NormalizeCultureSourceLabel(string sourceLabel)
+    {
+        return string.IsNullOrWhiteSpace(sourceLabel) ? PlayerCultureFallbackLabel : sourceLabel.Trim();
     }
 
     private static string NormalizeTargetCultureText(string targetCultureText)

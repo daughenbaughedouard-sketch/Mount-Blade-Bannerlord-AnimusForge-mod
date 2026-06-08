@@ -691,30 +691,30 @@ public class SiegeAiInterventionBehavior : CampaignBehaviorBase
 
 	private static CultureObject ResolveCulturalRepopulationTargetCulture(out string sourceLabel)
 	{
-		sourceLabel = "玩家角色文化";
+		sourceLabel = SiegeCulturalRepopulationProfile.PlayerHeroCultureSourceLabel;
 		try
 		{
 			Hero mainHero = Hero.MainHero;
 			Kingdom playerKingdom = mainHero?.Clan?.Kingdom;
 			if (playerKingdom?.Culture != null)
 			{
-				sourceLabel = "玩家所属王国文化";
+				sourceLabel = SiegeCulturalRepopulationProfile.PlayerKingdomCultureSourceLabel;
 				return playerKingdom.Culture;
 			}
 			IFaction mapFaction = mainHero?.MapFaction;
 			if (mapFaction != null && !ReferenceEquals(mapFaction, mainHero?.Clan) && mapFaction.Culture != null)
 			{
-				sourceLabel = "玩家所属王国文化";
+				sourceLabel = SiegeCulturalRepopulationProfile.PlayerKingdomCultureSourceLabel;
 				return mapFaction.Culture;
 			}
 			if (mainHero?.Culture != null)
 			{
-				sourceLabel = "玩家角色文化";
+				sourceLabel = SiegeCulturalRepopulationProfile.PlayerHeroCultureSourceLabel;
 				return mainHero.Culture;
 			}
 			if (mainHero?.Clan?.Culture != null)
 			{
-				sourceLabel = "玩家家族文化";
+				sourceLabel = SiegeCulturalRepopulationProfile.PlayerClanCultureSourceLabel;
 				return mainHero.Clan.Culture;
 			}
 		}
@@ -722,7 +722,7 @@ public class SiegeAiInterventionBehavior : CampaignBehaviorBase
 		{
 			Logger.Log("SiegeAiIntervention", "ResolveCulturalRepopulationTargetCulture failed: " + ex.Message);
 		}
-		sourceLabel = "玩家文化";
+		sourceLabel = SiegeCulturalRepopulationProfile.PlayerCultureFallbackLabel;
 		return null;
 	}
 
@@ -735,19 +735,11 @@ public class SiegeAiInterventionBehavior : CampaignBehaviorBase
 			{
 				cultureName = culture?.StringId;
 			}
-			if (string.IsNullOrWhiteSpace(cultureName))
-			{
-				return sourceLabel ?? "玩家文化";
-			}
-			if (string.IsNullOrWhiteSpace(sourceLabel))
-			{
-				return cultureName;
-			}
-			return cultureName + "（" + sourceLabel + "）";
+			return SiegeCulturalRepopulationProfile.BuildTargetCultureMessageText(cultureName, sourceLabel);
 		}
 		catch
 		{
-			return sourceLabel ?? "玩家文化";
+			return SiegeCulturalRepopulationProfile.NormalizeCultureSourceLabel(sourceLabel);
 		}
 	}
 
