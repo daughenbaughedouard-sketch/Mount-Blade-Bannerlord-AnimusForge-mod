@@ -34,6 +34,8 @@ public static class SiegeCivilianGatherInteractionProfile
 
     public const int MessengerSpeechMaxCount = 3;
 
+    public const float ImmediateReactionFailsafeSeconds = 180.0f;
+
     public const string TargetWaitSource = "gather_target_wait";
 
     public const string MessengerMoveSource = "gather_messenger_move";
@@ -57,6 +59,8 @@ public static class SiegeCivilianGatherInteractionProfile
     public const string ImmediateReactionFailureFollowerSource = "gather_immediate_reaction_failed";
 
     public const string ImmediateReactionFailureReleaseSource = "gather_immediate_reaction_failed";
+
+    public const string ImmediateReactionFailsafeReason = "immediate_reaction_failsafe_180s";
 
     public const string GatherMarkSourcePrefix = "gather_mark:";
 
