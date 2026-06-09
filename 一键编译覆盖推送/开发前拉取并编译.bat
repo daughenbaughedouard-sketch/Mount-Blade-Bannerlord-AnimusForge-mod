@@ -50,12 +50,12 @@ if errorlevel 1 (
     exit /b 1
 )
 
-where dotnet >nul 2>nul
+call "%SCRIPT_DIR%resolve_dotnet_sdk.bat"
 if errorlevel 1 (
-    echo [ERROR] dotnet SDK not found in PATH.
     pause
     exit /b 1
 )
+echo Dotnet    : "%DOTNET_EXE%"
 
 git rev-parse --is-inside-work-tree >nul 2>nul
 if errorlevel 1 (
@@ -72,17 +72,19 @@ if not defined BRANCH (
     exit /b 1
 )
 if /I not "%BRANCH%"=="main" (
-    echo [ERROR] This 1.3.x toolchain only allows pulls on branch "main".
-    echo Current branch: "%BRANCH%"
-    pause
-    exit /b 1
+    echo [INFO] Current branch is not "main"; using current branch "%BRANCH%".
 )
 
 for /f "delims=" %%U in ('git remote get-url origin 2^>nul') do set "ORIGIN_URL=%%U"
 if not defined ORIGIN_URL (
-    echo [ERROR] Remote 'origin' not found.
-    pause
-    exit /b 1
+    if "%DRY_RUN%"=="1" (
+        set "ORIGIN_URL=(missing)"
+        echo [WARN] Remote 'origin' not found. Pull would fail until an origin remote is configured.
+    ) else (
+        echo [ERROR] Remote 'origin' not found.
+        pause
+        exit /b 1
+    )
 )
 
 if not exist "%BANNERLORD_ROOT%" (
@@ -105,9 +107,9 @@ if "%DRY_RUN%"=="1" (
     echo   git fetch origin "%BRANCH%"
     echo   if origin/%BRANCH% has new commit^(s^): git rebase --autostash "origin/%BRANCH%"
     if defined WORKSHOP_CONTENT_DIR (
-        echo   dotnet build "%PROJECT_ROOT%\AnimusForge.csproj" -c %CONFIG% /p:BannerlordRoot="%BANNERLORD_ROOT%" /p:WorkshopContentDir="%WORKSHOP_CONTENT_DIR%"
+        echo   "%DOTNET_EXE%" build "%PROJECT_ROOT%\AnimusForge.csproj" -c %CONFIG% /p:BannerlordRoot="%BANNERLORD_ROOT%" /p:WorkshopContentDir="%WORKSHOP_CONTENT_DIR%"
     ) else (
-        echo   dotnet build "%PROJECT_ROOT%\AnimusForge.csproj" -c %CONFIG% /p:BannerlordRoot="%BANNERLORD_ROOT%"
+        echo   "%DOTNET_EXE%" build "%PROJECT_ROOT%\AnimusForge.csproj" -c %CONFIG% /p:BannerlordRoot="%BANNERLORD_ROOT%"
     )
     echo.
     echo [SUCCESS] Dry-run completed. No build, deploy, commit, or push was run.
@@ -159,9 +161,9 @@ if not "%BEHIND_COUNT%"=="0" (
 echo.
 echo [2/2] Building project...
 if defined WORKSHOP_CONTENT_DIR (
-    dotnet build "%PROJECT_ROOT%\AnimusForge.csproj" -c %CONFIG% /p:BannerlordRoot="%BANNERLORD_ROOT%" /p:WorkshopContentDir="%WORKSHOP_CONTENT_DIR%"
+    "%DOTNET_EXE%" build "%PROJECT_ROOT%\AnimusForge.csproj" -c %CONFIG% /p:BannerlordRoot="%BANNERLORD_ROOT%" /p:WorkshopContentDir="%WORKSHOP_CONTENT_DIR%"
 ) else (
-    dotnet build "%PROJECT_ROOT%\AnimusForge.csproj" -c %CONFIG% /p:BannerlordRoot="%BANNERLORD_ROOT%"
+    "%DOTNET_EXE%" build "%PROJECT_ROOT%\AnimusForge.csproj" -c %CONFIG% /p:BannerlordRoot="%BANNERLORD_ROOT%"
 )
 set "ERR=%ERRORLEVEL%"
 if not "%ERR%"=="0" (

@@ -12,6 +12,7 @@ cd /d "%PROJECT_ROOT%"
 set "PATH_SCRIPT=%SCRIPT_DIR%resolve_bannerlord_paths.ps1"
 set "CONFIG=Debug"
 set "DRY_RUN=0"
+set "BUILD_TARGET=1.3"
 set "COMMIT_MSG="
 set "GIT_EXCLUDE_PATH=AnimusForge/ONNX/reranker"
 set "BANNERLORD_ROOT="
@@ -27,6 +28,18 @@ if "%~1"=="" goto args_done
 
 if /I "%~1"=="--dry-run" (
     set "DRY_RUN=1"
+    shift
+    goto parse_args
+)
+
+if /I "%~1"=="--dual" (
+    set "BUILD_TARGET=dual"
+    shift
+    goto parse_args
+)
+
+if /I "%~1"=="--all" (
+    set "BUILD_TARGET=dual"
     shift
     goto parse_args
 )
@@ -64,6 +77,7 @@ echo Repo      : "%PROJECT_ROOT%"
 echo Bannerlord: "%BANNERLORD_ROOT%"
 if defined WORKSHOP_CONTENT_DIR echo Workshop  : "%WORKSHOP_CONTENT_DIR%"
 echo Config    : "%CONFIG%"
+echo Target    : "%BUILD_TARGET%"
 echo Exclude   : "%GIT_EXCLUDE_PATH%"
 if "%DRY_RUN%"=="1" echo Mode      : DRY RUN
 echo.
@@ -75,12 +89,12 @@ if errorlevel 1 (
     exit /b 1
 )
 
-where dotnet >nul 2>nul
+call "%SCRIPT_DIR%resolve_dotnet_sdk.bat"
 if errorlevel 1 (
-    echo [ERROR] dotnet SDK not found in PATH.
     pause
     exit /b 1
 )
+echo Dotnet    : "%DOTNET_EXE%"
 
 git rev-parse --is-inside-work-tree >nul 2>nul
 if errorlevel 1 (
@@ -97,17 +111,19 @@ if not defined BRANCH (
     exit /b 1
 )
 if /I not "%BRANCH%"=="main" (
-    echo [ERROR] This 1.3.x toolchain only allows pushes from branch "main".
-    echo Current branch: "%BRANCH%"
-    pause
-    exit /b 1
+    echo [INFO] Current branch is not "main"; using current branch "%BRANCH%".
 )
 
 for /f "delims=" %%U in ('git remote get-url origin 2^>nul') do set "ORIGIN_URL=%%U"
 if not defined ORIGIN_URL (
-    echo [ERROR] Remote 'origin' not found.
-    pause
-    exit /b 1
+    if "%DRY_RUN%"=="1" (
+        set "ORIGIN_URL=(missing)"
+        echo [WARN] Remote 'origin' not found. Pull/push would fail until an origin remote is configured.
+    ) else (
+        echo [ERROR] Remote 'origin' not found.
+        pause
+        exit /b 1
+    )
 )
 
 if not exist "%BANNERLORD_ROOT%" (
@@ -133,11 +149,11 @@ if "%DRY_RUN%"=="1" (
     echo   git fetch origin "%BRANCH%"
     echo   if origin/%BRANCH% has new commit^(s^): git rebase --autostash "origin/%BRANCH%"
     if defined WORKSHOP_CONTENT_DIR (
-        echo   dotnet build "%PROJECT_ROOT%\AnimusForge.csproj" -c %CONFIG% /p:BannerlordApi=1.3 /p:BannerlordRoot="%BANNERLORD_ROOT%" /p:WorkshopContentDir="%WORKSHOP_CONTENT_DIR%"
-        echo   dotnet build "%PROJECT_ROOT%\AnimusForge.csproj" -c %CONFIG% /p:BannerlordApi=1.4 /p:BannerlordRoot="%BANNERLORD_ROOT%" /p:WorkshopContentDir="%WORKSHOP_CONTENT_DIR%"
+        echo   "%DOTNET_EXE%" build "%PROJECT_ROOT%\AnimusForge.csproj" -c %CONFIG% /p:BannerlordApi=1.3 /p:BannerlordRoot="%BANNERLORD_ROOT%" /p:WorkshopContentDir="%WORKSHOP_CONTENT_DIR%"
+        if /I "%BUILD_TARGET%"=="dual" echo   "%DOTNET_EXE%" build "%PROJECT_ROOT%\AnimusForge.csproj" -c %CONFIG% /p:BannerlordApi=1.4 /p:BannerlordRoot="%BANNERLORD_ROOT%" /p:WorkshopContentDir="%WORKSHOP_CONTENT_DIR%"
     ) else (
-        echo   dotnet build "%PROJECT_ROOT%\AnimusForge.csproj" -c %CONFIG% /p:BannerlordApi=1.3 /p:BannerlordRoot="%BANNERLORD_ROOT%"
-        echo   dotnet build "%PROJECT_ROOT%\AnimusForge.csproj" -c %CONFIG% /p:BannerlordApi=1.4 /p:BannerlordRoot="%BANNERLORD_ROOT%"
+        echo   "%DOTNET_EXE%" build "%PROJECT_ROOT%\AnimusForge.csproj" -c %CONFIG% /p:BannerlordApi=1.3 /p:BannerlordRoot="%BANNERLORD_ROOT%"
+        if /I "%BUILD_TARGET%"=="dual" echo   "%DOTNET_EXE%" build "%PROJECT_ROOT%\AnimusForge.csproj" -c %CONFIG% /p:BannerlordApi=1.4 /p:BannerlordRoot="%BANNERLORD_ROOT%"
     )
     echo   git rm -r --cached --ignore-unmatch -- "%GIT_EXCLUDE_PATH%"
     echo   git add -A
@@ -194,9 +210,9 @@ if not "%BEHIND_COUNT%"=="0" (
 echo.
 echo [2/4] Building project for Bannerlord 1.3.x...
 if defined WORKSHOP_CONTENT_DIR (
-    dotnet build "%PROJECT_ROOT%\AnimusForge.csproj" -c %CONFIG% /p:BannerlordApi=1.3 /p:BannerlordRoot="%BANNERLORD_ROOT%" /p:WorkshopContentDir="%WORKSHOP_CONTENT_DIR%"
+    "%DOTNET_EXE%" build "%PROJECT_ROOT%\AnimusForge.csproj" -c %CONFIG% /p:BannerlordApi=1.3 /p:BannerlordRoot="%BANNERLORD_ROOT%" /p:WorkshopContentDir="%WORKSHOP_CONTENT_DIR%"
 ) else (
-    dotnet build "%PROJECT_ROOT%\AnimusForge.csproj" -c %CONFIG% /p:BannerlordApi=1.3 /p:BannerlordRoot="%BANNERLORD_ROOT%"
+    "%DOTNET_EXE%" build "%PROJECT_ROOT%\AnimusForge.csproj" -c %CONFIG% /p:BannerlordApi=1.3 /p:BannerlordRoot="%BANNERLORD_ROOT%"
 )
 set "ERR=%ERRORLEVEL%"
 if not "%ERR%"=="0" (
@@ -207,18 +223,22 @@ if not "%ERR%"=="0" (
 )
 
 echo.
-echo [2/4] Building project for Bannerlord 1.4.5...
-if defined WORKSHOP_CONTENT_DIR (
-    dotnet build "%PROJECT_ROOT%\AnimusForge.csproj" -c %CONFIG% /p:BannerlordApi=1.4 /p:BannerlordRoot="%BANNERLORD_ROOT%" /p:WorkshopContentDir="%WORKSHOP_CONTENT_DIR%"
+if /I "%BUILD_TARGET%"=="dual" (
+    echo [2/4] Building project for Bannerlord 1.4.5...
+    if defined WORKSHOP_CONTENT_DIR (
+        "%DOTNET_EXE%" build "%PROJECT_ROOT%\AnimusForge.csproj" -c %CONFIG% /p:BannerlordApi=1.4 /p:BannerlordRoot="%BANNERLORD_ROOT%" /p:WorkshopContentDir="%WORKSHOP_CONTENT_DIR%"
+    ) else (
+        "%DOTNET_EXE%" build "%PROJECT_ROOT%\AnimusForge.csproj" -c %CONFIG% /p:BannerlordApi=1.4 /p:BannerlordRoot="%BANNERLORD_ROOT%"
+    )
+    set "ERR=%ERRORLEVEL%"
+    if not "%ERR%"=="0" (
+        echo.
+        echo [FAILED] 1.4.5 build failed. ExitCode=%ERR%
+        pause
+        exit /b %ERR%
+    )
 ) else (
-    dotnet build "%PROJECT_ROOT%\AnimusForge.csproj" -c %CONFIG% /p:BannerlordApi=1.4 /p:BannerlordRoot="%BANNERLORD_ROOT%"
-)
-set "ERR=%ERRORLEVEL%"
-if not "%ERR%"=="0" (
-    echo.
-    echo [FAILED] 1.4.5 build failed. ExitCode=%ERR%
-    pause
-    exit /b %ERR%
+    echo [2/4] Skipping Bannerlord 1.4.5 build. Use --dual only when 1.4.5 dependencies are available.
 )
 
 echo.

@@ -2,6 +2,7 @@ param(
     [string]$ProjectRoot = "",
     [string]$BuildDll = "",
     [string]$BannerlordRoot = "",
+    [switch]$Client13Output,
     [switch]$DualClientOutput,
     [string]$BuildDll13 = "",
     [string]$BuildDll14 = ""
@@ -376,6 +377,28 @@ function Deploy-DualClientModule {
     Write-Host "Deploy Result: success"
 }
 
+function Deploy-Client13Module {
+    param(
+        [Parameter(Mandatory = $true)][string]$SourceModuleDir,
+        [Parameter(Mandatory = $true)][string]$BannerlordRootPath,
+        [Parameter(Mandatory = $true)][string]$BuildDll13Path
+    )
+
+    $modulesDir = Get-BannerlordModulesDir -BannerlordRootPath $BannerlordRootPath
+    $target13 = Join-Path $modulesDir "AnimusForge_1_3_x"
+    $targetFull = Get-FullPathSafe -Path $target13
+
+    Write-Host "Deploying    : $targetFull (1.3.x)"
+    Invoke-RobocopyModuleSync -SourceDir $SourceModuleDir -TargetDir $targetFull
+    Copy-BuildOutputIntoModule -TargetModuleDir $targetFull -BuildDllPath $BuildDll13Path
+    Set-SubModuleIdentity -TargetModuleDir $targetFull -ModuleId "AnimusForge_1_3_x" -DisplayName "AnimusForge 1.3.x"
+    Assert-SameHash -SourceRoot $SourceModuleDir -TargetRoot $targetFull -RelativePath "ModuleData\RuleBehaviorPrompts.json"
+    Assert-SameHash -SourceRoot $targetFull -TargetRoot $targetFull -RelativePath "bin\Win64_Shipping_Client\AnimusForge.dll"
+
+    Write-Host "Deploy Mode  : 1.3.x version module output"
+    Write-Host "Deploy Result: success"
+}
+
 function Assert-SameHash {
     param(
         [Parameter(Mandatory = $true)][string]$SourceRoot,
@@ -424,6 +447,21 @@ if ($DualClientOutput) {
     Sync-PlayerExportsBackToSource -SourceModuleDir $sourceModuleDir -TargetModuleDirs $targetModuleDirsForSync
     Write-Host "Source Module: $sourceModuleDir"
     Deploy-DualClientModule -SourceModuleDir $sourceModuleDir -BannerlordRootPath $BannerlordRoot -BuildDll13Path $BuildDll13 -BuildDll14Path $BuildDll14
+    exit 0
+}
+
+if ($Client13Output) {
+    if ([string]::IsNullOrWhiteSpace($BuildDll13)) {
+        throw "Client13Output requires -BuildDll13."
+    }
+    if ([string]::IsNullOrWhiteSpace($BannerlordRoot)) {
+        throw "Client13Output requires -BannerlordRoot."
+    }
+
+    $targetModuleDirsForSync = @((Join-Path (Get-BannerlordModulesDir -BannerlordRootPath $BannerlordRoot) "AnimusForge_1_3_x"))
+    Sync-PlayerExportsBackToSource -SourceModuleDir $sourceModuleDir -TargetModuleDirs $targetModuleDirsForSync
+    Write-Host "Source Module: $sourceModuleDir"
+    Deploy-Client13Module -SourceModuleDir $sourceModuleDir -BannerlordRootPath $BannerlordRoot -BuildDll13Path $BuildDll13
     exit 0
 }
 
