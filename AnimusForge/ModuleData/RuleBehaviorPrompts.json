@@ -25,7 +25,7 @@
         "PostprocessRules": [
             {
                 "Tag": "[ACTION:DUEL]",
-                "Description": "如果玩家和NPC都同意真剑，武器，比武决斗，输出这个,只有一方同意不算，如果双方只是叫嚣也不算,如果还在讨论彩头和赌注，以及并非单挑而是群战，那么不允许输出这个"
+                "Description": "如果玩家和NPC都同意或现在执行了真剑，武器，比武决斗，输出这个,只有一方同意不算，如果双方只是叫嚣也不算,如果还在讨论彩头和赌注，以及并非单挑而是群战，那么不允许输出这个"
             },
             {
                 "Tag": "[AD;金额;天数;备注内容]",
@@ -47,15 +47,15 @@
         "TopicLabel": "IBarter, Bestow, or Exchange Assets",
         "Code": "TRADE",
         "NonHeroInstruction": "你不是一个有名有姓的NPC，你只是普通士兵或平民，你无法进行交易或者物品转让",
-        "Instruction": "【交易规则】你只能承诺转移或交易【（{npcName}）商铺可用财富与物品】中真实存在且数量足够的财物，你最好让玩家先给钱或物，【交易铁律】：玩家嘴上说“钱给你了/拿去吧”一律视为没给！只有看到以 [AFEF玩家行为补充] 开头的系统消息明确写了交付，你才算真正收到了钱。没看到系统消息前，绝对禁止在动作描写里写“接过了钱/物品”，必须继续开口向玩家索要！",
+        "Instruction": "【交易规则】你只能承诺转移或交易【（{npcName}）商铺可用财富与物品】中真实存在且数量足够的财物，你最好让玩家先给钱或物，严禁瞎编不存在的事物，【交易铁律】：玩家嘴上说“钱给你了/拿去吧”一律视为没给！只有看到以 [AFEF玩家行为补充] 开头的系统消息明确写了交付，你才算真正收到了钱。没看到系统消息前，绝对禁止在动作描写里写“接过了钱/物品”，必须继续开口向玩家索要！",
         "PostprocessRules": [
             {
                 "Tag": "[ACTION:GIVE_GOLD:金额]",
-                "Description": "请分析NPC的回复,判断NPC是否有把第纳尔交给了玩家，如果NPC只是给玩家试用，那么请参考AD标签。"
+                "Description": "请分析NPC的回复,判断NPC是否有把第纳尔交给了玩家，如果NPC只是给玩家试用，那么请参考AD标签，如果NPC说的数量模棱两可，那么自行判断应该给多少钱。"
             },
             {
                 "Tag": "[ACTION:GIVE_ITEM:物品名称:数量]",
-                "Description": "请分析NPC的回复,判断NPC是否有把什么物品交给了玩家，如果NPC只是给玩家试用，那么请参考AD标签"
+                "Description": "请分析NPC的回复,判断NPC是否有把什么物品交给了玩家，如果NPC只是给玩家试用，那么请参考AD标签,物品名称只可以写NPC的物品清单存在的"
             },
             {
                 "Tag": "[AD;金额;天数;备注内容]",
@@ -101,11 +101,11 @@
         "PostprocessRules": [
             {
                 "Tag": "[ACTION:GIVE_GOLD:金额]",
-                "Description": "请分析NPC的回复,判断NPC是否有把第纳尔交给了玩家，如果NPC只是给玩家试用，那么请参考AD标签。"
+                "Description": "请分析NPC的回复,判断NPC是否有把第纳尔交给了玩家，如果NPC只是给玩家试用，那么请参考AD标签，如果NPC说的数量模棱两可，那么自行判断应该给多少钱。。"
             },
             {
                 "Tag": "[ACTION:GIVE_ITEM:物品名称:数量]",
-                "Description": "请分析NPC的回复,判断NPC是否有把什么物品交给了玩家，如果NPC只是给玩家试用，那么请参考AD标签。"
+                "Description": "请分析NPC的回复,判断NPC是否有把什么物品交给了玩家，如果NPC只是给玩家试用，那么请参考AD标签，物品名称只可以写NPC的物品清单存在的"
             },
             {
                 "Tag": "[AD;金额;天数;备注内容]",
@@ -172,19 +172,19 @@
             "PostprocessRules": [
                 {
                     "Tag": "[ACTION:KINGDOM_SERVICE:LEAVE:current]",
-                    "Description": "如果NPC在<latest_reply>里正式同意玩家退出当前效力，就输出这个"
+                    "Description": "如果NPC在<latest_reply>里正式同意或现在执行了玩家退出当前效力，就输出这个"
                 },
                 {
                     "Tag": "[ACTION:KINGDOM_SERVICE:MERCENARY:{targetKingdomId}]",
-                    "Description": "如果NPC在<latest_reply>里正式同意玩家以雇佣兵身份加入目标王国，就输出这个"
+                    "Description": "如果NPC在<latest_reply>里正式同意或现在执行了玩家以雇佣兵身份加入目标王国，就输出这个"
                 },
                 {
                     "Tag": "[ACTION:KINGDOM_SERVICE:VASSAL:{targetKingdomId}]",
-                    "Description": "如果NPC在<latest_reply>里正式同意玩家以正式封臣身份加入目标王国，就输出这个"
+                    "Description": "如果NPC在<latest_reply>里正式同意或现在执行了玩家以正式封臣身份加入目标王国，就输出这个"
                 },
                 {
                     "Tag": "[ACTION:KINGDOM_SERVICE:CLAN_JOIN_PLAYER_KINGDOM:{targetClanId}]",
-                    "Description": "NPC在<latest_reply>里最终明确同意带领整个家族加入玩家王国成为领主时，输出这个。这个标签只代表家族归附和王国归属改变，不代表NPC本人加入玩家队伍、成为玩家同伴或跟玩家上路。若<latest_reply>表达的是“我本人加入你的队伍/当你的同伴/跟你走”，禁止输出这个；若<latest_reply>只是模糊同意“效力于你/加入你/来你麾下”，没有明确整个家族加入玩家王国成为领主，禁止输出。若NPC只是谈条件、犹豫、拒绝、要求报酬、要求封地、要求保证、要求日后再议，禁止输出。"
+                    "Description": "NPC在<latest_reply>里最终明确同意或现在执行了带领整个家族加入玩家王国成为领主时，输出这个。这个标签只代表家族归附和王国归属改变，不代表NPC本人加入玩家队伍、成为玩家同伴或跟玩家上路。若<latest_reply>表达的是“我本人加入你的队伍/当你的同伴/跟你走”，禁止输出这个；若<latest_reply>只是模糊同意“效力于你/加入你/来你麾下”，没有明确整个家族加入玩家王国成为领主，禁止输出。若NPC只是谈条件、犹豫、拒绝、要求报酬、要求封地、要求保证、要求日后再议，禁止输出。"
                 }
             ],
             "RuntimeInstructionTemplates": {
@@ -265,7 +265,7 @@
             "PostprocessRules": [
                 {
                     "Tag": "[ACTION:OPEN_LORDS_HALL]",
-                    "Description": "如果NPC在<latest_reply>里明确同意让玩家进入领主大厅，就输出这个"
+                    "Description": "如果NPC在<latest_reply>里明确同意或现在执行了让玩家进入领主大厅，就输出这个"
                 }
             ],
             "RuntimeInstructionTemplates": {
@@ -302,15 +302,15 @@
             "PostprocessRules": [
                 {
                     "Tag": "[ACTION:MARRIAGE_FORMAL:playerClanHeroId:targetHeroId]",
-                    "Description": "如果NPC在<latest_reply>里明确无条件同意某一对系统事实清单中的婚配对象正式成婚，就输出对应标签，若有条件，请勿输出；若同时明确彩礼金额，也可在末尾追加 :金额"
+                    "Description": "如果NPC在<latest_reply>里同意或现在执行了无条件同意某一对系统事实清单中的婚配对象正式成婚，就输出对应标签，若有条件，请勿输出；若同时明确彩礼金额，也可在末尾追加 :金额"
                 },
                 {
                     "Tag": "[ACTION:MARRIAGE_ELOPE:targetHeroId]",
-                    "Description": "如果NPC在<latest_reply>里明确无条件同意与玩家私奔，就输出这个"
+                    "Description": "如果NPC在<latest_reply>里同意或现在执行了无条件同意与玩家私奔，就输出这个"
                 },
                 {
                     "Tag": "[ACTION:DIVORCE:playerClanHeroId:targetHeroId]",
-                    "Description": "如果NPC在<latest_reply>里明确无条件同意系统事实清单中的这一对对象离婚，就输出对应标签。只有当NPC明确同意把钱退还给玩家时，才可在末尾追加 :金额；不要把玩家向NPC还钱写进这个标签"
+                    "Description": "如果NPC在<latest_reply>里同意或现在执行了无条件同意系统事实清单中的这一对对象离婚，就输出对应标签。只有当NPC明确同意把钱退还给玩家时，才可在末尾追加 :金额；不要把玩家向NPC还钱写进这个标签"
                 }
             ],
             "RuntimeInstructionTemplates": {
@@ -361,18 +361,18 @@
             "Group": "scene",
             "Priority": 77,
             "TopicNumber": 8,
-            "TopicLabel": "Lead the way, summon, and follow",
+            "TopicLabel": "Local 3D scene movements (lead, follow). Excludes world map travel and combat/attack actions.",
             "Code": "SCENE_MOVE",
             "NonHeroInstruction": "【场景行为规则】即使你只是无名士兵或平民，只要本轮系统确实给了【带路与传唤NPC清单】或相关状态提示，你也可以决定是否带路、传唤、跟随、停止跟随或结束这次会面；但你只能对系统当前列出的目标表态，不能编造名单外的人或地点。只有当你在正文里最终明确答应时，才算真的执行；若你还在拒绝、推脱、反问、拖延或继续谈条件，就不算已经执行。正文只自然说话，不要自己写任何动作标签。",
             "Instruction": "【场景行为规则】带路、传唤、跟随、停止跟随、结束传唤后的会面，都只以本轮运行时状态为准。你只能依据系统当前给出的【带路与传唤NPC清单】和状态提示回答；没有列出来的目标，不得擅自答应。若目标在酒馆或领主大厅，带路只需带到对应门口。只有当你在正文里最终明确同意时，才算真的执行；若你仍在拒绝、解释、反问、拖延或继续谈条件，就不要当成已经执行。正文只自然说话，不要自己写任何动作标签。",
             "PostprocessRules": [
                 {
                     "Tag": "[ACTION:SCENE_FOLLOW_PLAYER]",
-                    "Description": "如果NPC在<latest_reply>里明确同意之后跟随玩家，就输出这个，包括跟玩家去某个地点，"
+                    "Description": "如果NPC在<latest_reply>里明确同意或现在执行了跟随玩家，就输出这个，包括跟玩家去某个地点，"
                 },
                 {
                     "Tag": "[ACTION:SCENE_STOP_FOLLOW]",
-                    "Description": "如果NPC在<latest_reply>里明确同意停止跟随玩家，就输出这个"
+                    "Description": "如果NPC在<latest_reply>里明确同意或现在执行了停止跟随玩家，就输出这个"
                 },
                 {
                     "Tag": "[END]",
@@ -380,11 +380,11 @@
                 },
                 {
                     "Tag": "[ACTION:SCENE_SUMMON:人物名称列表]",
-                    "Description": "如果NPC在<latest_reply>里明确同意去把【带路与传唤NPC清单】中的一个或多个人叫来，就输出这个；把人物名称写进标签，若有多人可用逗号分隔"
+                    "Description": "如果NPC在<latest_reply>里明确同意或现在执行了去把【带路与传唤NPC清单】中的一个或多个人叫来，就输出这个；把人物名称写进标签，若有多人可用逗号分隔"
                 },
                 {
                     "Tag": "[ACTION:SCENE_GUIDE:人物名称]",
-                    "Description": "如果NPC在<latest_reply>里明确同意给玩家带路去【带路与传唤NPC清单】中的目标，就输出这个；把【带路与传唤NPC清单】中的NPC写进标签,如果玩家要求带去某个地点，可以看NPC名称后缀的地点，你可以在标签中写入这个NPC的名称，让NPC把玩家带去这个地点"
+                    "Description": "如果NPC在<latest_reply>里明确同意或现在执行了给玩家带路去【带路与传唤NPC清单】中的目标，就输出这个；把【带路与传唤NPC清单】中的NPC写进标签,如果玩家要求带去某个地点，可以看NPC名称后缀的地点，你可以在标签中写入这个NPC的名称，让NPC把玩家带去这个地点"
                 }
             ],
             "TriggerKeywords": [
@@ -411,18 +411,18 @@
             "Group": "trade",
             "Priority": 84,
             "TopicNumber": 9,
-            "TopicLabel": "Transfer, recruit, or purchase Units",
+            "TopicLabel": "Transfer NPC-owned troops or prisoners to player; notable volunteer recruitment",
             "Code": "PARTY_TRANSFER",
             "NonHeroInstruction": "【雇佣士兵与俘虏处置规则】你不是领主，无权把部队或俘虏正式转给玩家。若玩家坚持，请让他去找能做主的领主",
-            "Instruction": "【雇佣士兵与俘虏处置规则】谈士兵时，应把他们视作人手、兵力和效忠对象，而不是货物；谈俘虏时，才可用赎取、买卖、移交之类说法。你只能依据系统在本轮给出的清单与编号作答，不得编造清单外的士兵、俘虏、编号、数量或价格。你最好让玩家先给钱或士兵，如果你还没有商量好价格，或者没有确定玩家将士兵或俘虏交给你了，请不要在你的发言里出现成交等结账字眼，这样会导致你的钱或者士兵，俘虏或者物实际给到玩家手里，如果你确认了玩家已经把这三者给到你了，那你才可以在回复里出现成交等结账字眼。",
+            "Instruction": "【雇佣士兵、要人募兵与俘虏处置规则】谈士兵时，应把他们视作人手、兵力和效忠对象，而不是货物；谈俘虏时，才可用赎取、买卖、移交之类说法。你只能依据系统在本轮给出的清单与编号作答，不得编造清单外的士兵、俘虏、编号、数量或价格。若系统清单标明“原版要人募兵”，这些士兵来自你在城镇或村庄的原版待招募槽位；你可以按清单同意玩家招募，成交后槽位会实时减少。你最好让玩家先给钱或士兵，如果你还没有商量好价格，或者没有确定玩家将士兵或俘虏交给你了，请不要在你的发言里出现成交等结账字眼，这样会导致你的钱或者士兵，俘虏或者物实际给到玩家手里，如果你确认了玩家已经把这三者给到你了，那你才可以在回复里出现成交等结账字眼。\n[Intent boundary] This rule covers NPC-owned troops or prisoners moving from the NPC to the player, and original-game notable volunteers recruited from the current notable. If the player says they will give troops to the NPC, split troops to the NPC, provide soldiers for a new companion party, or asks the NPC to lead a newly formed party, this is not PARTY_TRANSFER; route it to WORLDMAP_ORDER:CREATE_COMPANION_PARTY or later world-map orders. Do not treat player-supplied troops for an NPC party as hiring, buying, ordinary recruitment, or a troop sale from NPC to player.",
             "PostprocessRules": [
                 {
-                    "Tag": "[ATT:士兵名称:数量]",
-                    "Description": "如果NPC在<latest_reply>里明确同意让自己的部队中的某种士兵转入玩家麾下，就输出这个；这里填写士兵名称和数量"
+                    "Tag": "[ATT:部队编号:数量]",
+                    "Description": "Output only when the NPC clearly agrees in <latest_reply> to transfer a numbered troop stack currently owned by the NPC into the player's party, or to let the player recruit a numbered original-game notable volunteer stack from the current notable. 部队编号 must be copied from this turn's numbered list, not a troop name. Never output when the player is giving, splitting, or promising troops to the NPC, or when the player is creating a companion party for the NPC; that belongs to WORLDMAP_ORDER:CREATE_COMPANION_PARTY."
                 },
                 {
-                    "Tag": "[ATP:俘虏名称:数量]",
-                    "Description": "如果NPC在<latest_reply>里明确同意把【你当前可转移俘虏】中的某种俘虏交给玩家，就输出这个；这里填写俘虏名称和数量"
+                    "Tag": "[ATP:俘虏编号:数量]",
+                    "Description": "如果NPC在<latest_reply>里明确同意或现在执行了把【你当前可转移俘虏】中的某种俘虏交给玩家，就输出这个；俘虏编号必须复制本轮编号清单，不要填写俘虏名称"
                 }
             ],
             "RuntimeInstructionTemplates": {
@@ -447,7 +447,10 @@
                 "把这些俘虏交给我。",
                 "把你抓的人转给我。",
                 "我给你钱，你让几名士兵改投我麾下。",
-                "我想从你这边收编几个人手，开个价吧。"
+                "我想从你这边收编几个人手，开个价吧。",
+                "我想从你这里招募几个新兵。",
+                "你这里还有能招募的人手吗？",
+                "把你手下可招募的新兵名单给我看看。"
             ]
         },
         {
@@ -456,14 +459,14 @@
             "Group": "politics",
             "Priority": 83,
             "TopicNumber": 10,
-            "TopicLabel": "Change Settlement Ownership",
+            "TopicLabel": "Transfer fixed assets: fiefs, workshops, caravans, and trade convoys",
             "Code": "SETTLEMENT",
-            "NonHeroInstruction": "【领地转移规则】只有家族族长才有权和玩家讨论城市或城堡的正式转移。若你不是家族族长，不管你是普通路人、士兵，还是同家族的其他领主，你都必须明确引导玩家去找你的家族族长；正文只口头解释或引导，不写任何领地转移标签。",
-            "Instruction": "【领地转移规则】只讨论城市与城堡，不谈村庄。只认系统本轮给出的领地清单、收益和指导价；不得编造。只有当你在正文里最终明确同意把你家族的城市或城堡转给玩家时，才算真的转移；若你还在压价、拒绝、反问或继续谈条件，就不算成交。",
+            "NonHeroInstruction": "【固定资产转移规则】如果你没有系统清单中可转移的固定资产，就只能口头拒绝或引导玩家去找真正能做主的人；正文不写任何资产转移标签。",
+            "Instruction": "【固定资产转移规则】固定资产包括城市、城堡、工坊、商队和商船队；村庄不单独转移。只认系统本轮给出的固定资产清单、收益和指导价；不得编造清单外资产。玩家付款不由本规则扣款，玩家可用Y键或已有交易链路先行交付；本规则只负责成交后的产权变更。只有当你在正文里最终明确同意现在把清单中的某项固定资产转给玩家时，才算真的转移；若你还在报价、要求玩家先付款、压价、拒绝、反问或继续谈条件，就不算成交。",
             "PostprocessRules": [
                 {
-                    "Tag": "[ACTION:SETTLEMENT_TRANSFER:TO_PLAYER:定居点ID或编号]",
-                    "Description": "此标签仅限于NPC转移领地给玩家，绝不可理解为玩家转移领地给NPC，如果还只是在<latest_reply>讨论价格，并且npc是有条件给予，那么不允许输出此标签。如果NPC明确无条件同意把【你家族当前可转移的城市和城堡】中的某座城市或城堡转给玩家家族，就输出这个；目标只能填写本轮清单中的编号、名称或ID。"
+                    "Tag": "[ACTION:SETTLEMENT_TRANSFER:TO_PLAYER:固定资产ID或编号]",
+                    "Description": "这是固定资产转移唯一标签，仅限NPC把【你当前可转移固定资产】中的城市、城堡、工坊、商队或商船队转给玩家；绝不可理解为玩家转移资产给NPC。若<latest_reply>还只是在报价、要求玩家先付款、压价、拒绝、反问、继续谈条件或说付款后再转，不允许输出。只有NPC明确同意现在转移，或确认已收到玩家用Y键/交易链路给出的对价并立即过户时，才输出；目标只能填写本轮清单中的编号、名称或ID。"
                 }
             ],
             "TriggerKeywords": [
@@ -471,6 +474,10 @@
                 "把你家族的一座城转给我吧。",
                 "把这座城堡卖给我。",
                 "我想买你家族的一座城市。",
+                "我想买你的工坊。",
+                "把你的商队转给我吧。",
+                "我想收购你的商船队。",
+                "你名下有哪些固定资产可以转让？",
                 "我想把我家族的一座城堡转给你。",
                 "我把这座城交给你，你开个价。",
                 "你的家族名下有哪些城市和城堡能谈转让？",
@@ -485,22 +492,22 @@
             "Group": "quest",
             "Priority": 82,
             "TopicNumber": 11,
-            "TopicLabel": "Quest commissions, helping out, and resolving troubles",
+            "TopicLabel": "Vanilla issue quests only: NPC offers, accepts, tracks, or turns in original-game quests for the player",
             "Code": "ISSUE",
             "NonHeroInstruction": "【原版任务规则】你不是有名有姓、能发布原版任务的英雄。本轮不得向玩家发布、验收或结算任何原版任务；若玩家来问差事、任务进度或交付，你只能口头说明自己无权处理，或引导他去找真正的委托人。",
-            "Instruction": "【原版任务规则】只处理系统当前确实存在的原版任务状态：可发布、进行中、同伴代办进行中、可交付、刚完成、当前无任务。你必须以本轮运行时状态为准，不得编造不存在的委托、目标、进度、完成结果、失败原因或奖励。\n【发布边界】只有当你在正文里最终明确把当前任务正式交给玩家时，才算真的发布；如果你还在介绍情况、试探、谈条件、反问、拒绝、挽留、拖延，或玩家只是说“我接了”，都不算已经接任务。\n【同伴代办边界】只有当玩家明确要求由同伴代办，且明确指定系统给出的可用同伴之一，而你也在正文里最终明确同意时，才算真的以同伴代办方式接取；如果玩家没点名、你还在追问、或目标不在系统候选里，就不算成立。\n【交付边界】只有当系统当前已处于可交付状态，且你在正文里最终明确确认任务完成并验收时，才算真的交付；如果你只是在讨论进度、提醒要求、质疑完成度、继续追问细节，或玩家单方面声称“我做完了”，都不算已经结算。\n【奖励边界】原版任务的奖励、声望、关系和日志推进由系统在交付成功后自动处理。你可以在正文里口头提及报酬，但不要把原版任务奖励当成普通交易或借贷，也不要自行转账、交货或生成别的经济标签。",
+            "Instruction": "【原版任务规则】只处理系统当前确实存在的原版任务状态：可发布、进行中、同伴代办进行中、可交付、刚完成、当前无任务。你必须以本轮运行时状态为准，不得编造不存在的委托、目标、进度、完成结果、失败原因或奖励。\n[Intent boundary] This rule is only for original-game Issue quests assigned by the NPC to the player or turned in by the player. Player orders given to the NPC are not vanilla issues: forming a companion party, receiving player-supplied troops, traveling, patrolling, following, attacking looters/bandits/lords/settlements, solving trouble by command, stopping orders, or leading a detachment must route to WORLDMAP_ORDER or another specific rule, even if the player uses words like task, job, help, errand, handle this, deal with them, or solve this problem.\n【发布边界】只有当你在正文里最终明确把当前任务正式交给玩家时，才算真的发布；如果你还在介绍情况、试探、谈条件、反问、拒绝、挽留、拖延，或玩家只是说“我接了”，都不算已经接任务。\n【同伴代办边界】只有当玩家明确要求由同伴代办，且明确指定系统给出的可用同伴之一，而你也在正文里最终明确同意时，才算真的以同伴代办方式接取；如果玩家没点名、你还在追问、或目标不在系统候选里，就不算成立。\n【交付边界】只有当系统当前已处于可交付状态，且你在正文里最终明确确认任务完成并验收时，才算真的交付；如果你只是在讨论进度、提醒要求、质疑完成度、继续追问细节，或玩家单方面声称“我做完了”，都不算已经结算。\n【奖励边界】原版任务的奖励、声望、关系和日志推进由系统在交付成功后自动处理。你可以在正文里口头提及报酬，但不要把原版任务奖励当成普通交易或借贷，也不要自行转账、交货或生成别的经济标签。",
             "PostprocessRules": [
                 {
                     "Tag": "[ACTION:ISSUE_ACCEPT_SELF]",
-                    "Description": "如果NPC在<latest_reply>里明确同意把任务正式交给玩家本人接取，就输出这个"
+                    "Description": "Output only when the NPC clearly assigns the current original-game Issue quest to the player in <latest_reply>. Never output for a player command ordering the NPC to form a party, receive troops, travel, patrol, follow, attack, or otherwise act on the world map."
                 },
                 {
                     "Tag": "[ACTION:ISSUE_ACCEPT_ALT:COMPANION=HeroId]",
-                    "Description": "如果NPC在<latest_reply>里明确同意由系统当前给出的某位可用同伴代办当前任务，就输出这个；HeroId必须填写系统候选中的那位同伴ID"
+                    "Description": "Output only when the NPC clearly accepts that a named companion candidate will handle the current original-game Issue quest for the player. HeroId must be one of the provided companion candidates. Never output for creating a companion party or commanding a companion party on the world map."
                 },
                 {
                     "Tag": "[ACTION:QUEST_TURN_IN]",
-                    "Description": "如果NPC在<latest_reply>里明确确认当前任务已经完成并正式验收，就输出这个；输出后由系统自动发放原版奖励"
+                    "Description": "Output only when the NPC clearly confirms the current original-game Issue quest is complete and formally turns it in. Do not use this for completion, cancellation, or results of WORLDMAP_ORDER commands."
                 }
             ],
             "RuntimeInstructionTemplates": {
@@ -523,16 +530,16 @@
                 "最近领地里有没有什么麻烦事需要我帮忙？",
                 "我来交任务了，你答应的报酬准备好了吗？",
                 "那个委托的进度差不多了，我来给你汇报一下。",
-                "给我点活儿干，我想赚点第纳尔。",
+                "Do you have an original-game issue quest that you can formally offer me?",
                 "这事我接下了，你放心交给我吧。",
-                "有什么我可以代劳的吗？",
+                "Can I personally accept your current original-game issue quest?",
                 "派我的同伴去帮你解决那个麻烦吧。",
                 "我让阿莱西斯替我去办这件事，你意下如何？",
                 "这差事先交给我的同伴去跑一趟吧。",
                 "你再把任务要求跟我说清楚些，我马上动身。",
                 "事情还没彻底办成，我先来和你说说进展。",
                 "你要我做的事情都完成了，验收一下吧。",
-                "你不是有事找人帮忙吗？说吧，要我做什么。",
+                "Can one of my named companions handle your current issue quest as an alternative solution?",
                 "任务做完了，奖励拿来吧。"
             ]
         },
@@ -611,7 +618,7 @@
             "PostprocessRules": [
                 {
                     "Tag": "[ACTION:LET_PLAYER_GO]",
-                    "Description": "如果NPC在<latest_reply>里明确同意让玩家立刻离开当前遭遇，就输出这个；没有明确放行就不要输出"
+                    "Description": "如果NPC在<latest_reply>里明确同意或现在执行了让玩家立刻离开当前遭遇，就输出这个；没有明确放行就不要输出"
                 }
             ],
             "TriggerKeywords": [
@@ -635,7 +642,7 @@
             "PostprocessRules": [
                 {
                     "Tag": "[A:H_J_P_P]",
-                    "Description": "如果NPC在<latest_reply>里明确同意由当前说话者本人立即加入玩家队伍，就输出这个。这个标签只代表当前说话者本人入队、成为同伴或随玩家上路；不代表其家族加入玩家王国，不代表成为玩家封臣，也不代表作为领主效力。若<latest_reply>表达的是“我的家族加入你的王国/成为你的封臣/作为领主效力/归附你的王国”，禁止输出这个。若<latest_reply>只是模糊同意“效力于你/加入你/来你麾下”，没有明确当前说话者本人立即加入玩家队伍，禁止输出。若当前说话者已经在玩家队伍中，禁止输出。该标签只指当前说话者：普通非Hero会升格为Hero同伴；酒馆雇佣池NPC会让同类型雇佣兵整组作为普通士兵加入，不创建Hero。"
+                    "Description": "如果NPC在<latest_reply>里明确同意或现在执行了由当前说话者本人立即加入玩家队伍，就输出这个。这个标签只代表当前说话者本人入队、成为同伴或随玩家上路；不代表其家族加入玩家王国，不代表成为玩家封臣，也不代表作为领主效力，也不代表大地图上的独立部队合并命令。若<latest_reply>表达的是“我的家族加入你的王国/成为你的封臣/作为领主效力/归附你的王国”，禁止输出这个。若玩家要求的是“把你的部队并入我的部队/和我的部队合并/率领部队前来与我会合/把你的人都带来会合/并入玩家主队”等独立部队合并或大地图会合命令，禁止输出[A:H_J_P_P]；这类请求只应由大地图指令规则的WORLDMAP_ORDER:MERGE_TO_PLAYER处理。若<latest_reply>只是模糊同意“效力于你/加入你/来你麾下”，没有明确当前说话者本人立即加入玩家队伍，禁止输出。若当前说话者已经在玩家队伍中，禁止输出。该标签只指当前说话者：普通非Hero会升格为Hero同伴；酒馆雇佣池NPC会让同类型雇佣兵整组作为普通士兵加入，不创建Hero。"
                 }
             ],
             "TriggerKeywords": [
@@ -676,7 +683,7 @@
             "PostprocessRules": [
                 {
                     "Tag": "[ACTION:VOTE_DEAL:议程编号:选项编号:权重:备注]",
-                    "Description": "当你最终明确同意玩家投票交易时，必须使用此精确格式。议程编号和选项编号见后处理清单（如A1:O2=投A1议程的O2选项）。权重可选SLIGHTLY_FAVOR（稍微支持）、STRONGLY_FAVOR（强烈支持）、FULLY_PUSH（全力推动）。备注=中文简要描述承诺。只有在玩家已实际交付承诺的报酬（如有）且最终明确成交时才输出，还在谈条件或拒绝时禁止输出。禁止使用SUPPORT/OPPOSE旧格式。 如果你不是家族族长，禁止输出此标签。如果你所属氏族是某议程的提案氏族，禁止就该议程输出此标签。"
+                    "Description": "当你最终明确同意或现在执行了玩家投票交易时，必须使用此精确格式。议程编号和选项编号见后处理清单（如A1:O2=投A1议程的O2选项）。权重可选SLIGHTLY_FAVOR（稍微支持）、STRONGLY_FAVOR（强烈支持）、FULLY_PUSH（全力推动）。备注=中文简要描述承诺。只有在玩家已实际交付承诺的报酬（如有）且最终明确成交时才输出，还在谈条件或拒绝时禁止输出。禁止使用SUPPORT/OPPOSE旧格式。 如果你不是家族族长，禁止输出此标签。如果你所属氏族是某议程的提案氏族，禁止就该议程输出此标签。"
                 }
             ],
             "RuntimeInstructionTemplates": {
@@ -760,6 +767,96 @@
                 }
             ],
             "TriggerKeywords": []
+        },
+        {
+            "Id": "worldmap_party_command",
+            "IsEnabled": true,
+            "Group": "campaign",
+            "Priority": 88,
+            "TopicNumber": 18,
+            "TopicLabel": "Move and attack",
+            "Code": "Commands and Requests",
+            "NonHeroInstruction": "你不是有名有姓、可在大地图上独立行动的英雄或领主，不能接受玩家的大地图行军、巡逻、跟随、攻击、组队或部队合并命令。若玩家提出此类要求，请自然说明你没有独立部队或权限。",
+            "Instruction": "【大地图指令规则】玩家可能要求你执行任何命令或者请求，你可以根据你和玩家的关系，选择接受与否，或者向玩家索要利益来换取你的行动，如果玩家是你的上司那么你最好听话",
+            "PostprocessRules": [
+                {
+                    "Tag": "[ACTION:WORLDMAP_ORDER:GO_TO_SETTLEMENT:settlement:{id}:{days}]",
+                    "Description": "仅当玩家要求且NPC在正文中明确同意或现在执行了前往或守备某个定居点时输出。{id}必须来自后处理上下文提供的定居点候选原版ID，禁止根据名称猜ID。{days}为到达后停留天数；玩家未指定时填3。"
+                },
+                {
+                    "Tag": "[ACTION:WORLDMAP_ORDER:PATROL_SETTLEMENT:settlement:{id}:{days}]",
+                    "Description": "仅当玩家要求且NPC明确同意同意或现在执行了某个定居点附近巡逻或在附近游击或者猎杀时输出。{id}必须来自后处理上下文的定居点候选原版ID，禁止猜ID。{days}为抵达附近后巡逻天数；未指定填3。"
+                },
+                {
+                    "Tag": "[ACTION:WORLDMAP_ORDER:FOLLOW:{hero|party}:{id}:{days}]",
+                    "Description": "Only output this when the NPC clearly agrees to follow a world-map target. Use target type hero only for a provided hero candidate. Use target type party only for a provided nearby visible party candidate. {id} must be the raw Hero ID or raw nearby party ID from the context; never guess from a name. {days} is the duration after catching up; use 3 if unspecified."
+                },
+                {
+                    "Tag": "[ACTION:WORLDMAP_ORDER:ATTACK:{hero|party|settlement}:{id}:{days}:{AI|FORCE|REBELLION_FORCE}]",
+                    "Description": "Only output this when the NPC clearly agrees to attack a world-map target. Use hero for a provided hero candidate, party for a provided nearby visible party candidate, and settlement for a provided settlement candidate. {id} must be the raw ID from the matching context list; never guess. Settlement targets automatically mean siege for towns/castles and raid/burn for villages. {days} is the total tracking/execution timeout: default 3 for hero/party, 15 for town/castle siege, 5 for village raid. Use AI for cautious original-game evaluation. Use FORCE only when the player explicitly demands no hesitation or a forced attack. Use REBELLION_FORCE only for hero or settlement targets when the player explicitly orders the player clan to leave its kingdom with fiefs, rebel, then attack that same former kingdom; do not use REBELLION_FORCE for party targets. War/rebellion happens only at the real attack commit point, not when the order is accepted."
+                },
+                {
+                    "Tag": "[ACTION:WORLDMAP_ORDER:MERGE_TO_PLAYER:{days}]",
+                    "Description": "仅当玩家要求且NPC明确同意或现在执行了把自己的独立同伴部队并入玩家主队时输出。{days}为向玩家靠近的期限或到位后处理等待天数；未指定填1。"
+                },
+                {
+                    "Tag": "[ACTION:WORLDMAP_ORDER:CREATE_COMPANION_PARTY]",
+                    "Description": "执行WORLDMAP的标签时，无论如何都必须先在最开头输入此标签。"
+                },
+                {
+                    "Tag": "[ACTION:WORLDMAP_ORDER:STOP]",
+                    "Description": "仅当玩家要求且NPC明确同意或现在执行了停止当前大地图命令并回归原版AI时输出。玩家说“你可以自由行动了”“不用继续待在那里”“不用再巡逻/跟随/追击了”“取消之前的命令”“回到你自己的安排”等，且NPC正文表示收到、遵命、会自由行动或恢复自行安排，也属于明确同意停止当前大地图命令。STOP会清空该NPC当前命令队列，不应与其他大地图命令同时输出。"
+                }
+            ],
+            "TriggerKeywords": [
+                "Leave the kingdom with our fiefs and attack them.",
+                "Rebel against our kingdom and then attack that lord.",
+                "Take our castles with us, break away, and besiege that town.",
+                "Defect with our lands and raid that village.",
+                "Besiege that town.",
+                "Besiege that castle.",
+                "Attack that settlement.",
+                "Raid that village.",
+                "Burn that village.",
+                "Take your party and lay siege to the city.",
+                "Attack the nearby looters.",
+                "Attack that visible bandit party.",
+                "Follow the caravan northeast of us.",
+                "Strike the villagers north of your party.",
+                "Chase that nearby raider group for one day.",
+                "Form a companion party here; I will give you the troops.",
+                "Create your own party and wait while I split soldiers to you.",
+                "You only need to lead the detachment; I will provide the men.",
+                "Do not go recruit elsewhere; form the party here and take my soldiers.",
+                "Build a companion party first, then attack the nearby looters.",
+                "Take the troops I give you and hunt the visible bandit parties.",
+                "去萨哥特等我一天。",
+                "带你的部队去某个城镇。",
+                "在那个城堡附近巡逻两天。",
+                "跟随某个领主的部队。",
+                "追上并攻击那支部队。",
+                "你去袭击那个领主。",
+                "别管风险，必须追杀他。",
+                "把你的部队并入我的部队。",
+                "你和我的部队合并。",
+                "和我的部队合并。",
+                "率领部队前来与我会合。",
+                "并入我的主队。",
+                "把你的人都带来和我会合。",
+                "你去组建一支同伴部队。",
+                "停止当前大地图命令。",
+                "取消我之前给你的大地图命令。",
+                "解除你当前的行动命令。",
+                "停止执行我之前的行军命令。",
+                "之前让你去那里停留的命令取消。",
+                "你可以自由行动了。",
+                "你不必在那边呆着了。",
+                "不用继续待在那里了。",
+                "不用再巡逻了，恢复自由行动。",
+                "不用再跟随目标了，自己行动吧。",
+                "放弃当前追击，回到你自己的安排。",
+                "先去那里停留一天，然后跟随我。"
+            ]
         }
     ],
     "DuelStake": {

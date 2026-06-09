@@ -35,6 +35,7 @@ public sealed class CourierDeliveryBehavior : CampaignBehaviorBase
 	private const double RouteRefreshSeconds = 2.0;
 	private const double CampaignTickThrottleSeconds = 0.75;
 	private const string CourierPartyPrefix = "af_courier_";
+	private static readonly string[] CourierExcludedRuleIds = new[] { "duel", "lords_hall_access", "scene_mechanism_actions", "encounter_release_player" };
 
 	private enum CourierStage
 	{
@@ -77,6 +78,7 @@ public sealed class CourierDeliveryBehavior : CampaignBehaviorBase
 		public bool ReplyGenerationStarted;
 		public bool ReplyPopupShown;
 		public bool PostprocessConsumed;
+		public bool ReplyWaitPopupShown;
 		public int EscrowGold;
 		public List<CourierCargoEntry> Entries = new List<CourierCargoEntry>();
 		public List<CourierCargoEntry> CrewEntries = new List<CourierCargoEntry>();
@@ -127,6 +129,9 @@ public sealed class CourierDeliveryBehavior : CampaignBehaviorBase
 	private readonly object _sessionLock = new object();
 	private PendingCourierFlow _pendingFlow;
 	private long _lastCampaignTickUtcTicks;
+	private bool _courierReplyWaitTimeLocked;
+	private CampaignTimeControlMode _courierReplyWaitPreviousMode = CampaignTimeControlMode.Stop;
+	private bool _courierReplyWaitPreviousLock;
 
 	public static CourierDeliveryBehavior Instance { get; private set; }
 
@@ -466,7 +471,7 @@ public sealed class CourierDeliveryBehavior : CampaignBehaviorBase
 			new InquiryElement("show", "展示物品并写信", null, true, ""),
 			new InquiryElement("give_troops", "转移部队并写信", null, true, ""),
 			new InquiryElement("give_prisoners", "转移俘虏并写信", null, true, ""),
-			new InquiryElement("give_settlements", "转移定居点并写信", null, true, "")
+			new InquiryElement("give_settlements", "转移固定资产并写信", null, true, "")
 		};
 		MBInformationManager.ShowMultiSelectionInquiry(new MultiSelectionInquiryData(
 			"信使与邮递 - " + targetName,
@@ -540,7 +545,7 @@ public sealed class CourierDeliveryBehavior : CampaignBehaviorBase
 		}
 		if (mode == CourierPayloadMode.GiveSettlements && !MyBehavior.IsSettlementTransferLeaderEligibleForExternal(flow.Recipient, flow.Recipient.CharacterObject))
 		{
-			InformationManager.DisplayMessage(new InformationMessage("只有家族族长才能谈领地转移。", Colors.Yellow));
+			InformationManager.DisplayMessage(new InformationMessage("当前收件人没有可接收或可谈的固定资产。", Colors.Yellow));
 			ResetPendingFlow("payload_settlement_ineligible");
 			return;
 		}
@@ -566,7 +571,7 @@ public sealed class CourierDeliveryBehavior : CampaignBehaviorBase
 			}
 			else if (option.SettlementEntry != null)
 			{
-				hint = $"每日收益: {Math.Max(0, option.SettlementEntry.DailyIncomeDenars)} 第纳尔 | 一次结清指导价: {Math.Max(0, option.SettlementEntry.GuidePriceDenars)} 第纳尔";
+				hint = $"类型: {(string.IsNullOrWhiteSpace(option.SettlementEntry.TypeLabel) ? "固定资产" : option.SettlementEntry.TypeLabel)} | 每日收益: {Math.Max(0, option.SettlementEntry.DailyIncomeDenars)} 第纳尔 | 一次结清指导价: {Math.Max(0, option.SettlementEntry.GuidePriceDenars)} 第纳尔";
 			}
 			list.Add(new InquiryElement(i, option.Name + " (×" + Math.Max(1, option.AvailableAmount) + ")", null, true, hint));
 		}
@@ -731,6 +736,7 @@ public sealed class CourierDeliveryBehavior : CampaignBehaviorBase
 				_sessions[session.Id] = session;
 			}
 			Log("session created id=" + session.Id + " recipient=" + session.RecipientHeroId + " party=" + session.CourierPartyId + " mode=" + session.PayloadMode + " entries=" + session.Entries.Count);
+			StartCourierReplyGeneration(session, "created_preflight");
 			InformationManager.DisplayMessage(new InformationMessage("信使队已出发，正在前往 " + session.RecipientName + "。", Colors.Green));
 			ResetPendingFlow("confirm_done");
 			ProcessSession(session);
@@ -881,10 +887,25 @@ public sealed class CourierDeliveryBehavior : CampaignBehaviorBase
 		}
 		ApplyCourierAiOverrides(courier, "tick");
 		Hero recipient = ResolveRecipient(session);
+		if (!session.DeliveryApplied && recipient != null && !recipient.IsDead && !session.ReplyGenerated && !session.ReplyGenerationStarted)
+		{
+			StartCourierReplyGeneration(session, "outbound_preflight");
+		}
 		if (stage == CourierStage.GeneratingReply)
 		{
+			if (session.DeliveryApplied && (recipient == null || recipient.IsDead))
+			{
+				EndCourierReplyWaitPause(session, "recipient_invalid_after_delivery");
+				session.ReplyGenerated = true;
+				session.ReplyGenerationStarted = false;
+				session.Stage = CourierStage.Returning.ToString();
+				RouteToSender(session, courier);
+				return;
+			}
 			if (session.ReplyGenerated)
 			{
+				CommitGeneratedReplyAtRecipient(session, recipient);
+				EndCourierReplyWaitPause(session, "reply_generated");
 				session.Stage = CourierStage.Returning.ToString();
 				RouteToSender(session, courier);
 				return;
@@ -893,6 +914,7 @@ public sealed class CourierDeliveryBehavior : CampaignBehaviorBase
 			{
 				StartCourierReplyGeneration(session, "resume_or_tick");
 			}
+			ShowCourierReplyWaitPopupAndPause(session, recipient);
 			MaintainReplyWaitAtRecipient(session, courier, recipient);
 			return;
 		}
@@ -907,6 +929,7 @@ public sealed class CourierDeliveryBehavior : CampaignBehaviorBase
 			session.Stage = CourierStage.Returning.ToString();
 			session.DeliveryApplied = false;
 			session.RecipientWaitReason = "";
+			EndCourierReplyWaitPause(session, "recipient_dead_before_delivery");
 			RouteToSender(session, courier);
 			return;
 		}
@@ -976,10 +999,14 @@ public sealed class CourierDeliveryBehavior : CampaignBehaviorBase
 		}
 		if (!session.ReplyGenerated)
 		{
+			session.Stage = CourierStage.GeneratingReply.ToString();
+			ShowCourierReplyWaitPopupAndPause(session, recipient);
 			StartCourierReplyGeneration(session, "delivered");
 			MaintainReplyWaitAtRecipient(session, courier, recipient);
 			return;
 		}
+		CommitGeneratedReplyAtRecipient(session, recipient);
+		EndCourierReplyWaitPause(session, "delivered_reply_ready");
 		session.Stage = CourierStage.Returning.ToString();
 		RouteToSender(session, courier);
 	}
@@ -990,7 +1017,10 @@ public sealed class CourierDeliveryBehavior : CampaignBehaviorBase
 		{
 			return;
 		}
-		session.Stage = CourierStage.GeneratingReply.ToString();
+		if (session.DeliveryApplied)
+		{
+			session.Stage = CourierStage.GeneratingReply.ToString();
+		}
 		session.ReplyGenerationStarted = true;
 		Log("reply generation queued session=" + session.Id + " reason=" + (reason ?? ""));
 		_ = Task.Run(() => GenerateNpcReplyAsync(session.Id));
@@ -1047,15 +1077,17 @@ public sealed class CourierDeliveryBehavior : CampaignBehaviorBase
 			{
 				session.ReplyGenerated = true;
 				session.ReplyGenerationStarted = false;
-				session.Stage = CourierStage.Returning.ToString();
+				MainThreadActions.Enqueue(() => ProcessSessionById(sessionId, "reply_generated_recipient_invalid"));
 				return;
 			}
 			Log("llm main start session=" + session.Id + " recipient=" + SafeHeroId(recipient));
-			string extraFact = session.DeliveryFactText ?? "";
-			List<string> preprocessRuleHits = MyBehavior.RunCourierRulePreprocessForExternal(recipient, session.LetterText, extraFact, recipient.CharacterObject, targetAgentIndex: -1);
-			MyBehavior.ShoutPromptContext ctx = MyBehavior.BuildShoutPromptContextForExternal(recipient, session.LetterText, extraFact, recipient.Culture?.StringId ?? "neutral", hasAnyHero: true, targetCharacter: recipient.CharacterObject, targetAgentIndex: -1);
-			string extras = FilterCourierInjectedRuleBlocks(ctx?.Extras ?? "", preprocessRuleHits, new[] { "scene_mechanism_actions" });
-			List<object> messages = BuildCourierReplyMessages(recipient, session, extras);
+			string extraFact = BuildDeliveryFactText(session, delivered: true);
+			MyBehavior.ShoutPromptContext ctx = MyBehavior.BuildShoutPromptContextForExternal(recipient, session.LetterText, extraFact, recipient.Culture?.StringId ?? "neutral", hasAnyHero: true, targetCharacter: recipient.CharacterObject, targetAgentIndex: -1, excludedRuleIds: CourierExcludedRuleIds);
+			List<string> selectedRuleHits = MergeCourierSelectedRuleIds(ctx?.PreprocessRuleIds);
+			selectedRuleHits = ExcludeCourierSelectedRuleIds(selectedRuleHits, CourierExcludedRuleIds);
+			string extras = FilterCourierInjectedRuleBlocks(ctx?.Extras ?? "", selectedRuleHits, CourierExcludedRuleIds);
+			string historyText = MyBehavior.BuildHistoryContextForExternal(recipient, 24, session.LetterText, extraFact);
+			List<object> messages = BuildCourierReplyMessages(recipient, session, extras, extraFact, historyText);
 			ShoutNetwork.RecordPrimaryRequestBodyForTokenStats(messages, MainReplyMaxTokens, "courier_reply_preflight");
 			string output = await ShoutNetwork.CallApiWithMessages(messages, MainReplyMaxTokens);
 			if (IsTerminalStage(session))
@@ -1074,8 +1106,8 @@ public sealed class CourierDeliveryBehavior : CampaignBehaviorBase
 				session.ReplyPostprocessedText = "";
 				session.ReplyGenerated = true;
 				session.ReplyGenerationStarted = false;
-				session.Stage = CourierStage.Returning.ToString();
 				Log("npc no reply session=" + session.Id);
+				MainThreadActions.Enqueue(() => ProcessSessionById(sessionId, "reply_generated_empty"));
 				return;
 			}
 			bool duelInjected = ShoutBehavior.HasInjectedRuleBlockForExternal(extras, "duel");
@@ -1089,18 +1121,16 @@ public sealed class CourierDeliveryBehavior : CampaignBehaviorBase
 			bool partyTransferInjected = ShoutBehavior.HasInjectedRuleBlockForExternal(extras, "party_transfer");
 			bool settlementTransferInjected = ShoutBehavior.HasInjectedRuleBlockForExternal(extras, "settlement_transfer");
 			bool voteDealInjected = ShoutBehavior.HasInjectedRuleBlockForExternal(extras, "vote_deal");
+			bool worldMapPartyCommandInjected = ShoutBehavior.HasInjectedRuleBlockForExternal(extras, "worldmap_party_command");
 			bool kingdomServiceInjected = ShoutBehavior.HasInjectedRuleBlockForExternal(extras, "kingdom_service");
-			string historyText = MyBehavior.BuildHistoryContextForExternal(recipient, 20, session.LetterText, extraFact);
-			string postprocessed = ShoutBehavior.RunCourierActionPostprocessForExternal(recipient, recipient.CharacterObject, recipient.Name?.ToString() ?? "NPC", session.LetterText, historyText, reply, duelInjected, rewardInjected, loanInjected, kingdomServiceInjected, lordsHallInjected, meetingReleaseInjected, vanillaIssueInjected, heroJoinPartyInjected, sceneMechanismInjected, partyTransferInjected, settlementTransferInjected, voteDealInjected, preprocessRuleHits, ctx?.EntityPostprocessContext);
+			string postprocessed = ShoutBehavior.RunCourierActionPostprocessForExternal(recipient, recipient.CharacterObject, recipient.Name?.ToString() ?? "NPC", session.LetterText, historyText, reply, duelInjected, rewardInjected, loanInjected, kingdomServiceInjected, lordsHallInjected, meetingReleaseInjected, vanillaIssueInjected, heroJoinPartyInjected, sceneMechanismInjected, partyTransferInjected, settlementTransferInjected, voteDealInjected, worldMapPartyCommandInjected, selectedRuleHits, ctx?.EntityPostprocessContext);
 			string replyPostprocessed = string.IsNullOrWhiteSpace(postprocessed) ? reply : postprocessed;
-			VoteDealBehavior.ProcessVoteDealTagsDispatch(recipient, ref replyPostprocessed);
 			session.ReplyText = reply;
 			session.ReplyPostprocessedText = replyPostprocessed;
 			session.ReplyGenerated = true;
 			session.ReplyGenerationStarted = false;
-			session.Stage = CourierStage.Returning.ToString();
-			MyBehavior.AppendExternalDialogueHistory(recipient, null, "【回信】" + StripCourierActionTags(reply), "[AFEF NPC行为补充] " + (recipient.Name?.ToString() ?? "NPC") + "已通过信使写下回信，信使正在把回信带给玩家。");
-			Log("llm main done session=" + session.Id + " replyLen=" + reply.Length + " postLen=" + (session.ReplyPostprocessedText ?? "").Length + " preprocessHits=" + ((preprocessRuleHits == null || preprocessRuleHits.Count == 0) ? "(none)" : string.Join(",", preprocessRuleHits)) + " duel=" + duelInjected + " reward=" + rewardInjected + " loan=" + loanInjected + " kingdom=" + kingdomServiceInjected + " lordsHall=" + lordsHallInjected + " meetingRelease=" + meetingReleaseInjected + " vanillaIssue=" + vanillaIssueInjected + " heroJoin=" + heroJoinPartyInjected + " sceneMechanism=" + sceneMechanismInjected + " partyTransfer=" + partyTransferInjected + " settlementTransfer=" + settlementTransferInjected + " voteDeal=" + voteDealInjected);
+			Log("llm main done session=" + session.Id + " replyLen=" + reply.Length + " postLen=" + (session.ReplyPostprocessedText ?? "").Length + " preprocessHits=" + ((selectedRuleHits == null || selectedRuleHits.Count == 0) ? "(none)" : string.Join(",", selectedRuleHits)) + " duel=" + duelInjected + " reward=" + rewardInjected + " loan=" + loanInjected + " kingdom=" + kingdomServiceInjected + " lordsHall=" + lordsHallInjected + " meetingRelease=" + meetingReleaseInjected + " vanillaIssue=" + vanillaIssueInjected + " heroJoin=" + heroJoinPartyInjected + " sceneMechanism=" + sceneMechanismInjected + " partyTransfer=" + partyTransferInjected + " settlementTransfer=" + settlementTransferInjected + " voteDeal=" + voteDealInjected + " worldMap=" + worldMapPartyCommandInjected);
+			MainThreadActions.Enqueue(() => ProcessSessionById(sessionId, "reply_generated"));
 		}
 		catch (Exception ex)
 		{
@@ -1109,8 +1139,224 @@ public sealed class CourierDeliveryBehavior : CampaignBehaviorBase
 			{
 				session.ReplyGenerated = true;
 				session.ReplyGenerationStarted = false;
-				session.Stage = CourierStage.Returning.ToString();
+				MainThreadActions.Enqueue(() => ProcessSessionById(sessionId, "reply_generation_failed"));
 			}
+		}
+	}
+
+	private void ProcessSessionById(string sessionId, string reason)
+	{
+		try
+		{
+			CourierSession session = null;
+			lock (_sessionLock)
+			{
+				_sessions.TryGetValue(sessionId ?? "", out session);
+			}
+			if (session == null || IsTerminalStage(session))
+			{
+				return;
+			}
+			Log("process session by id session=" + session.Id + " reason=" + (reason ?? ""));
+			ProcessSession(session);
+		}
+		catch (Exception ex)
+		{
+			Log("process session by id failed session=" + (sessionId ?? "") + " error=" + ex);
+		}
+	}
+
+	private void CommitGeneratedReplyAtRecipient(CourierSession session, Hero recipient)
+	{
+		if (session == null || session.PostprocessConsumed)
+		{
+			return;
+		}
+		if (!session.DeliveryApplied)
+		{
+			return;
+		}
+		string text = session.ReplyPostprocessedText ?? session.ReplyText ?? "";
+		if (recipient == null || recipient.IsDead)
+		{
+			session.PostprocessConsumed = true;
+			session.ReplyPostprocessedText = StripCourierActionTags(text);
+			Log("postprocess skipped recipient invalid session=" + session.Id);
+			return;
+		}
+		try
+		{
+			VoteDealBehavior.ProcessVoteDealTagsDispatch(recipient, ref text);
+		}
+		catch (Exception ex)
+		{
+			Log("apply vote deal tags failed session=" + session.Id + " error=" + ex.Message);
+		}
+		try
+		{
+			WorldMapPartyCommandBehavior.ProcessWorldMapOrderTagsDispatch(recipient, ref text);
+		}
+		catch (Exception ex)
+		{
+			Log("apply world map tags failed session=" + session.Id + " error=" + ex.Message);
+		}
+		try
+		{
+			RewardSystemBehavior.Instance?.ApplyRewardTags(recipient, Hero.MainHero, ref text);
+		}
+		catch (Exception ex)
+		{
+			Log("apply reward tags failed session=" + session.Id + " error=" + ex.Message);
+		}
+		try
+		{
+			VanillaIssueOfferBridge.ApplyIssueOfferTags(recipient, ref text);
+		}
+		catch (Exception ex)
+		{
+			Log("apply vanilla issue tags failed session=" + session.Id + " error=" + ex.Message);
+		}
+		try
+		{
+			RomanceSystemBehavior.Instance?.ApplyMarriageTags(recipient, Hero.MainHero, ref text);
+		}
+		catch (Exception ex)
+		{
+			Log("apply marriage tags failed session=" + session.Id + " error=" + ex.Message);
+		}
+		try
+		{
+			if (MyBehavior.TryApplyPartyTransferTagsForExternal(recipient, recipient.CharacterObject, -1, ref text, out var facts, out var notifications))
+			{
+				foreach (string fact in facts ?? new List<string>())
+				{
+					MyBehavior.AppendExternalDialogueHistory(recipient, null, null, fact);
+				}
+				foreach (string note in notifications ?? new List<string>())
+				{
+					InformationManager.DisplayMessage(new InformationMessage(note, Colors.Green));
+				}
+			}
+		}
+		catch (Exception ex)
+		{
+			Log("apply party transfer tags failed session=" + session.Id + " error=" + ex.Message);
+		}
+		session.ReplyPostprocessedText = text;
+		session.PostprocessConsumed = true;
+		if (!string.IsNullOrWhiteSpace(session.ReplyText))
+		{
+			MyBehavior.AppendExternalDialogueHistory(recipient, null, "【回信】" + StripCourierActionTags(session.ReplyText), "[AFEF NPC行为补充] " + (recipient.Name?.ToString() ?? "NPC") + "已通过信使写下回信，信使正在把回信带给玩家。");
+		}
+		Log("postprocess committed at recipient session=" + session.Id + " remainingLen=" + (text ?? "").Length);
+	}
+
+	private void ShowCourierReplyWaitPopupAndPause(CourierSession session, Hero recipient)
+	{
+		if (session == null || session.ReplyGenerated)
+		{
+			return;
+		}
+		BeginCourierReplyWaitPause(session, recipient);
+		if (session.ReplyWaitPopupShown)
+		{
+			return;
+		}
+		session.ReplyWaitPopupShown = true;
+		try
+		{
+			string name = recipient?.Name?.ToString() ?? session.RecipientName ?? "NPC";
+			InformationManager.ShowInquiry(new InquiryData("等待信使回信生成", "信使已经抵达 " + name + " 的位置，正在等待对方读信并写下回信。\n\n游戏时间已暂停，回信生成完成后会自动继续并执行后处理标签。", isAffirmativeOptionShown: false, isNegativeOptionShown: false, "", "", null, null), pauseGameActiveState: true, prioritize: true);
+		}
+		catch (Exception ex)
+		{
+			Log("show reply wait inquiry failed session=" + session.Id + " error=" + ex.Message);
+			InformationManager.DisplayMessage(new InformationMessage("信使已抵达，正在等待回信生成。游戏时间已暂停。", Colors.Yellow));
+		}
+	}
+
+	private void BeginCourierReplyWaitPause(CourierSession session, Hero recipient)
+	{
+		try
+		{
+			Campaign campaign = Campaign.Current;
+			if (campaign == null)
+			{
+				return;
+			}
+			if (!_courierReplyWaitTimeLocked)
+			{
+				_courierReplyWaitPreviousMode = campaign.TimeControlMode;
+				_courierReplyWaitPreviousLock = campaign.TimeControlModeLock;
+				campaign.TimeControlMode = CampaignTimeControlMode.Stop;
+				campaign.SetTimeControlModeLock(true);
+				_courierReplyWaitTimeLocked = true;
+				Log("reply wait time locked session=" + (session?.Id ?? "") + " recipient=" + SafeHeroId(recipient));
+			}
+			else
+			{
+				campaign.SetTimeSpeed(0);
+			}
+		}
+		catch (Exception ex)
+		{
+			Log("reply wait pause failed session=" + (session?.Id ?? "") + " error=" + ex.Message);
+		}
+	}
+
+	private void EndCourierReplyWaitPause(CourierSession completedSession, string reason)
+	{
+		if (completedSession != null)
+		{
+			completedSession.ReplyWaitPopupShown = false;
+		}
+		if (HasActiveCourierReplyWait())
+		{
+			return;
+		}
+		try
+		{
+			InformationManager.HideInquiry();
+		}
+		catch
+		{
+		}
+		if (!_courierReplyWaitTimeLocked)
+		{
+			return;
+		}
+		try
+		{
+			Campaign campaign = Campaign.Current;
+			if (campaign != null)
+			{
+				campaign.SetTimeControlModeLock(_courierReplyWaitPreviousLock);
+				if (!_courierReplyWaitPreviousLock)
+				{
+					campaign.TimeControlMode = _courierReplyWaitPreviousMode;
+				}
+			}
+			Log("reply wait time released reason=" + (reason ?? ""));
+		}
+		catch (Exception ex)
+		{
+			Log("reply wait release failed reason=" + (reason ?? "") + " error=" + ex.Message);
+		}
+		_courierReplyWaitTimeLocked = false;
+	}
+
+	private bool HasActiveCourierReplyWait()
+	{
+		try
+		{
+			lock (_sessionLock)
+			{
+				return _sessions.Values.Any(x => x != null && !IsTerminalStage(x) && x.DeliveryApplied && !x.ReplyGenerated && x.ReplyWaitPopupShown);
+			}
+		}
+		catch
+		{
+			return false;
 		}
 	}
 
@@ -1124,6 +1370,22 @@ public sealed class CourierDeliveryBehavior : CampaignBehaviorBase
 		if (session.DeliveryApplied && !session.PostprocessConsumed && !string.IsNullOrWhiteSpace(session.ReplyPostprocessedText) && recipient != null)
 		{
 			string text = session.ReplyPostprocessedText;
+			try
+			{
+				VoteDealBehavior.ProcessVoteDealTagsDispatch(recipient, ref text);
+			}
+			catch (Exception ex)
+			{
+				Log("apply vote deal tags failed session=" + session.Id + " error=" + ex.Message);
+			}
+			try
+			{
+				WorldMapPartyCommandBehavior.ProcessWorldMapOrderTagsDispatch(recipient, ref text);
+			}
+			catch (Exception ex)
+			{
+				Log("apply world map tags failed session=" + session.Id + " error=" + ex.Message);
+			}
 			try
 			{
 				RewardSystemBehavior.Instance?.ApplyRewardTags(recipient, Hero.MainHero, ref text);
@@ -1278,14 +1540,13 @@ public sealed class CourierDeliveryBehavior : CampaignBehaviorBase
 			}
 			else if (string.Equals(entry.Kind, "settlement", StringComparison.OrdinalIgnoreCase))
 			{
-				Settlement settlement = Settlement.Find(entry.Id);
 				string status = null;
-				bool ok = RewardSystemBehavior.Instance != null && RewardSystemBehavior.Instance.TryApplyPlayerSettlementTransferForExternal(recipient, settlement, out status);
+				bool ok = RewardSystemBehavior.Instance != null && RewardSystemBehavior.Instance.TryApplyPlayerSettlementTransferForExternal(recipient, entry.Id, out status);
 				entry.Delivered = ok;
 				entry.Amount = ok ? 1 : 0;
 				if (!ok && !string.IsNullOrWhiteSpace(status))
 				{
-					Log("settlement transfer failed session=" + session.Id + " settlement=" + entry.Id + " status=" + status);
+					Log("fixed asset transfer failed session=" + session.Id + " asset=" + entry.Id + " status=" + status);
 				}
 			}
 		}
@@ -1334,7 +1595,7 @@ public sealed class CourierDeliveryBehavior : CampaignBehaviorBase
 			string fact = "[AFEF玩家行为补充] " + (MyBehavior.BuildPlayerPublicDisplayNameForExternal() ?? "玩家") + "通过信使寄出的信使队在途中被" + destroyerName + "歼灭。";
 			if (!session.DeliveryApplied)
 			{
-				fact += "这封信和随信寄出的物品、金钱、部队或俘虏未能送达；定居点转移没有发生。";
+				fact += "这封信和随信寄出的物品、金钱、部队或俘虏未能送达；固定资产转移没有发生。";
 			}
 			else
 			{
@@ -1343,6 +1604,7 @@ public sealed class CourierDeliveryBehavior : CampaignBehaviorBase
 			MyBehavior.AppendExternalDialogueHistory(recipient, null, null, fact);
 			UntrackCourierMapVisual(destroyedParty, "destroyed");
 			session.Stage = CourierStage.Destroyed.ToString();
+			EndCourierReplyWaitPause(session, "destroyed");
 			lock (_sessionLock)
 			{
 				_sessions.Remove(session.Id);
@@ -1432,6 +1694,7 @@ public sealed class CourierDeliveryBehavior : CampaignBehaviorBase
 		Hero recipient = ResolveRecipient(session);
 		MyBehavior.AppendExternalDialogueHistory(recipient, null, null, "[AFEF玩家行为补充] 玩家派出的信使队失去踪迹，信件与随信物资未能确认送达。");
 		session.Stage = CourierStage.Destroyed.ToString();
+		EndCourierReplyWaitPause(session, "missing");
 		lock (_sessionLock)
 		{
 			_sessions.Remove(session.Id);
@@ -1783,7 +2046,7 @@ public sealed class CourierDeliveryBehavior : CampaignBehaviorBase
 		return false;
 	}
 
-	private static List<object> BuildCourierReplyMessages(Hero recipient, CourierSession session, string extras)
+	private static List<object> BuildCourierReplyMessages(Hero recipient, CourierSession session, string extras, string deliveryFactForPrompt = null, string prebuiltHistory = null)
 	{
 		string npcName = recipient?.Name?.ToString() ?? "NPC";
 		string playerName = MyBehavior.BuildPlayerPublicDisplayNameForExternal();
@@ -1791,21 +2054,29 @@ public sealed class CourierDeliveryBehavior : CampaignBehaviorBase
 		{
 			playerName = Hero.MainHero?.Name?.ToString() ?? "玩家";
 		}
-		string history = MyBehavior.BuildHistoryContextForExternal(recipient, 24, session.LetterText, session.DeliveryFactText);
+		string deliveryFact = string.IsNullOrWhiteSpace(deliveryFactForPrompt) ? (session?.DeliveryFactText ?? "") : deliveryFactForPrompt;
+		string history = prebuiltHistory ?? MyBehavior.BuildHistoryContextForExternal(recipient, 24, session.LetterText, deliveryFact);
 		string recentFacts = MyBehavior.BuildRecentNpcFactContextForExternal(recipient, 6);
+		string senderIdentity = MyBehavior.BuildPlayerCourierSenderIdentityForExternal();
 		string system = "你正在扮演 Mount & Blade II: Bannerlord 世界中的角色：" + npcName + "。\n"
 			+ "这不是面对面对话。你刚刚通过信使收到" + playerName + "写给你的一封信。\n"
+			+ "你必须根据来信者的公开身份选择合适称呼；如果来信者是君主或统治者，不要降格称为勋爵、领主或普通贵族。\n"
 			+ "请只输出你要写在回信中的正文，不要写旁白、动作描写、系统说明或标签解释。\n"
 			+ "如果你认为没有必要回信，可以完全空回复。\n"
-			+ "如果你在回信中明确同意给玩家物品、部队、俘虏或定居点，仍然按已注入的后处理规则在正文语义中表达，标签由后处理阶段生成。";
+			+ "如果你在回信中明确同意给玩家物品、部队、俘虏或固定资产，仍然按已注入的后处理规则在正文语义中表达，标签由后处理阶段生成。";
 		StringBuilder user = new StringBuilder();
 		user.AppendLine("【信件内容】");
 		user.AppendLine(session.LetterText ?? "");
-		if (!string.IsNullOrWhiteSpace(session.DeliveryFactText))
+		if (!string.IsNullOrWhiteSpace(senderIdentity))
+		{
+			user.AppendLine();
+			user.AppendLine(senderIdentity.Trim());
+		}
+		if (!string.IsNullOrWhiteSpace(deliveryFact))
 		{
 			user.AppendLine();
 			user.AppendLine("【随信送达事实】");
-			user.AppendLine(session.DeliveryFactText);
+			user.AppendLine(deliveryFact);
 		}
 		if (!string.IsNullOrWhiteSpace(history))
 		{
@@ -1885,7 +2156,7 @@ public sealed class CourierDeliveryBehavior : CampaignBehaviorBase
 			}
 			else if (entry.Kind == "settlement")
 			{
-				sb.Append("\n[AFEF玩家行为补充] ").Append(playerName).Append(verb).Append("转移了定居点 ").Append(entry.Name).Append("。");
+				sb.Append("\n[AFEF玩家行为补充] ").Append(playerName).Append(verb).Append("转移了固定资产 ").Append(entry.Name).Append("。");
 			}
 		}
 		return sb.ToString().Trim();
@@ -1939,7 +2210,7 @@ public sealed class CourierDeliveryBehavior : CampaignBehaviorBase
 			}
 			else if (entry.Kind == "settlement")
 			{
-				sb.Append("转移定居点 ").Append(entry.Name);
+				sb.Append("转移固定资产 ").Append(entry.Name);
 			}
 			sb.AppendLine();
 		}
@@ -1981,13 +2252,13 @@ public sealed class CourierDeliveryBehavior : CampaignBehaviorBase
 		}
 		if (mode == CourierPayloadMode.GiveSettlements)
 		{
-			foreach (MyBehavior.SettlementTransferPromptEntry entry in MyBehavior.BuildSettlementTransferPromptEntriesForExternal(flow.Recipient, flow.Recipient.CharacterObject).Where(x => x != null && x.Section == MyBehavior.SettlementTransferEntrySection.PlayerFiefs && x.Settlement != null && x.Settlement.IsFortification))
+			foreach (MyBehavior.SettlementTransferPromptEntry entry in MyBehavior.BuildSettlementTransferPromptEntriesForExternal(flow.Recipient, flow.Recipient.CharacterObject).Where(x => x != null && x.Section == MyBehavior.SettlementTransferEntrySection.PlayerFiefs && MyBehavior.IsSettlementTransferEntryValidForExternal(x)))
 			{
 				list.Add(new CourierTradeOption
 				{
 					Kind = "settlement",
-					Id = entry.SettlementId,
-					Name = entry.DisplayName,
+					Id = MyBehavior.GetSettlementTransferAssetIdForExternal(entry),
+					Name = MyBehavior.GetSettlementTransferAssetDisplayNameForExternal(entry),
 					AvailableAmount = 1,
 					SettlementEntry = entry
 				});
@@ -2072,14 +2343,14 @@ public sealed class CourierDeliveryBehavior : CampaignBehaviorBase
 		}
 		if (mode == CourierPayloadMode.GiveSettlements)
 		{
-			return "你当前没有可转移给对方的城市或城堡。";
+			return "你当前没有可转移给对方的固定资产。";
 		}
 		return "你没有可用的物品或第纳尔。";
 	}
 
 	private static string BuildPayloadTitle(CourierPayloadMode mode, string targetName)
 	{
-		string prefix = mode == CourierPayloadMode.Give ? "发送物品并写信" : mode == CourierPayloadMode.Show ? "展示物品并写信" : mode == CourierPayloadMode.GiveTroops ? "转移部队并写信" : mode == CourierPayloadMode.GivePrisoners ? "转移俘虏并写信" : "转移定居点并写信";
+		string prefix = mode == CourierPayloadMode.Give ? "发送物品并写信" : mode == CourierPayloadMode.Show ? "展示物品并写信" : mode == CourierPayloadMode.GiveTroops ? "转移部队并写信" : mode == CourierPayloadMode.GivePrisoners ? "转移俘虏并写信" : "转移固定资产并写信";
 		return prefix + " - " + targetName;
 	}
 
@@ -2095,7 +2366,7 @@ public sealed class CourierDeliveryBehavior : CampaignBehaviorBase
 		}
 		if (mode == CourierPayloadMode.GiveSettlements)
 		{
-			return "当前收件人：" + targetName + "\n选择要随信转给对方家族的城市或城堡（可多选）：";
+			return "当前收件人：" + targetName + "\n选择要随信转给对方的固定资产（可多选）：";
 		}
 		return "当前收件人：" + targetName + "\n选择要" + (mode == CourierPayloadMode.Show ? "展示" : "发送") + "的物品或第纳尔（可多选）：";
 	}
@@ -2921,7 +3192,18 @@ public sealed class CourierDeliveryBehavior : CampaignBehaviorBase
 
 	private static void ResetReplyGenerationAfterLoad(CourierSession session, string reason)
 	{
-		if (session == null || session.ReplyGenerated || ParseStage(session.Stage) != CourierStage.GeneratingReply)
+		if (session == null)
+		{
+			return;
+		}
+		session.ReplyWaitPopupShown = false;
+		if (session.ReplyGenerated || IsTerminalStage(session))
+		{
+			session.ReplyGenerationStarted = false;
+			return;
+		}
+		CourierStage stage = ParseStage(session.Stage);
+		if (!session.ReplyGenerationStarted && stage != CourierStage.GeneratingReply)
 		{
 			return;
 		}
@@ -3014,6 +3296,44 @@ public sealed class CourierDeliveryBehavior : CampaignBehaviorBase
 			return false;
 		}
 		return hits.Any(x => string.Equals((x ?? "").Trim(), value, StringComparison.OrdinalIgnoreCase));
+	}
+
+	private static List<string> MergeCourierSelectedRuleIds(params IEnumerable<string>[] sources)
+	{
+		List<string> result = new List<string>();
+		HashSet<string> seen = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+		try
+		{
+			foreach (IEnumerable<string> source in sources ?? new IEnumerable<string>[0])
+			{
+				foreach (string raw in source ?? Enumerable.Empty<string>())
+				{
+					string value = (raw ?? "").Trim();
+					if (!string.IsNullOrWhiteSpace(value) && seen.Add(value))
+					{
+						result.Add(value);
+					}
+				}
+			}
+		}
+		catch
+		{
+		}
+		return result;
+	}
+
+	private static List<string> ExcludeCourierSelectedRuleIds(List<string> source, IEnumerable<string> excludedRuleIds)
+	{
+		if (source == null || source.Count == 0)
+		{
+			return new List<string>();
+		}
+		HashSet<string> excluded = new HashSet<string>((excludedRuleIds ?? Enumerable.Empty<string>()).Where(x => !string.IsNullOrWhiteSpace(x)).Select(x => x.Trim()), StringComparer.OrdinalIgnoreCase);
+		if (excluded.Count == 0)
+		{
+			return source;
+		}
+		return source.Where(x => !string.IsNullOrWhiteSpace(x) && !excluded.Contains(x.Trim())).ToList();
 	}
 
 	private static string FilterCourierInjectedRuleBlocks(string text, List<string> allowedRuleIds, IEnumerable<string> excludedRuleIds)

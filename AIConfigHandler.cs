@@ -16,8 +16,10 @@ using SandBox.Missions.MissionLogics;
 using SandBox.Objects.Usables;
 using TaleWorlds.CampaignSystem;
 using TaleWorlds.CampaignSystem.ComponentInterfaces;
+using TaleWorlds.CampaignSystem.Party;
 using TaleWorlds.CampaignSystem.Settlements;
 using TaleWorlds.CampaignSystem.Settlements.Locations;
+using TaleWorlds.Core;
 using TaleWorlds.Engine;
 using TaleWorlds.Localization;
 using TaleWorlds.MountAndBlade;
@@ -297,8 +299,6 @@ public static class AIConfigHandler
 
 	public static bool RewardEnabled => _guardrail?.Reward?.IsEnabled == true;
 
-	public const string CompanionTradeBlockedInstruction = "【交易规则】不允许与同伴交易。";
-
 	public static string RewardInstruction => BuildRewardInstructionForExternal();
 
 	public static List<PostprocessRuleEntry> RewardPostprocessRules => _guardrail?.Reward?.PostprocessRules ?? new List<PostprocessRuleEntry>();
@@ -307,16 +307,127 @@ public static class AIConfigHandler
 
 	public static Dictionary<string, string> RewardRuntimeInstructionTemplates => _guardrail?.Reward?.RuntimeInstructionTemplates ?? new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase);
 
-	public static bool IsPlayerCompanionTradeTarget(Hero targetHero)
+	public static bool IsPlayerCompanionOrFamilyTradeTarget(Hero targetHero)
 	{
 		try
 		{
-			return targetHero != null && targetHero.IsPlayerCompanion;
+			if (RomanceSystemBehavior.IsPlayerCompanionOrFamily(targetHero))
+			{
+				return true;
+			}
+			Hero mainHero = Hero.MainHero;
+			Clan playerClan = Clan.PlayerClan ?? mainHero?.Clan;
+			return targetHero != null && targetHero != mainHero && playerClan != null && (targetHero.IsPlayerCompanion || targetHero.CompanionOf == playerClan || targetHero.Clan == playerClan);
 		}
 		catch
 		{
 			return false;
 		}
+	}
+
+	private static bool IsPlayerCompanionOrFamilyExcludedRule(string ruleId)
+	{
+		string text = (ruleId ?? "").Trim();
+		return string.Equals(text, "reward", StringComparison.OrdinalIgnoreCase) || string.Equals(text, "loan", StringComparison.OrdinalIgnoreCase) || string.Equals(text, "vote_deal", StringComparison.OrdinalIgnoreCase) || string.Equals(text, "party_transfer", StringComparison.OrdinalIgnoreCase) || string.Equals(text, "settlement_transfer", StringComparison.OrdinalIgnoreCase);
+	}
+
+	private static bool ShouldExcludePlayerCompanionOrFamilyRulesForConversationTarget()
+	{
+		try
+		{
+			return IsPlayerCompanionOrFamilyTradeTarget(ResolveConversationTargetHero());
+		}
+		catch
+		{
+			return false;
+		}
+	}
+
+	private static bool IsSceneMoveRule(string ruleId)
+	{
+		return string.Equals((ruleId ?? "").Trim(), "scene_mechanism_actions", StringComparison.OrdinalIgnoreCase);
+	}
+
+	public static bool ShouldExcludeSceneMoveRuleForCurrentMission()
+	{
+		try
+		{
+			return ShouldExcludeSceneMoveRuleForMission(Mission.Current);
+		}
+		catch
+		{
+			return false;
+		}
+	}
+
+	private static bool ShouldExcludeSceneMoveRuleForMission(Mission mission)
+	{
+		if (mission == null)
+		{
+			return false;
+		}
+		try
+		{
+			if (LordEncounterBehavior.IsEncounterMeetingMissionActive || MeetingBattleRuntime.IsMeetingActive || mission.GetMissionBehavior<MeetingBattleLockMissionBehavior>() != null)
+			{
+				return true;
+			}
+		}
+		catch
+		{
+		}
+		try
+		{
+			if (TroopInspectionBehavior.ShouldSuppressReinforcementSystem(mission))
+			{
+				return true;
+			}
+		}
+		catch
+		{
+		}
+		try
+		{
+			if (MilitaryExerciseBehavior.IsCurrentExerciseRuntime() && mission.GetMissionBehavior<MilitaryExerciseMissionLogic>() != null)
+			{
+				return true;
+			}
+		}
+		catch
+		{
+		}
+		try
+		{
+			MissionMode mode = mission.Mode;
+			if (mode == MissionMode.Battle || mode == MissionMode.Deployment || mode == MissionMode.Duel || mode == MissionMode.Stealth || mode == MissionMode.Tournament)
+			{
+				return true;
+			}
+		}
+		catch
+		{
+		}
+		try
+		{
+			if (mission.GetMissionBehavior<BattleEndLogic>() != null || mission.GetMissionBehavior<BattleDeploymentMissionController>() != null)
+			{
+				return true;
+			}
+		}
+		catch
+		{
+		}
+		try
+		{
+			if (PlayerEncounterCompat.HasBattleOrEncounteredBattle() || PlayerEncounterCompat.HasCampaignBattleResult())
+			{
+				return true;
+			}
+		}
+		catch
+		{
+		}
+		return false;
 	}
 
 	public static bool LoanEnabled => _guardrail?.Loan?.IsEnabled == true;
@@ -520,6 +631,7 @@ public static class AIConfigHandler
 		marriagePlayerCandidates = NormalizeActionPostprocessNameReferences(marriagePlayerCandidates, npcName);
 		marriageTargetCandidates = NormalizeActionPostprocessNameReferences(marriageTargetCandidates, npcName);
 		marriageFactHint = NormalizeActionPostprocessNameReferences(marriageFactHint, npcName);
+		runtimeContext = AppendPersistentActionPostprocessRuntimeContext(runtimeContext);
 		runtimeContext = NormalizeActionPostprocessNameReferences(runtimeContext, npcName);
 		text = ReplaceActionPostprocessOptionalSection(text, "玩家可见装备：", "player_item_list", playerItemList);
 		text = ReplaceActionPostprocessOptionalSection(text, "{npc_name}的物品清单：", "shared_item_list", sharedItemList);
@@ -534,6 +646,150 @@ public static class AIConfigHandler
 			.Replace("{reply}", string.IsNullOrWhiteSpace(latestReplyBlock) ? "玩家: （无）\nNPC: （无）" : latestReplyBlock.Trim())
 			.Replace("{npc_name}", "NPC");
 		return Regex.Replace(text.Trim(), "(\\r?\\n){3,}", Environment.NewLine + Environment.NewLine);
+	}
+
+	private static string AppendPersistentActionPostprocessRuntimeContext(string runtimeContext)
+	{
+		string text = (runtimeContext ?? "").Trim();
+		List<string> facts = new List<string>();
+		string playerId = "";
+		try
+		{
+			playerId = (Hero.MainHero?.StringId ?? "").Trim();
+		}
+		catch
+		{
+			playerId = "";
+		}
+		if (!string.IsNullOrWhiteSpace(playerId) && text.IndexOf("hero:" + playerId, StringComparison.OrdinalIgnoreCase) < 0)
+		{
+			facts.Add("【固定实体ID】玩家本人固定ID：hero:" + playerId + "。当后处理标签需要指向玩家本人或玩家主队所属英雄时，只能使用此ID；不要猜测玩家ID。");
+		}
+		string locationFact = BuildActionPostprocessPlayerCurrentLocationFact();
+		if (!string.IsNullOrWhiteSpace(locationFact) && text.IndexOf("【玩家当前地点ID】", StringComparison.OrdinalIgnoreCase) < 0)
+		{
+			facts.Add(locationFact);
+		}
+		if (facts.Count == 0)
+		{
+			return text;
+		}
+		string factText = string.Join(Environment.NewLine, facts.Where((string x) => !string.IsNullOrWhiteSpace(x)));
+		if (string.IsNullOrWhiteSpace(text))
+		{
+			return factText.Trim();
+		}
+		return (text + Environment.NewLine + factText).Trim();
+	}
+
+	private static string BuildActionPostprocessPlayerCurrentLocationFact()
+	{
+		try
+		{
+			Settlement settlement = null;
+			string source = "";
+			try
+			{
+				settlement = Settlement.CurrentSettlement;
+				if (settlement != null)
+				{
+					source = "当前场景定居点";
+				}
+			}
+			catch
+			{
+				settlement = null;
+			}
+			if (settlement == null)
+			{
+				try
+				{
+					settlement = MobileParty.MainParty?.CurrentSettlement;
+					if (settlement != null)
+					{
+						source = "玩家主队所在定居点";
+					}
+				}
+				catch
+				{
+					settlement = null;
+				}
+			}
+			if (settlement == null)
+			{
+				try
+				{
+					settlement = Hero.MainHero?.CurrentSettlement;
+					if (settlement != null)
+					{
+						source = "玩家英雄所在定居点";
+					}
+				}
+				catch
+				{
+					settlement = null;
+				}
+			}
+			if (settlement != null)
+			{
+				string settlementId = (settlement.StringId ?? "").Trim();
+				string settlementName = (settlement.Name?.ToString() ?? settlementId).Trim();
+				string type = settlement.IsTown ? "城镇" : (settlement.IsCastle ? "城堡" : (settlement.IsVillage ? "村庄" : (settlement.IsHideout ? "藏身处" : "定居点")));
+				if (string.IsNullOrWhiteSpace(settlementId))
+				{
+					return "";
+				}
+				StringBuilder sb = new StringBuilder();
+				sb.Append("【玩家当前地点ID】当前定居点：settlement:" + settlementId + "；名称：" + settlementName + "；类型：" + type);
+				if (!string.IsNullOrWhiteSpace(source))
+				{
+					sb.Append("；来源：" + source);
+				}
+				sb.Append("。若玩家在<latest_reply>语境中说“这里”“此地”“本城”“当前地点”“我们所在的地方”，且动作标签需要 settlement 目标，优先使用此 settlement ID。");
+				return sb.ToString();
+			}
+			Settlement nearest = ResolveNearestSettlementToMainPartyForPostprocess(out float distance);
+			if (nearest != null)
+			{
+				string settlementId = (nearest.StringId ?? "").Trim();
+				string settlementName = (nearest.Name?.ToString() ?? settlementId).Trim();
+				if (!string.IsNullOrWhiteSpace(settlementId))
+				{
+					return "【玩家当前地点ID】当前未处于定居点内；最近定居点：settlement:" + settlementId + "；名称：" + settlementName + "；距离：" + distance.ToString("0.0") + "。只有当玩家明确说“附近”“最近的定居点”等语义时才使用最近定居点；不要把它误当作玩家脚下当前地点。";
+				}
+			}
+		}
+		catch
+		{
+		}
+		return "";
+	}
+
+	private static Settlement ResolveNearestSettlementToMainPartyForPostprocess(out float distance)
+	{
+		distance = 0f;
+		try
+		{
+			MobileParty party = MobileParty.MainParty;
+			if (party == null || Settlement.All == null)
+			{
+				return null;
+			}
+			Settlement nearest = Settlement.All
+				.Where((Settlement x) => x != null && !x.IsHideout)
+				.OrderBy((Settlement x) => x.GatePosition.DistanceSquared(party.Position))
+				.FirstOrDefault();
+			if (nearest != null)
+			{
+				distance = nearest.GatePosition.Distance(party.Position);
+			}
+			return nearest;
+		}
+		catch
+		{
+			distance = 0f;
+			return null;
+		}
 	}
 
 	public static string PrepareActionPostprocessHistoryText(string historyText)
@@ -1120,13 +1376,24 @@ public static class AIConfigHandler
 		{
 			return false;
 		}
+		if (IsPlayerCompanionOrFamilyExcludedRule(text) && ShouldExcludePlayerCompanionOrFamilyRulesForConversationTarget())
+		{
+			return false;
+		}
+		if (IsSceneMoveRule(text) && ShouldExcludeSceneMoveRuleForCurrentMission())
+		{
+			return false;
+		}
 		if (!string.Equals(text, "vanilla_issue", StringComparison.OrdinalIgnoreCase))
 		{
 			return true;
 		}
 		try
 		{
-			return ResolveConversationTargetHero() != null;
+			return ResolveConversationTargetHero() != null
+				|| ResolveConversationTargetCharacter() != null
+				|| !string.IsNullOrWhiteSpace(ResolveRuntimeTargetTroopId())
+				|| !string.IsNullOrWhiteSpace(ResolveRuntimeTargetUnnamedRank());
 		}
 		catch
 		{
@@ -2053,6 +2320,7 @@ public static class AIConfigHandler
 			{
 				text2 = text2.Replace(item, "玩家");
 			}
+			text2 = text2.Replace("玩家（玩家）", "玩家").Replace("玩家(玩家)", "玩家");
 			return text2;
 		}
 		catch
@@ -2338,7 +2606,7 @@ public static class AIConfigHandler
 			AppendAuxiliaryDialogueHistoryLines(list, GetAuxiliarySceneDialogueHistoryContext());
 			AppendAuxiliaryDialogueHistoryLines(list, runtimeGuardrailContext);
 			string text3 = NormalizeSemanticText(secondaryText);
-			if (!string.IsNullOrWhiteSpace(text3))
+			if (!string.IsNullOrWhiteSpace(text3) && !IsAuxiliarySceneShoutObserverLine(text3))
 			{
 				latestNpcText = text3;
 			}
@@ -2390,15 +2658,72 @@ public static class AIConfigHandler
 		{
 			return "";
 		}
+		if (IsAuxiliaryPlayerHistoryLine(text))
+		{
+			return NormalizeAuxiliaryPlayerRoutingLine(text);
+		}
 		const string value = "\u0001AF_NONE_ASCII\u0001";
 		const string value2 = "\u0001AF_NONE_CN\u0001";
 		text = text.Replace("(none)", value).Replace("（无）", value2);
-		text = Regex.Replace(text, "（[^（）]*）", "", RegexOptions.CultureInvariant);
-		text = Regex.Replace(text, "\\([^()]*\\)", "", RegexOptions.CultureInvariant);
+		text = RemoveAuxiliaryInnerThoughtSegments(text, '（', '）');
+		text = RemoveAuxiliaryInnerThoughtSegments(text, '(', ')');
 		text = Regex.Replace(text, "[ \\t]{2,}", " ", RegexOptions.CultureInvariant);
 		text = text.Replace(value, "(none)").Replace(value2, "（无）");
 		text = text.Trim();
 		text = text.TrimStart('，', '。', '、', '；', '：', ',', ';', ':');
+		return text.Trim();
+	}
+
+	private static string RemoveAuxiliaryInnerThoughtSegments(string text, char open, char close)
+	{
+		string value = text ?? "";
+		if (string.IsNullOrEmpty(value) || value.IndexOf(open) < 0)
+		{
+			return value;
+		}
+		StringBuilder stringBuilder = new StringBuilder(value.Length);
+		for (int i = 0; i < value.Length; i++)
+		{
+			char c = value[i];
+			if (c != open)
+			{
+				stringBuilder.Append(c);
+				continue;
+			}
+			int depth = 1;
+			i++;
+			for (; i < value.Length; i++)
+			{
+				char c2 = value[i];
+				if (c2 == open)
+				{
+					depth++;
+				}
+				else if (c2 == close)
+				{
+					depth--;
+					if (depth <= 0)
+					{
+						break;
+					}
+				}
+			}
+			if (i >= value.Length)
+			{
+				break;
+			}
+		}
+		return stringBuilder.ToString();
+	}
+
+	private static string NormalizeAuxiliaryPlayerRoutingLine(string line)
+	{
+		string text = NormalizeSemanticText(line);
+		if (string.IsNullOrWhiteSpace(text))
+		{
+			return "";
+		}
+		text = Regex.Replace(text, "[ \\t]{2,}", " ", RegexOptions.CultureInvariant);
 		return text.Trim();
 	}
 
@@ -2418,6 +2743,10 @@ public static class AIConfigHandler
 				{
 					continue;
 				}
+				if (IsAuxiliarySceneShoutObserverLine(text2))
+				{
+					continue;
+				}
 				string text3 = ExtractAuxiliaryHistoryUtterance(text2);
 				if (!string.IsNullOrWhiteSpace(text) && string.Equals(text3, text, StringComparison.Ordinal))
 				{
@@ -2430,6 +2759,21 @@ public static class AIConfigHandler
 		{
 		}
 		return "";
+	}
+
+	private static bool IsAuxiliarySceneShoutObserverLine(string line)
+	{
+		string text = NormalizeSemanticText(line);
+		if (string.IsNullOrWhiteSpace(text))
+		{
+			return false;
+		}
+		int startIndex = GetAuxiliaryHistorySpeakerSearchStart(text);
+		if (startIndex > 0 && startIndex < text.Length)
+		{
+			text = text.Substring(startIndex).TrimStart();
+		}
+		return text.StartsWith("[场景喊话]", StringComparison.Ordinal);
 	}
 
 	private static void TrimAuxiliaryLatestDialogueLines(List<string> lines, string latestNpcText, string latestPlayerText)
@@ -2496,7 +2840,7 @@ public static class AIConfigHandler
 		{
 			return NormalizeSemanticText(text.Substring(value2.Length));
 		}
-		int num = text.IndexOfAny(new char[2] { ':', '：' });
+		int num = FindAuxiliaryHistorySpeakerDelimiter(text);
 		if (num >= 0 && num + 1 < text.Length)
 		{
 			return NormalizeSemanticText(text.Substring(num + 1));
@@ -2511,9 +2855,64 @@ public static class AIConfigHandler
 		{
 			return false;
 		}
-		int num = text.IndexOfAny(new char[2] { ':', '：' });
-		string text2 = ((num >= 0) ? text.Substring(0, num).Trim() : text);
+		string text2 = GetAuxiliaryHistorySpeakerPrefix(text);
 		return text2.Equals("玩家", StringComparison.OrdinalIgnoreCase) || text2.Equals("你", StringComparison.OrdinalIgnoreCase) || text2.Equals("Player", StringComparison.OrdinalIgnoreCase) || text2.Equals("You", StringComparison.OrdinalIgnoreCase) || text2.EndsWith(" says to you", StringComparison.OrdinalIgnoreCase) || (text2.Contains("对") && text2.EndsWith("说", StringComparison.Ordinal));
+	}
+
+	private static string GetAuxiliaryHistorySpeakerPrefix(string line)
+	{
+		string text = NormalizeSemanticText(line);
+		if (string.IsNullOrWhiteSpace(text))
+		{
+			return "";
+		}
+		int num = FindAuxiliaryHistorySpeakerDelimiter(text);
+		if (num >= 0)
+		{
+			int startIndex = GetAuxiliaryHistorySpeakerSearchStart(text);
+			if (startIndex < num)
+			{
+				return text.Substring(startIndex, num - startIndex).Trim();
+			}
+			return text.Substring(0, num).Trim();
+		}
+		int num2 = GetAuxiliaryHistorySpeakerSearchStart(text);
+		return num2 < text.Length ? text.Substring(num2).Trim() : text.Trim();
+	}
+
+	private static int FindAuxiliaryHistorySpeakerDelimiter(string line)
+	{
+		string text = NormalizeSemanticText(line);
+		if (string.IsNullOrWhiteSpace(text))
+		{
+			return -1;
+		}
+		int startIndex = GetAuxiliaryHistorySpeakerSearchStart(text);
+		int num = text.IndexOfAny(new char[2] { ':', '：' }, startIndex);
+		if (num >= 0)
+		{
+			return num;
+		}
+		return text.IndexOfAny(new char[2] { ':', '：' });
+	}
+
+	private static int GetAuxiliaryHistorySpeakerSearchStart(string line)
+	{
+		string text = NormalizeSemanticText(line);
+		if (string.IsNullOrWhiteSpace(text))
+		{
+			return 0;
+		}
+		if (!text.StartsWith("[", StringComparison.Ordinal) && !text.StartsWith("AF_SCENE_SESSION", StringComparison.Ordinal) && !text.StartsWith("_SCENE_SESSION", StringComparison.Ordinal) && !text.StartsWith("SCENE_SESSION", StringComparison.Ordinal))
+		{
+			return 0;
+		}
+		int num = text.IndexOf(']');
+		if (num >= 0 && num + 1 < text.Length && num <= 64)
+		{
+			return num + 1;
+		}
+		return 0;
 	}
 
 	private static void AppendAuxiliaryDialogueHistoryLines(List<string> lines, string block)
@@ -2657,7 +3056,7 @@ public static class AIConfigHandler
 		string latestNpcText;
 		string historyBlock = BuildAuxiliaryGuardrailHistoryBlock(runtimeGuardrailContext, secondaryText, userText, out latestNpcText);
 		string text2 = StripAuxiliaryHistoryInnerThoughtsFromLine(NormalizeSemanticText(latestNpcText));
-		string text5 = StripAuxiliaryHistoryInnerThoughtsFromLine(text);
+		string text5 = NormalizeAuxiliaryPlayerRoutingLine(text);
 		StringBuilder stringBuilder = new StringBuilder();
 		stringBuilder.AppendLine("You are a dialogue retrieval tool. Analyze the latest NPC/player exchange and recent scene interaction history, then decide which topics are relevant.");
 		for (int i = 0; i < topics.Count; i++)
@@ -2712,6 +3111,11 @@ public static class AIConfigHandler
 			}
 			if ((flag || flag2) && !string.IsNullOrWhiteSpace(text2))
 			{
+				if (flag2 && IsAuxiliaryPlayerHistoryLine(text2))
+				{
+					array[i] = NormalizeAuxiliaryPlayerRoutingLine(array[i]);
+					continue;
+				}
 				array[i] = StripAuxiliaryHistoryInnerThoughtsFromLine(array[i]);
 			}
 		}
@@ -3289,6 +3693,11 @@ public static class AIConfigHandler
 
 	public static bool TryCallAuxiliaryRuleCodesForExternal(string userText, string secondaryText, string runtimeGuardrailContext, int topN, out List<string> ruleIds, out string error)
 	{
+		return TryCallAuxiliaryRuleCodesForExternal(userText, secondaryText, runtimeGuardrailContext, topN, out ruleIds, out error, null);
+	}
+
+	public static bool TryCallAuxiliaryRuleCodesForExternal(string userText, string secondaryText, string runtimeGuardrailContext, int topN, out List<string> ruleIds, out string error, IEnumerable<string> excludedRuleIds)
+	{
 		ruleIds = new List<string>();
 		error = "";
 		try
@@ -3304,7 +3713,8 @@ public static class AIConfigHandler
 				error = "no_enabled_rule_topics";
 				return false;
 			}
-			List<GuardrailAuxiliaryTopic> topics = GetEligibleAuxiliaryGuardrailTopics(allEnabledRulePrompts.Select((GuardrailRulePromptConfig x) => x?.Id ?? ""));
+			HashSet<string> excluded = BuildExcludedRuleIdSet(excludedRuleIds);
+			List<GuardrailAuxiliaryTopic> topics = GetEligibleAuxiliaryGuardrailTopics(allEnabledRulePrompts.Select((GuardrailRulePromptConfig x) => x?.Id ?? "").Where((string x) => !excluded.Contains((x ?? "").Trim())));
 			if (topics.Count <= 0)
 			{
 				error = "no_eligible_rule_topics";
@@ -3974,10 +4384,10 @@ public static class AIConfigHandler
 		return list;
 	}
 
-	private static bool TryGetRuleEval(string userText, string secondaryText, string ruleTag, out GuardrailRuleEval eval)
+	private static bool TryGetRuleEval(string userText, string secondaryText, string ruleTag, out GuardrailRuleEval eval, IEnumerable<string> excludedRuleIds = null)
 	{
 		eval = null;
-		if (!TryGetGuardrailEvalSnapshot(userText, secondaryText, out var snapshot) || snapshot == null || snapshot.Rules == null)
+		if (!TryGetGuardrailEvalSnapshot(userText, secondaryText, out var snapshot, excludedRuleIds) || snapshot == null || snapshot.Rules == null)
 		{
 			return false;
 		}
@@ -4006,16 +4416,33 @@ public static class AIConfigHandler
 		return IsGuardrailSemanticHit(input, null, ruleTag, ruleInstruction, triggerKeywords, out matchedKeyword, out score);
 	}
 
-	public static bool IsGuardrailSemanticHit(string input, string secondaryInput, string ruleTag, string ruleInstruction, List<string> triggerKeywords, out string matchedKeyword, out float score)
+	public static bool IsGuardrailSemanticHit(string input, string secondaryInput, string ruleTag, string ruleInstruction, List<string> triggerKeywords, out string matchedKeyword, out float score, IEnumerable<string> excludedRuleIds = null)
 	{
 		matchedKeyword = "";
 		score = 0f;
+		HashSet<string> excluded = BuildExcludedRuleIdSet(excludedRuleIds);
+		string normalizedRuleTag = NormalizeSemanticText(ruleTag);
+		if (!string.IsNullOrWhiteSpace(normalizedRuleTag) && excluded.Contains(normalizedRuleTag))
+		{
+			Logger.Log("GuardrailSemantic", "rule=" + ruleTag + " hit=False mode=blocked_excluded_rule");
+			return false;
+		}
+		if (IsPlayerCompanionOrFamilyExcludedRule(ruleTag) && ShouldExcludePlayerCompanionOrFamilyRulesForConversationTarget())
+		{
+			Logger.Log("GuardrailSemantic", "rule=" + ruleTag + " hit=False mode=blocked_player_companion_or_family_rule");
+			return false;
+		}
+		if (IsSceneMoveRule(ruleTag) && ShouldExcludeSceneMoveRuleForCurrentMission())
+		{
+			Logger.Log("GuardrailSemantic", "rule=" + ruleTag + " hit=False mode=blocked_scene_move_mission");
+			return false;
+		}
 		string text = NormalizeSemanticText(input);
 		if (string.IsNullOrWhiteSpace(text))
 		{
 			return false;
 		}
-		if (TryGetRuleEval(text, secondaryInput, ruleTag, out var eval))
+		if (TryGetRuleEval(text, secondaryInput, ruleTag, out var eval, excluded))
 		{
 			matchedKeyword = (string.IsNullOrWhiteSpace(eval.MatchedSeed) ? "semantic_seed" : eval.MatchedSeed);
 			score = eval.AmpScore;
@@ -4121,6 +4548,18 @@ public static class AIConfigHandler
 					set.Add(text);
 				}
 			}
+			if (ShouldExcludePlayerCompanionOrFamilyRulesForConversationTarget())
+			{
+				set.Add("reward");
+				set.Add("loan");
+				set.Add("vote_deal");
+				set.Add("party_transfer");
+				set.Add("settlement_transfer");
+			}
+			if (ShouldExcludeSceneMoveRuleForCurrentMission())
+			{
+				set.Add("scene_mechanism_actions");
+			}
 		}
 		catch
 		{
@@ -4163,12 +4602,13 @@ public static class AIConfigHandler
 		return false;
 	}
 
-	private static List<GuardrailRuleHit> GetGuardrailLexicalRuleHits(string input, string secondaryInput, int maxCount = 0, bool includeBuiltInRules = false)
+	private static List<GuardrailRuleHit> GetGuardrailLexicalRuleHits(string input, string secondaryInput, int maxCount = 0, bool includeBuiltInRules = false, IEnumerable<string> excludedRuleIds = null)
 	{
 		List<GuardrailRuleHit> list = new List<GuardrailRuleHit>();
 		try
 		{
 			int num = ((maxCount > 0) ? ClampGuardrailReturnCap(maxCount) : GuardrailRuleReturnCap);
+			HashSet<string> excluded = BuildExcludedRuleIdSet(excludedRuleIds);
 			Dictionary<string, GuardrailRulePromptConfig> dictionary = BuildRulePromptRegistry();
 			if (dictionary == null || dictionary.Count <= 0)
 			{
@@ -4177,7 +4617,7 @@ public static class AIConfigHandler
 			foreach (GuardrailRulePromptConfig value in dictionary.Values)
 			{
 				string text = (value?.Id ?? "").Trim().ToLowerInvariant();
-				if (value == null || !value.IsEnabled || string.IsNullOrWhiteSpace(text) || (!includeBuiltInRules && IsBuiltInRuleTag(text)) || !IsRuleCurrentlyEligibleForRag(text))
+				if (value == null || !value.IsEnabled || string.IsNullOrWhiteSpace(text) || excluded.Contains(text) || (!includeBuiltInRules && IsBuiltInRuleTag(text)) || !IsRuleCurrentlyEligibleForRag(text))
 				{
 					continue;
 				}
@@ -4346,7 +4786,7 @@ public static class AIConfigHandler
 		}
 	}
 
-	private static bool ShouldStartStickyGuardrailRule(string input, string secondaryInput, GuardrailRuleHit hit, int rank)
+	private static bool ShouldStartStickyGuardrailRule(string input, string secondaryInput, GuardrailRuleHit hit, int rank, IEnumerable<string> excludedRuleIds = null)
 	{
 		if (hit == null)
 		{
@@ -4361,7 +4801,7 @@ public static class AIConfigHandler
 		{
 			return true;
 		}
-		if (TryGetRuleEval(input, secondaryInput, text, out var eval) && eval != null && eval.Hit)
+		if (TryGetRuleEval(input, secondaryInput, text, out var eval, excludedRuleIds) && eval != null && eval.Hit)
 		{
 			if (eval.ForceHit || eval.HighAmpHit || eval.AbsHit)
 			{
@@ -4417,9 +4857,10 @@ public static class AIConfigHandler
 		return Math.Max(0.18f, num * num2);
 	}
 
-	private static List<GuardrailRuleHit> MergeStickyGuardrailRuleHits(string input, string secondaryInput, List<GuardrailRuleHit> liveHits, int maxCount)
+	private static List<GuardrailRuleHit> MergeStickyGuardrailRuleHits(string input, string secondaryInput, List<GuardrailRuleHit> liveHits, int maxCount, IEnumerable<string> excludedRuleIds = null)
 	{
-		List<GuardrailRuleHit> list = (liveHits ?? new List<GuardrailRuleHit>()).Where((GuardrailRuleHit x) => x != null && !string.IsNullOrWhiteSpace(x.RuleId)).OrderByDescending((GuardrailRuleHit x) => x.Priority).ThenByDescending((GuardrailRuleHit x) => x.Score).ThenBy((GuardrailRuleHit x) => x.RuleId, StringComparer.OrdinalIgnoreCase).ToList();
+		HashSet<string> excluded = BuildExcludedRuleIdSet(excludedRuleIds);
+		List<GuardrailRuleHit> list = (liveHits ?? new List<GuardrailRuleHit>()).Where((GuardrailRuleHit x) => x != null && !string.IsNullOrWhiteSpace(x.RuleId) && !excluded.Contains((x.RuleId ?? "").Trim())).OrderByDescending((GuardrailRuleHit x) => x.Priority).ThenByDescending((GuardrailRuleHit x) => x.Score).ThenBy((GuardrailRuleHit x) => x.RuleId, StringComparer.OrdinalIgnoreCase).ToList();
 		int num = ((maxCount > 0) ? ClampGuardrailReturnCap(maxCount) : GuardrailRuleReturnCap);
 		string text = ResolveGuardrailStickyTargetKey();
 		if (string.IsNullOrWhiteSpace(text))
@@ -4441,11 +4882,20 @@ public static class AIConfigHandler
 			for (int i = 0; i < value.Count; i++)
 			{
 				StickyGuardrailRuleState stickyGuardrailRuleState = value[i];
-				if (stickyGuardrailRuleState == null || string.IsNullOrWhiteSpace(stickyGuardrailRuleState.RuleId) || hashSet.Contains(stickyGuardrailRuleState.RuleId))
+				if (stickyGuardrailRuleState == null || string.IsNullOrWhiteSpace(stickyGuardrailRuleState.RuleId))
 				{
 					continue;
 				}
 				string text2 = stickyGuardrailRuleState.RuleId.Trim();
+				if (excluded.Contains(text2))
+				{
+					list3.Add(stickyGuardrailRuleState);
+					continue;
+				}
+				if (hashSet.Contains(stickyGuardrailRuleState.RuleId))
+				{
+					continue;
+				}
 				if (GetStickyGuardrailTurnLimit(text2) <= 0 || !dictionary.TryGetValue(text2, out var value2) || value2 == null || !value2.IsEnabled)
 				{
 					continue;
@@ -4475,7 +4925,7 @@ public static class AIConfigHandler
 			for (int j = 0; j < list.Count; j++)
 			{
 				GuardrailRuleHit guardrailRuleHit = list[j];
-				if (!ShouldStartStickyGuardrailRule(input, secondaryInput, guardrailRuleHit, j))
+				if (!ShouldStartStickyGuardrailRule(input, secondaryInput, guardrailRuleHit, j, excluded))
 				{
 					continue;
 				}
@@ -4548,7 +4998,7 @@ public static class AIConfigHandler
 		return list;
 	}
 
-	private static string BuildExtraRuleHitDebugDetail(string input, string secondaryInput, GuardrailRuleHit hit)
+	private static string BuildExtraRuleHitDebugDetail(string input, string secondaryInput, GuardrailRuleHit hit, IEnumerable<string> excludedRuleIds = null)
 	{
 		try
 		{
@@ -4558,7 +5008,7 @@ public static class AIConfigHandler
 			}
 			string text = NormalizeSemanticText(input);
 			string text2 = (hit.RuleId ?? "").Trim();
-			if (!string.IsNullOrWhiteSpace(text) && !string.IsNullOrWhiteSpace(text2) && TryGetRuleEval(text, secondaryInput, text2, out var eval) && eval != null)
+			if (!string.IsNullOrWhiteSpace(text) && !string.IsNullOrWhiteSpace(text2) && TryGetRuleEval(text, secondaryInput, text2, out var eval, excludedRuleIds) && eval != null)
 			{
 				string text3 = NormalizeSemanticText(eval.MatchedIntent);
 				if (text3.Length > 48)
@@ -4601,14 +5051,20 @@ public static class AIConfigHandler
 
 	public static string BuildMatchedExtraRuleInstructions(string input, string secondaryInput, int maxRules, bool hasAnyHero)
 	{
+		return BuildMatchedExtraRuleInstructions(input, secondaryInput, maxRules, hasAnyHero, null);
+	}
+
+	public static string BuildMatchedExtraRuleInstructions(string input, string secondaryInput, int maxRules, bool hasAnyHero, IEnumerable<string> excludedRuleIds)
+	{
 		try
 		{
-			List<GuardrailRuleHit> guardrailSemanticRuleHits = GetGuardrailSemanticRuleHits(input, secondaryInput, maxRules);
+			HashSet<string> excluded = BuildExcludedRuleIdSet(excludedRuleIds);
+			List<GuardrailRuleHit> guardrailSemanticRuleHits = GetGuardrailSemanticRuleHits(input, secondaryInput, maxRules, includeBuiltInRules: false, excludedRuleIds: excluded);
 			if (guardrailSemanticRuleHits == null || guardrailSemanticRuleHits.Count <= 0)
 			{
-				guardrailSemanticRuleHits = GetGuardrailLexicalRuleHits(input, secondaryInput, maxRules);
+				guardrailSemanticRuleHits = GetGuardrailLexicalRuleHits(input, secondaryInput, maxRules, includeBuiltInRules: false, excludedRuleIds: excluded);
 			}
-			guardrailSemanticRuleHits = MergeStickyGuardrailRuleHits(input, secondaryInput, guardrailSemanticRuleHits, maxRules);
+			guardrailSemanticRuleHits = MergeStickyGuardrailRuleHits(input, secondaryInput, guardrailSemanticRuleHits, maxRules, excluded);
 			if (guardrailSemanticRuleHits == null || guardrailSemanticRuleHits.Count <= 0)
 			{
 				return "";
@@ -4637,9 +5093,9 @@ public static class AIConfigHandler
 						value = text2;
 					}
 				}
-				if (hasAnyHero && string.Equals(text, "reward", StringComparison.OrdinalIgnoreCase) && IsPlayerCompanionTradeTarget(ResolveConversationTargetHero()))
+				if (hasAnyHero && IsPlayerCompanionOrFamilyExcludedRule(text) && ShouldExcludePlayerCompanionOrFamilyRulesForConversationTarget())
 				{
-					value = CompanionTradeBlockedInstruction;
+					continue;
 				}
 				if ((hasAnyHero || IsPlayerKingdomRecruitmentModeActive()) && string.Equals(text, "kingdom_service", StringComparison.OrdinalIgnoreCase))
 				{
@@ -4704,7 +5160,7 @@ public static class AIConfigHandler
 					}
 					try
 					{
-						Logger.Log("GuardrailSemantic", $"extra_rule_hit rule={text} score={guardrailRuleHit.Score:0.000} group={guardrailRuleHit.Group} priority={guardrailRuleHit.Priority} nonHero={!hasAnyHero}{BuildExtraRuleHitDebugDetail(input, secondaryInput, guardrailRuleHit)}");
+						Logger.Log("GuardrailSemantic", $"extra_rule_hit rule={text} score={guardrailRuleHit.Score:0.000} group={guardrailRuleHit.Group} priority={guardrailRuleHit.Priority} nonHero={!hasAnyHero}{BuildExtraRuleHitDebugDetail(input, secondaryInput, guardrailRuleHit, excluded)}");
 					}
 					catch
 					{
@@ -4936,9 +5392,9 @@ public static class AIConfigHandler
 		{
 			Hero hero = targetHero ?? ResolveConversationTargetHero();
 			CharacterObject characterObject = targetCharacter ?? ResolveConversationTargetCharacter();
-			if (IsPlayerCompanionTradeTarget(hero))
+			if (IsPlayerCompanionOrFamilyTradeTarget(hero))
 			{
-				return CompanionTradeBlockedInstruction;
+				return "";
 			}
 			string text = ApplyPlayerDisplayNameToGuardrailText(_guardrail?.Reward?.Instruction ?? "");
 			string text2 = ApplyRuntimeTemplate(text, BuildRewardRuntimeTokens(hero, characterObject));
@@ -5018,9 +5474,9 @@ public static class AIConfigHandler
 		{
 			Hero hero = targetHero ?? ResolveConversationTargetHero();
 			CharacterObject characterObject = targetCharacter ?? ResolveConversationTargetCharacter();
-			if (IsPlayerCompanionTradeTarget(hero))
+			if (IsPlayerCompanionOrFamilyTradeTarget(hero))
 			{
-				return CompanionTradeBlockedInstruction;
+				return "";
 			}
 			int num = 6;
 			try

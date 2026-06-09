@@ -3022,6 +3022,11 @@ public class LordEncounterBehavior : CampaignBehaviorBase
 		return mainHero != null && mainHero.MaxHitPoints > 0 && (float)mainHero.HitPoints / mainHero.MaxHitPoints < PlayerMeetingMinimumHealthRatio;
 	}
 
+	private static bool IsTargetHeroHealthTooLowForMeeting(Hero target)
+	{
+		return target != null && target != Hero.MainHero && target.IsLord && target.MaxHitPoints > 0 && (float)target.HitPoints / target.MaxHitPoints < PlayerMeetingMinimumHealthRatio;
+	}
+
 	private static string GetLowHealthMeetingBlockedMessage(Hero target)
 	{
 		string text = target?.Name?.ToString();
@@ -3030,6 +3035,16 @@ public class LordEncounterBehavior : CampaignBehaviorBase
 			text = "该NPC";
 		}
 		return "你的健康状况不允许你与" + text + "会面";
+	}
+
+	private static string GetTargetLowHealthMeetingBlockedMessage(Hero target)
+	{
+		string text = target?.Name?.ToString();
+		if (string.IsNullOrWhiteSpace(text))
+		{
+			text = "该领主";
+		}
+		return text + " 的血量低于 21%，暂时无法与你会面。";
 	}
 
 	private static void DisplayLowHealthMeetingBlockedMessageOnce(Hero target, string message)
@@ -3113,6 +3128,13 @@ public class LordEncounterBehavior : CampaignBehaviorBase
 				args.Tooltip = new TextObject(text);
 				DisplayLowHealthMeetingBlockedMessageOnce(hero, text);
 			}
+			else if (IsTargetHeroHealthTooLowForMeeting(hero))
+			{
+				args.IsEnabled = false;
+				string text2 = GetTargetLowHealthMeetingBlockedMessage(hero);
+				args.Tooltip = new TextObject(text2);
+				DisplayLowHealthMeetingBlockedMessageOnce(hero, text2);
+			}
 			else
 			{
 				ClearLowHealthMeetingBlockedMessageState();
@@ -3130,6 +3152,11 @@ public class LordEncounterBehavior : CampaignBehaviorBase
 			if (IsMainHeroHealthTooLowForMeeting())
 			{
 				AnimusForgeQuickInfo.Show(GetLowHealthMeetingBlockedMessage(hero), hero.CharacterObject);
+				return;
+			}
+			if (IsTargetHeroHealthTooLowForMeeting(hero))
+			{
+				AnimusForgeQuickInfo.Show(GetTargetLowHealthMeetingBlockedMessage(hero), hero.CharacterObject);
 				return;
 			}
 			IsOpeningConversation = true;
@@ -3522,7 +3549,7 @@ public class LordEncounterBehavior : CampaignBehaviorBase
 		{
 			return "你已警告过" + text + "。若还忍不了，就在句末输出[ACTION:MEETING_TAUNT_BATTLE]；这会把当前会面立刻升级为战斗，并按玩家攻击了你方军队来处理后果。";
 		}
-		return "若" + text + "辱骂，贬低或者挑衅你，可在句末输出[ACTION:MEETING_TAUNT_WARN]警告他；若忍无可忍，可直接输出[ACTION:MEETING_TAUNT_BATTLE]。这会把当前会面立刻升级为战斗，并按玩家攻击了你方军队来处理后果，注意，此标签和单挑无关，而是正式的全面战争";
+		return "若" + text + "辱骂，贬低或者挑衅你，可在句末输出[ACTION:MEETING_TAUNT_WARN]警告他；若忍无可忍，可直接输出[ACTION:MEETING_TAUNT_BATTLE],此标签会把当前会面立刻升级为战斗，并按玩家攻击了你方军队来处理后果，注意，此标签和单挑无关，而是正式的全面战争";
 	}
 
 	private static int GetRelationToPlayerSafe(Hero hero)
@@ -3919,6 +3946,16 @@ public class LordEncounterBehavior : CampaignBehaviorBase
 					Logger.Log("LordEncounter", "StartMeeting aborted because target hero is null.");
 					return;
 				}
+			}
+			if (IsMainHeroHealthTooLowForMeeting())
+			{
+				AnimusForgeQuickInfo.Show(GetLowHealthMeetingBlockedMessage(target), target.CharacterObject);
+				return;
+			}
+			if (IsTargetHeroHealthTooLowForMeeting(target))
+			{
+				AnimusForgeQuickInfo.Show(GetTargetLowHealthMeetingBlockedMessage(target), target.CharacterObject);
+				return;
 			}
 			SetTarget(target);
 			ClearMeetingPlayerReleaseAuthorization("start_meeting");

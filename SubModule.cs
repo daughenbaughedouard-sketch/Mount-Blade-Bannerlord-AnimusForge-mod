@@ -307,6 +307,7 @@ public class SubModule : MBSubModuleBase
 			campaignGameStarter.AddBehavior(new ShoutBehavior());
 			campaignGameStarter.AddBehavior(new SiegeAiInterventionBehavior());
 			campaignGameStarter.AddBehavior(new CourierDeliveryBehavior());
+			campaignGameStarter.AddBehavior(new WorldMapPartyCommandBehavior());
 			campaignGameStarter.AddBehavior(new DuelBehavior());
 			campaignGameStarter.AddBehavior(new RewardSystemBehavior());
 			campaignGameStarter.AddBehavior(new AnimusForgeTerminalBehavior());
