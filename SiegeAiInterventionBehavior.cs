@@ -1387,44 +1387,6 @@ public class SiegeAiInterventionBehavior : CampaignBehaviorBase
 		}
 	}
 
-	internal static string BuildDeterministicPostprocessTagsForExternal(string playerText, string replyText, int targetAgentIndex, CharacterObject targetCharacter, List<PostprocessRuleEntry> rules)
-	{
-		try
-		{
-			if (!IsActiveInCurrentMission())
-			{
-				return "";
-			}
-			List<string> allowed = new List<string>();
-			foreach (PostprocessRuleEntry rule in rules ?? new List<PostprocessRuleEntry>())
-			{
-				string tag = (rule?.Tag ?? "").Trim();
-				if (!string.IsNullOrWhiteSpace(tag))
-				{
-					allowed.Add(tag);
-				}
-			}
-			Agent targetAgent = TryGetAgent(targetAgentIndex);
-			CharacterObject character = targetCharacter ?? targetAgent?.Character as CharacterObject;
-			bool targetIsAlliedSoldier = targetAgentIndex >= 0 && AlliedAgentIndexes.Contains(targetAgentIndex);
-			bool targetIsCivilian = IsCivilianForIntervention(character);
-			string raw = SiegeDeterministicPostprocessTagClassifier.BuildTagBlock(new SiegeDeterministicPostprocessTagFacts(
-				playerText,
-				replyText,
-				targetIsAlliedSoldier,
-				targetIsCivilian,
-				HasSharedCivilianReliefPool(),
-				_soldierAppeasementRequired,
-				_soldierAppeasementApplied));
-			return SiegePostprocessTagNormalizer.Normalize(raw, allowed);
-		}
-		catch (Exception ex)
-		{
-			Logger.Log("SiegeAiIntervention", "BuildDeterministicPostprocessTagsForExternal failed: " + ex.Message);
-			return "";
-		}
-	}
-
 	internal static bool TryProcessAiActionTags(Hero targetHero, CharacterObject targetCharacter, int targetAgentIndex, ref string text, out bool actionHandled)
 	{
 		actionHandled = false;

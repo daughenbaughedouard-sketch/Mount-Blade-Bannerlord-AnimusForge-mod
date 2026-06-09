@@ -11442,13 +11442,17 @@ private static string NormalizeScenePlayerHistoryLine(string text, string target
 			}
 			if (!AIConfigHandler.CanUseAuxiliaryActionPostprocess())
 			{
-				return BuildSceneActionPostprocessFallbackText(text, playerText, -1, targetCharacter, siegeInterventionRuleInjected);
+				if (Regex.Matches(text ?? "", "\\[ACTION:MOOD:[^\\]]+\\]", RegexOptions.IgnoreCase).Count <= 0 && !string.IsNullOrWhiteSpace(AIConfigHandler.ActionPostprocessFallbackMoodTag))
+				{
+					text = (text + "\n" + AIConfigHandler.ActionPostprocessFallbackMoodTag).Trim();
+				}
+				return text.Trim();
 			}
 			string actionPostprocessSystemPrompt = AIConfigHandler.ActionPostprocessSystemPrompt;
 			string actionPostprocessUserPromptTemplate = AIConfigHandler.ActionPostprocessUserPromptTemplate;
 			if (string.IsNullOrWhiteSpace(actionPostprocessSystemPrompt) || string.IsNullOrWhiteSpace(actionPostprocessUserPromptTemplate))
 			{
-				return BuildSceneActionPostprocessFallbackText(text, playerText, -1, targetCharacter, siegeInterventionRuleInjected);
+				return (text + "\n" + AIConfigHandler.ActionPostprocessFallbackMoodTag).Trim();
 			}
 			bool transactionPostprocessEnabled = rewardRuleInjected || loanRuleInjected;
 			List<PostprocessRuleEntry> duelRules = duelRuleInjected ? AIConfigHandler.DuelPostprocessRules : null;
@@ -11590,9 +11594,8 @@ private static string NormalizeScenePlayerHistoryLine(string text, string target
 			string voteDealTags = (voteDealRules != null && voteDealRules.Count > 0) ? NormalizeVoteDealPostprocessTagsForScene(content, voteDealRules) : "";
 			string worldMapPartyCommandTags = worldMapPartyCommandRuleInjected ? NormalizeWorldMapPartyCommandPostprocessTagsForScene(content) : "";
 			string siegeInterventionTags = siegeInterventionRuleInjected ? SiegeAiInterventionBehavior.NormalizeSiegeInterventionPostprocessTagsForExternal(content, siegeInterventionRules) : "";
-			string deterministicSiegeInterventionTags = siegeInterventionRuleInjected ? SiegeAiInterventionBehavior.BuildDeterministicPostprocessTagsForExternal(playerText, text, -1, targetCharacter, siegeInterventionRules) : "";
 			string marriageTags = (marriageRuleInjected && RomanceSystemBehavior.Instance != null) ? RomanceSystemBehavior.Instance.NormalizeMarriagePostprocessTagsForExternal(content, marriageRules) : "";
-			string merged = MergeNormalizedPostprocessBlocksForScene(duelTags, rewardTags, kingdomTags, lordsHallTags, meetingReleaseTags, vanillaIssueTags, heroJoinTags, sceneMechanismTags, partyTransferTags, settlementTransferTags, voteDealTags, worldMapPartyCommandTags, siegeInterventionTags, deterministicSiegeInterventionTags, marriageTags);
+			string merged = MergeNormalizedPostprocessBlocksForScene(duelTags, rewardTags, kingdomTags, lordsHallTags, meetingReleaseTags, vanillaIssueTags, heroJoinTags, sceneMechanismTags, partyTransferTags, settlementTransferTags, voteDealTags, worldMapPartyCommandTags, siegeInterventionTags, marriageTags);
 			if (string.IsNullOrWhiteSpace(merged))
 			{
 				merged = AIConfigHandler.ActionPostprocessFallbackMoodTag;
@@ -13175,19 +13178,6 @@ private static string NormalizeScenePlayerHistoryLine(string text, string target
 		return string.Join("\n", list.Concat(new string[1] { text }).Where((string x) => !string.IsNullOrWhiteSpace(x))).Trim();
 	}
 
-	private static string BuildSceneActionPostprocessFallbackText(string replyText, string playerText, int targetAgentIndex, CharacterObject targetCharacter, bool siegeInterventionRuleInjected)
-	{
-		string text = replyText ?? "";
-		string siegeTags = "";
-		if (siegeInterventionRuleInjected)
-		{
-			List<PostprocessRuleEntry> siegeRules = SiegeAiInterventionBehavior.BuildRuntimePostprocessRulesForExternal() ?? new List<PostprocessRuleEntry>();
-			siegeTags = SiegeAiInterventionBehavior.BuildDeterministicPostprocessTagsForExternal(playerText, text, targetAgentIndex, targetCharacter, siegeRules);
-		}
-		string merged = MergeNormalizedPostprocessBlocksForScene(siegeTags, AIConfigHandler.ActionPostprocessFallbackMoodTag);
-		return string.IsNullOrWhiteSpace(merged) ? text.Trim() : (text + "\n" + merged).Trim();
-	}
-
 	private static string TryRunSceneUnifiedActionPostprocess(Hero targetHero, CharacterObject targetCharacter, int targetAgentIndex, string npcName, string playerText, string historyText, string replyText, bool duelRuleInjected, bool rewardRuleInjected, bool loanRuleInjected, bool kingdomServiceRuleInjected, bool lordsHallRuleInjected, bool meetingReleaseRuleInjected, bool vanillaIssueRuleInjected, bool heroJoinPartyRuleInjected, bool sceneMechanismRuleInjected, bool partyTransferRuleInjected, bool settlementTransferRuleInjected, bool voteDealRuleInjected, bool worldMapPartyCommandRuleInjected, bool siegeInterventionRuleInjected, bool marriageRuleInjected, List<RewardSystemBehavior.DuelStakeOption> duelStakeOptions, List<PostprocessRuleEntry> kingdomServiceRules, List<PostprocessRuleEntry> sceneMechanismRules, List<SceneSummonPromptTarget> sceneSummonTargets, List<SceneGuidePromptTarget> sceneGuideTargets, string entityPostprocessContext = null)
 	{
 		string text = StripActionTagsForSceneSpeech(replyText ?? "");
@@ -13205,13 +13195,17 @@ private static string NormalizeScenePlayerHistoryLine(string text, string target
 		}
 		if (!AIConfigHandler.CanUseAuxiliaryActionPostprocess())
 		{
-			return BuildSceneActionPostprocessFallbackText(text, playerText, targetAgentIndex, targetCharacter, siegeInterventionRuleInjected);
+			if (Regex.Matches(text ?? "", "\\[ACTION:MOOD:[^\\]]+\\]", RegexOptions.IgnoreCase).Count <= 0 && !string.IsNullOrWhiteSpace(AIConfigHandler.ActionPostprocessFallbackMoodTag))
+			{
+				text = (text + "\n" + AIConfigHandler.ActionPostprocessFallbackMoodTag).Trim();
+			}
+			return text.Trim();
 		}
 		string actionPostprocessSystemPrompt = AIConfigHandler.ActionPostprocessSystemPrompt;
 		string actionPostprocessUserPromptTemplate = AIConfigHandler.ActionPostprocessUserPromptTemplate;
 		if (string.IsNullOrWhiteSpace(actionPostprocessSystemPrompt) || string.IsNullOrWhiteSpace(actionPostprocessUserPromptTemplate))
 		{
-			return BuildSceneActionPostprocessFallbackText(text, playerText, targetAgentIndex, targetCharacter, siegeInterventionRuleInjected);
+			return (text + "\n" + AIConfigHandler.ActionPostprocessFallbackMoodTag).Trim();
 		}
 		bool transactionPostprocessEnabled = rewardRuleInjected || loanRuleInjected;
 		List<PostprocessRuleEntry> duelRules = duelRuleInjected ? AIConfigHandler.DuelPostprocessRules : null;
@@ -13381,9 +13375,8 @@ private static string NormalizeScenePlayerHistoryLine(string text, string target
 		string voteDealTags = (voteDealRules != null && voteDealRules.Count > 0) ? NormalizeVoteDealPostprocessTagsForScene(content, voteDealRules) : "";
 		string worldMapPartyCommandTags = worldMapPartyCommandRuleInjected ? NormalizeWorldMapPartyCommandPostprocessTagsForScene(content) : "";
 			string siegeInterventionTags = siegeInterventionRuleInjected ? SiegeAiInterventionBehavior.NormalizeSiegeInterventionPostprocessTagsForExternal(content, siegeInterventionRules) : "";
-			string deterministicSiegeInterventionTags = siegeInterventionRuleInjected ? SiegeAiInterventionBehavior.BuildDeterministicPostprocessTagsForExternal(playerText, text, targetAgentIndex, targetCharacter, siegeInterventionRules) : "";
 		string marriageTags = (marriageRuleInjected && RomanceSystemBehavior.Instance != null) ? RomanceSystemBehavior.Instance.NormalizeMarriagePostprocessTagsForExternal(content, marriageRules) : "";
-		string text21 = MergeNormalizedPostprocessBlocksForScene(text10, text11, text12, text13, text14, text15, text16, text17, text18, text19, voteDealTags, worldMapPartyCommandTags, siegeInterventionTags, deterministicSiegeInterventionTags, marriageTags);
+		string text21 = MergeNormalizedPostprocessBlocksForScene(text10, text11, text12, text13, text14, text15, text16, text17, text18, text19, voteDealTags, worldMapPartyCommandTags, siegeInterventionTags, marriageTags);
 		if (string.IsNullOrWhiteSpace(text21))
 		{
 			text21 = AIConfigHandler.ActionPostprocessFallbackMoodTag;
@@ -13902,7 +13895,7 @@ private static string NormalizeScenePlayerHistoryLine(string text, string target
 		{
 			return Task.CompletedTask;
 		}
-		if (!duelRuleInjected && !rewardRuleInjected && !loanRuleInjected && !kingdomServiceRuleInjected && !lordsHallRuleInjected && !meetingReleaseRuleInjected && !vanillaIssueRuleInjected && !heroJoinPartyRuleInjected && !sceneMechanismRuleInjected && !partyTransferRuleInjected && !settlementTransferRuleInjected && !voteDealRuleInjected && !worldMapPartyCommandRuleInjected && !marriageRuleInjected)
+		if (!duelRuleInjected && !rewardRuleInjected && !loanRuleInjected && !kingdomServiceRuleInjected && !lordsHallRuleInjected && !meetingReleaseRuleInjected && !vanillaIssueRuleInjected && !heroJoinPartyRuleInjected && !sceneMechanismRuleInjected && !partyTransferRuleInjected && !settlementTransferRuleInjected && !voteDealRuleInjected && !worldMapPartyCommandRuleInjected && !siegeInterventionRuleInjected && !marriageRuleInjected)
 		{
 			return Task.CompletedTask;
 		}
