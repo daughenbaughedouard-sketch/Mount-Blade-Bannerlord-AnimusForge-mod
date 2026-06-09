@@ -54,6 +54,10 @@ public static class SiegeCivilianGatherInteractionProfile
 
     public const string TargetBecameFollowerReleaseSource = "gather_target_became_c";
 
+    public const string ImmediateReactionFailureFollowerSource = "gather_immediate_reaction_failed";
+
+    public const string ImmediateReactionFailureReleaseSource = "gather_immediate_reaction_failed";
+
     public const string GatherMarkSourcePrefix = "gather_mark:";
 
     public const string GatherSeedSourcePrefix = "gather_seed:";

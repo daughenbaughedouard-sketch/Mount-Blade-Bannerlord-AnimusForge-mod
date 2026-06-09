@@ -21019,6 +21019,7 @@ private static List<string> BuildVisibleSceneHistoryLines(List<ConversationMessa
 				catch (Exception ex2)
 				{
 					Logger.Log("ShoutBehavior", "[ERROR] TriggerImmediateSceneBehaviorReaction background failed: " + ex2.Message);
+					ClearImmediateSceneReactionInteractionAfterGcczFailure(npcDataPacket, "background_exception:" + ex2.Message);
 				}
 				finally
 				{
@@ -23536,6 +23537,29 @@ private static List<string> BuildVisibleSceneHistoryLines(List<ConversationMessa
 		_stopStaringTime = Math.Max(_stopStaringTime, Mission.Current.CurrentTime + PLAYER_DRIVEN_MULTI_SCENE_STARE_HOLD_SECONDS);
 	}
 
+	private void ClearImmediateSceneReactionInteractionAfterGcczFailure(NpcDataPacket targetNpc, string reason)
+	{
+		try
+		{
+			int agentIndex = targetNpc?.AgentIndex ?? -1;
+			if (agentIndex < 0)
+			{
+				return;
+			}
+			if (!SiegeAiInterventionBehavior.TryHandleGatherMessengerImmediateReactionFailureForExternal(agentIndex, reason))
+			{
+				return;
+			}
+			_pendingInteractionTimeoutArms.Remove(agentIndex);
+			_activeInteractionSessions.Remove(agentIndex);
+			Logger.Log("ShoutBehavior", "[ImmediateSceneReaction] cleared GCCZ gather messenger after failed reaction. agent=" + agentIndex + " reason=" + (reason ?? ""));
+		}
+		catch (Exception ex)
+		{
+			Logger.Log("ShoutBehavior", "[WARN] ImmediateSceneReaction GCCZ failure cleanup failed: " + ex.Message);
+		}
+	}
+
 	private async Task GenerateImmediateSceneBehaviorReactionAsync(NpcDataPacket targetNpc, List<NpcDataPacket> allNpcData, Dictionary<int, Hero> resolvedHeroes, bool suppressStare)
 	{
 		if (targetNpc == null || allNpcData == null || allNpcData.Count == 0)
@@ -23557,6 +23581,7 @@ private static List<string> BuildVisibleSceneHistoryLines(List<ConversationMessa
 		Agent npcAgent = Mission.Current?.Agents?.FirstOrDefault(a => a != null && a.Index == targetNpc.AgentIndex);
 		if (!CanAgentParticipateInSceneSpeech(npcAgent))
 		{
+			ClearImmediateSceneReactionInteractionAfterGcczFailure(targetNpc, "not_speech_capable");
 			return;
 		}
 		CharacterObject npcCharacter = npcAgent.Character as CharacterObject;
@@ -23604,10 +23629,12 @@ private static List<string> BuildVisibleSceneHistoryLines(List<ConversationMessa
 		if (!AIConfigHandler.TryCallAuxiliarySimpleDialogue(messages, maxTokens, 0.35f, out var text2, out var error))
 		{
 			Logger.Log("ShoutBehavior", "[ImmediateSceneReaction] auxiliary_simple_dialogue failed: " + error);
+			ClearImmediateSceneReactionInteractionAfterGcczFailure(targetNpc, "auxiliary_simple_dialogue_failed:" + error);
 			return;
 		}
 		if (string.IsNullOrWhiteSpace(text2))
 		{
+			ClearImmediateSceneReactionInteractionAfterGcczFailure(targetNpc, "empty_content");
 			return;
 		}
 		string text3 = (text2 ?? "").Replace("\r", "").Trim();
@@ -23618,6 +23645,7 @@ private static List<string> BuildVisibleSceneHistoryLines(List<ConversationMessa
 		text3 = StripStageDirectionsForPassiveShout(text3);
 		if (string.IsNullOrWhiteSpace(text3))
 		{
+			ClearImmediateSceneReactionInteractionAfterGcczFailure(targetNpc, "empty_after_strip");
 			return;
 		}
 		if (!string.IsNullOrWhiteSpace(fullHistoryText))

@@ -4125,6 +4125,45 @@ public class SiegeAiInterventionBehavior : CampaignBehaviorBase
 		}
 	}
 
+	internal static bool TryHandleGatherMessengerImmediateReactionFailureForExternal(int messengerAgentIndex, string reason)
+	{
+		try
+		{
+			if (messengerAgentIndex < 0 || !IsActiveInCurrentMission())
+			{
+				return false;
+			}
+			Mission mission = Mission.Current;
+			Agent messenger = TryGetAgent(messengerAgentIndex);
+			bool isKnownGatherMessenger = CivilianGatherMessengerAgentIndexes.Contains(messengerAgentIndex) || IsCivilianGatherMessengerBusy(messengerAgentIndex);
+			if (!isKnownGatherMessenger)
+			{
+				return false;
+			}
+			string safeReason = string.IsNullOrWhiteSpace(reason) ? "immediate_reaction_failed" : reason.Trim();
+			List<CivilianGatherInteraction> interactions = ActiveCivilianGatherInteractions.Values
+				.Where(x => x != null && x.MessengerAgentIndex == messengerAgentIndex)
+				.ToList();
+			foreach (CivilianGatherInteraction interaction in interactions)
+			{
+				Agent target = mission?.Agents?.FirstOrDefault(a => a != null && a.Index == interaction.TargetAgentIndex);
+				if (IsEligibleCivilianAgent(target, includeHeroes: true) && !CivilianGatherFollowerAgentIndexes.Contains(target.Index))
+				{
+					MarkCivilianAsGatherFollower(target, SiegeCivilianGatherInteractionProfile.ImmediateReactionFailureFollowerSource);
+				}
+				ActiveCivilianGatherInteractions.Remove(interaction.TargetAgentIndex);
+			}
+			ReleaseGatherMessengerFromCurrentTarget(messenger, SiegeCivilianGatherInteractionProfile.ImmediateReactionFailureReleaseSource);
+			Logger.Log("SiegeAiIntervention", "Handled gather messenger immediate reaction failure. Agent=" + messengerAgentIndex + ", Reason=" + safeReason + ", Interactions=" + interactions.Count);
+			return true;
+		}
+		catch (Exception ex)
+		{
+			Logger.Log("SiegeAiIntervention", "TryHandleGatherMessengerImmediateReactionFailureForExternal failed: " + ex.Message);
+			return false;
+		}
+	}
+
 	private static void MaintainCivilianGatherFollowers(Mission mission, Agent main, bool force)
 	{
 		try
