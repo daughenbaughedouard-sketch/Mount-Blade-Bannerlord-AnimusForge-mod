@@ -1,3 +1,5 @@
+using System;
+
 namespace AnimusForge.SiegeAftermathIntervention;
 
 /// <summary>
@@ -62,6 +64,10 @@ public static class SiegeCivilianGatherInteractionProfile
 
     public const string GatherMessengerReturnSourcePrefix = "gather_messenger_return:";
 
+    public const string GatherSoldierReturnSourcePrefix = "gather_soldier_return:";
+
+    public const string CommandControlRepeatSoldierReleaseSource = "command_control_repeat_soldier_gather";
+
     public const string SoldierSeedMessengerSource = "soldier_seed_20_percent";
 
     public const string SoldierMessengerSource = "soldier_20_percent";
@@ -98,8 +104,23 @@ public static class SiegeCivilianGatherInteractionProfile
         return GatherMessengerReturnSourcePrefix + (reason ?? UnavailableSourceSuffix);
     }
 
+    public static string BuildGatherSoldierReturnSource(string reason)
+    {
+        return GatherSoldierReturnSourcePrefix + (reason ?? UnavailableSourceSuffix);
+    }
+
     public static string BuildFormationQueueSource(string reason)
     {
         return FormationQueueSourcePrefix + (reason ?? UnavailableSourceSuffix);
+    }
+
+    public static bool ShouldReleaseSoldiersForCommandControlRepeat(bool formationControlPending, bool formationControlComplete, bool seedIsSoldier, string source)
+    {
+        if (!seedIsSoldier || (!formationControlPending && !formationControlComplete))
+        {
+            return false;
+        }
+
+        return string.Equals(source, SiegePostprocessActionEffectProfile.GatherCiviliansSource, StringComparison.OrdinalIgnoreCase);
     }
 }

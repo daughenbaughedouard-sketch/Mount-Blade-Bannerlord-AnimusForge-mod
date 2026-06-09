@@ -3506,8 +3506,17 @@ public class SiegeAiInterventionBehavior : CampaignBehaviorBase
 			{
 				return false;
 			}
+			Agent seed = TryGetAgent(seedAgentIndex);
+			bool seedIsSoldier = IsInterventionAlliedSoldierForExternal(seed, requireActive: true);
 			if (_civilianFormationControlPending || _civilianFormationControlComplete)
 			{
+				if (SiegeCivilianGatherInteractionProfile.ShouldReleaseSoldiersForCommandControlRepeat(_civilianFormationControlPending, _civilianFormationControlComplete, seedIsSoldier, source))
+				{
+					string releaseSource = SiegeCivilianGatherInteractionProfile.BuildGatherSoldierReturnSource(SiegeCivilianGatherInteractionProfile.CommandControlRepeatSoldierReleaseSource);
+					int returned = ReturnAlliedGatherSoldiersToFormation(mission, releaseSource);
+					Logger.Log("SiegeAiIntervention", "Handled repeated soldier gather during command control. Source=" + (source ?? "N/A") + ", Seed=" + (seed?.Index.ToString() ?? "none") + ", Returned=" + returned);
+					return true;
+				}
 				Logger.Log("SiegeAiIntervention", "Civilian gathering already entering command control; ignored new messenger trigger. Source=" + (source ?? "N/A"));
 				return false;
 			}
@@ -3532,8 +3541,6 @@ public class SiegeAiInterventionBehavior : CampaignBehaviorBase
 			}
 			EnsureCivilianAssemblyPopulation(mission);
 			TrackSceneCivilianAgents(mission);
-			Agent seed = TryGetAgent(seedAgentIndex);
-			bool seedIsSoldier = IsInterventionAlliedSoldierForExternal(seed, requireActive: true);
 			bool seedIsCivilian = IsEligibleCivilianAgent(seed, includeHeroes: true);
 			int addedMessengers = 0;
 			if (seedIsSoldier)
@@ -4320,6 +4327,53 @@ public class SiegeAiInterventionBehavior : CampaignBehaviorBase
 		catch (Exception ex)
 		{
 			Logger.Log("SiegeAiIntervention", "StopCivilianGatherScriptFollowForCommandControl failed (" + (source ?? "N/A") + "): " + ex.Message);
+		}
+	}
+
+	private static int ReturnAlliedGatherSoldiersToFormation(Mission mission, string source)
+	{
+		try
+		{
+			if (mission?.Agents == null)
+			{
+				return 0;
+			}
+			int returned = 0;
+			foreach (Agent soldier in mission.Agents.ToList().Where(a => IsInterventionAlliedSoldierForExternal(a, requireActive: true)))
+			{
+				try
+				{
+					RestoreAlliedSoldierFriendlyState(soldier, 0f, source, forceFollow: false, clearTarget: true);
+					DisableCompanionStyleFollow(soldier);
+					AssignAgentToPlayerFormation(soldier, FormationClass.Infantry, refreshFormationOrders: false);
+					soldier.DisableScriptedMovement();
+					soldier.ClearTargetFrame();
+					soldier.InvalidateTargetAgent();
+					soldier.SetMaximumSpeedLimit(-1f, false);
+					soldier.SetCrouchMode(false);
+					soldier.SetShouldCatchUpWithFormation(true);
+					soldier.UpdateFormationOrders();
+					soldier.SetWatchState(Agent.WatchState.Patrolling);
+					CordonReadyAgentIndexes.Remove(soldier.Index);
+					LastCordonMoveOrderTimesBySoldier.Remove(soldier.Index);
+					LastCordonLookOrderTimesBySoldier.Remove(soldier.Index);
+					returned++;
+				}
+				catch
+				{
+				}
+			}
+			if (returned > 0)
+			{
+				TrySetPlayerFormationFollowOrder(FormationClass.Infantry, source);
+				Logger.Log("SiegeAiIntervention", "Returned gather allied soldiers to formation. Source=" + (source ?? "N/A") + ", Count=" + returned);
+			}
+			return returned;
+		}
+		catch (Exception ex)
+		{
+			Logger.Log("SiegeAiIntervention", "ReturnAlliedGatherSoldiersToFormation failed (" + (source ?? "N/A") + "): " + ex.Message);
+			return 0;
 		}
 	}
 
