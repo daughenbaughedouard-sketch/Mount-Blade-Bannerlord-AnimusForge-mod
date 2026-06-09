@@ -98,7 +98,7 @@ Second extraction slice:
 
 ## Civilian assembly profile
 
-`SiegeCivilianAssemblyProfile` owns dependency-free runtime parameters and source codes for GCCZ civilian assembly target counts, scene caps, extra-spawn gating, forward offset, grid spacing, columns, mission-start assembly, and control-tick assembly. AF adapters still own scene capacity checks, spawn gating, formation slot projection, and mission side effects.
+`SiegeCivilianAssemblyProfile` owns dependency-free runtime parameters and source codes for GCCZ civilian assembly target counts, scene caps, native-civilian-only assembly, forward offset, grid spacing, columns, mission-start assembly, and control-tick assembly. AF adapters still own scene capacity checks, formation slot projection, and mission side effects.
 
 `SiegeSceneAgentSuppressionProfile` owns dependency-free reason codes for suppressing unsafe vanilla scene agents, protected agents, player companion scene spawns, and guard leftovers. AF adapters still own live agent classification, `ShoutBehavior` cancellation, fade-out, and slot cleanup side effects.
 

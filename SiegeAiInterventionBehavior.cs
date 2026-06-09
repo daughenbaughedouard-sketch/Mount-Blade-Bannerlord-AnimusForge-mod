@@ -165,14 +165,10 @@ public class SiegeAiInterventionBehavior : CampaignBehaviorBase
 	private const int CivilianFormationControlBatchSize = SiegeCivilianGatherInteractionProfile.FormationControlBatchSize;
 	private const int CivilianGatherMessengerSpeechMinCount = SiegeCivilianGatherInteractionProfile.MessengerSpeechMinCount;
 	private const int CivilianGatherMessengerSpeechMaxCount = SiegeCivilianGatherInteractionProfile.MessengerSpeechMaxCount;
-	private const int MinDesiredCivilianAssemblyCount = SiegeCivilianAssemblyProfile.MinDesiredCivilianCount;
-	private const int MaxDesiredCivilianAssemblyCount = SiegeCivilianAssemblyProfile.MaxDesiredCivilianCount;
 	private const int TownCivilianAssemblySceneCap = SiegeCivilianAssemblyProfile.TownSceneCap;
 	private const int CastleCivilianAssemblySceneCap = SiegeCivilianAssemblyProfile.CastleSceneCap;
-	private const int CivilianAssemblySmallSceneExtraCap = SiegeCivilianAssemblyProfile.SmallSceneExtraCap;
 	private const int SceneTotalAgentSoftCap = SiegeCivilianAssemblyProfile.SceneTotalAgentSoftCap;
 	private const int MinimumCivilianAssemblySceneCap = SiegeCivilianAssemblyProfile.MinimumSceneCap;
-	private static readonly bool EnableExtraCivilianAssemblySpawns = SiegeCivilianAssemblyProfile.EnableExtraSpawns;
 	private const float CivilianAssemblyForwardDistance = SiegeCivilianAssemblyProfile.ForwardDistance;
 	private const float CivilianAssemblyColumnSpacing = SiegeCivilianAssemblyProfile.ColumnSpacing;
 	private const float CivilianAssemblyRowSpacing = SiegeCivilianAssemblyProfile.RowSpacing;
@@ -259,7 +255,6 @@ public class SiegeAiInterventionBehavior : CampaignBehaviorBase
 	private static readonly Dictionary<string, int> SharedCivilianReliefItems = new Dictionary<string, int>(StringComparer.OrdinalIgnoreCase);
 	private static readonly Dictionary<string, ItemObject> SharedCivilianReliefItemObjects = new Dictionary<string, ItemObject>(StringComparer.OrdinalIgnoreCase);
 	private static readonly List<string> InterventionMemoryEvents = new List<string>();
-	private static int _desiredCivilianAssemblyCount;
 	private static bool _pendingSummarySwitch;
 	private static SiegeAftermathAction.SiegeAftermath _pendingSummaryAftermath;
 	private static ItemRoster _pendingLootRoster = new ItemRoster();
@@ -297,9 +292,6 @@ public class SiegeAiInterventionBehavior : CampaignBehaviorBase
 	private static readonly SiegeOutcomeMessageDeduplicator OutcomeMessageDeduplicator = new SiegeOutcomeMessageDeduplicator();
 	private static bool _civilianAssemblyPointReady;
 	private static bool _civilianAssemblyMessageShown;
-	private static bool _civilianAssemblySpawnAttempted;
-	private static int _civilianAssemblyNextSlot;
-	private static int _spawnedAssemblyCivilianCount;
 	private static Vec3 _civilianAssemblyAnchor;
 	private static Vec3 _civilianAssemblyForward;
 	private static Clan _previousSettlementOwnerClan;
@@ -317,7 +309,6 @@ public class SiegeAiInterventionBehavior : CampaignBehaviorBase
 	private static readonly HashSet<int> SceneCivilianAgentIndexes = new HashSet<int>();
 	private static readonly HashSet<int> VictoryCheerAgentIndexes = new HashSet<int>();
 	private static readonly HashSet<int> CordonReadyAgentIndexes = new HashSet<int>();
-	private static readonly HashSet<int> CivilianAssemblySettledAgentIndexes = new HashSet<int>();
 	private static readonly HashSet<int> CivilianCalmedAgentIndexes = new HashSet<int>();
 	private static readonly HashSet<int> CivilianFrightenedActionAgentIndexes = new HashSet<int>();
 	private static readonly HashSet<int> CivilianPreMassacrePreparedAgentIndexes = new HashSet<int>();
@@ -329,7 +320,6 @@ public class SiegeAiInterventionBehavior : CampaignBehaviorBase
 	private static readonly HashSet<int> CommandableOriginRuntimeIds = new HashSet<int>();
 	private static readonly HashSet<int> MassacreReadySoldierAgentIndexes = new HashSet<int>();
 	private static readonly HashSet<int> MassacreCombatPreparedAgentIndexes = new HashSet<int>();
-	private static readonly Dictionary<int, int> CivilianAssemblySlots = new Dictionary<int, int>();
 	private static readonly Dictionary<int, int> CivilianSpeechRallySlots = new Dictionary<int, int>();
 	private static readonly Dictionary<int, float> LastCordonMoveOrderTimesBySoldier = new Dictionary<int, float>();
 	private static readonly Dictionary<int, float> LastCordonLookOrderTimesBySoldier = new Dictionary<int, float>();
@@ -503,9 +493,6 @@ public class SiegeAiInterventionBehavior : CampaignBehaviorBase
 			ResetOutcomeMessageDedup();
 			_civilianAssemblyPointReady = false;
 			_civilianAssemblyMessageShown = false;
-			_civilianAssemblySpawnAttempted = false;
-			_civilianAssemblyNextSlot = 0;
-			_spawnedAssemblyCivilianCount = 0;
 			_civilianAssemblyAnchor = Vec3.Zero;
 			_civilianAssemblyForward = Vec3.Forward;
 			CaptureNativeSiegeContext(settlement);
@@ -1396,6 +1383,44 @@ public class SiegeAiInterventionBehavior : CampaignBehaviorBase
 		catch (Exception ex)
 		{
 			Logger.Log("SiegeAiIntervention", "NormalizeSiegeInterventionPostprocessTagsForExternal failed: " + ex.Message);
+			return "";
+		}
+	}
+
+	internal static string BuildDeterministicPostprocessTagsForExternal(string playerText, string replyText, int targetAgentIndex, CharacterObject targetCharacter, List<PostprocessRuleEntry> rules)
+	{
+		try
+		{
+			if (!IsActiveInCurrentMission())
+			{
+				return "";
+			}
+			List<string> allowed = new List<string>();
+			foreach (PostprocessRuleEntry rule in rules ?? new List<PostprocessRuleEntry>())
+			{
+				string tag = (rule?.Tag ?? "").Trim();
+				if (!string.IsNullOrWhiteSpace(tag))
+				{
+					allowed.Add(tag);
+				}
+			}
+			Agent targetAgent = TryGetAgent(targetAgentIndex);
+			CharacterObject character = targetCharacter ?? targetAgent?.Character as CharacterObject;
+			bool targetIsAlliedSoldier = targetAgentIndex >= 0 && AlliedAgentIndexes.Contains(targetAgentIndex);
+			bool targetIsCivilian = IsCivilianForIntervention(character);
+			string raw = SiegeDeterministicPostprocessTagClassifier.BuildTagBlock(new SiegeDeterministicPostprocessTagFacts(
+				playerText,
+				replyText,
+				targetIsAlliedSoldier,
+				targetIsCivilian,
+				HasSharedCivilianReliefPool(),
+				_soldierAppeasementRequired,
+				_soldierAppeasementApplied));
+			return SiegePostprocessTagNormalizer.Normalize(raw, allowed);
+		}
+		catch (Exception ex)
+		{
+			Logger.Log("SiegeAiIntervention", "BuildDeterministicPostprocessTagsForExternal failed: " + ex.Message);
 			return "";
 		}
 	}
@@ -3321,7 +3346,6 @@ public class SiegeAiInterventionBehavior : CampaignBehaviorBase
 					ShoutBehavior.CancelAgentSpeechForRemovalExternal(agent.Index, SiegeSceneAgentSuppressionProfile.UnsafeOrNakedCivilianRemovedReason);
 					agent.FadeOut(hideInstantly: true, hideMount: true);
 					SceneCivilianAgentIndexes.Remove(agent.Index);
-					CivilianAssemblySlots.Remove(agent.Index);
 					CivilianSpeechRallySlots.Remove(agent.Index);
 					CivilianGatherFollowerAgentIndexes.Remove(agent.Index);
 					CivilianGatherReadyFormationAgentIndexes.Remove(agent.Index);
@@ -4496,50 +4520,12 @@ public class SiegeAiInterventionBehavior : CampaignBehaviorBase
 	{
 		try
 		{
-			if (_civilianAssemblySpawnAttempted || mission?.Agents == null)
+			if (mission?.Agents == null)
 			{
-				return;
-			}
-			_civilianAssemblySpawnAttempted = true;
-			if (!EnableExtraCivilianAssemblySpawns)
-			{
-				int existingOnly = mission.Agents.Count(a => IsEligibleCivilianAgent(a, includeHeroes: true));
-				Logger.Log("SiegeAiIntervention", "Extra civilian assembly spawn disabled; using native settlement civilians only. Existing=" + existingOnly);
 				return;
 			}
 			int existing = mission.Agents.Count(a => IsEligibleCivilianAgent(a, includeHeroes: true));
-			int desiredCount = GetDesiredCivilianAssemblyCount(mission);
-			int missing = Math.Max(0, desiredCount - existing);
-			if (missing <= 0)
-			{
-				Logger.Log("SiegeAiIntervention", "Civilian assembly population already sufficient. Existing=" + existing + ", Desired=" + desiredCount);
-				return;
-			}
-			List<CharacterObject> templates = PickAssemblyCivilianTemplates(missing);
-			if (templates.Count == 0)
-			{
-				Logger.Log("SiegeAiIntervention", "Civilian assembly spawn skipped: no safe civilian templates found. Existing=" + existing + ", Missing=" + missing);
-				return;
-			}
-			int spawned = 0;
-			for (int i = 0; i < missing; i++)
-			{
-				CharacterObject template = templates[i % templates.Count];
-				int slot = _civilianAssemblyNextSlot + i;
-				Vec3 position = GetCivilianTownSpawnPosition(mission, slot);
-				Agent agent = SpawnAssemblyCivilian(mission, template, position);
-				if (agent == null)
-				{
-					continue;
-				}
-				spawned++;
-				_spawnedAssemblyCivilianCount++;
-				SceneCivilianAgentIndexes.Add(agent.Index);
-				CivilianAssemblySlots[agent.Index] = slot;
-				PrepareCivilianForPreMassacreHitDetection(agent, mission);
-			}
-			_civilianAssemblyNextSlot += missing;
-			Logger.Log("SiegeAiIntervention", "Civilian assembly populated. Existing=" + existing + ", Spawned=" + spawned + ", Desired=" + desiredCount + ", Templates=" + templates.Count);
+			_lastSceneCivilianSpawnedCount = Math.Max(_lastSceneCivilianSpawnedCount, existing);
 		}
 		catch (Exception ex)
 		{
@@ -4549,23 +4535,12 @@ public class SiegeAiInterventionBehavior : CampaignBehaviorBase
 
 	private static int GetDesiredCivilianAssemblyCount(Mission mission = null)
 	{
-		if (_desiredCivilianAssemblyCount <= 0)
+		if (mission?.Agents == null)
 		{
-			try
-			{
-				_desiredCivilianAssemblyCount = MBRandom.RandomInt(MinDesiredCivilianAssemblyCount, MaxDesiredCivilianAssemblyCount + 1);
-			}
-			catch
-			{
-				_desiredCivilianAssemblyCount = (MinDesiredCivilianAssemblyCount + MaxDesiredCivilianAssemblyCount) / 2;
-			}
+			return 0;
 		}
-		int desired = Math.Max(MinDesiredCivilianAssemblyCount, Math.Min(MaxDesiredCivilianAssemblyCount, _desiredCivilianAssemblyCount));
-		if (mission == null)
-		{
-			return desired;
-		}
-		return Math.Max(0, Math.Min(desired, GetCivilianSceneCivilianCap(mission)));
+		int nativeCivilianCount = mission.Agents.Count(a => IsEligibleCivilianAgent(a, includeHeroes: true));
+		return Math.Max(0, Math.Min(nativeCivilianCount, GetCivilianSceneCivilianCap(mission)));
 	}
 
 	private static int GetCivilianSceneCivilianCap(Mission mission)
@@ -4578,150 +4553,16 @@ public class SiegeAiInterventionBehavior : CampaignBehaviorBase
 			}
 			Settlement settlement = ResolveCurrentSettlement();
 			int settlementCap = settlement?.IsCastle == true ? CastleCivilianAssemblySceneCap : TownCivilianAssemblySceneCap;
-			int nativeCivilianCount = mission.Agents.Count(a => IsEligibleCivilianAgent(a, includeHeroes: true) && !CivilianAssemblySlots.ContainsKey(a.Index));
+			int nativeCivilianCount = mission.Agents.Count(a => IsEligibleCivilianAgent(a, includeHeroes: true));
 			int nonCivilianActiveCount = mission.Agents.Count(a => a != null && a.IsActive() && !IsEligibleCivilianAgent(a, includeHeroes: true));
-			int nativeScaledCap = nativeCivilianCount > 0 ? nativeCivilianCount + CivilianAssemblySmallSceneExtraCap : settlementCap;
 			int totalAgentRoomCap = Math.Max(MinimumCivilianAssemblySceneCap, SceneTotalAgentSoftCap - nonCivilianActiveCount);
-			int cap = Math.Min(settlementCap, Math.Min(nativeScaledCap, totalAgentRoomCap));
-			return Math.Max(MinimumCivilianAssemblySceneCap, cap);
+			int cap = Math.Min(settlementCap, Math.Min(nativeCivilianCount, totalAgentRoomCap));
+			return Math.Max(0, cap);
 		}
 		catch
 		{
 			return TownCivilianAssemblySceneCap;
 		}
-	}
-
-	private static Vec3 GetCivilianTownSpawnPosition(Mission mission, int slot)
-	{
-		Agent main = Agent.Main ?? mission?.MainAgent;
-		Vec3 fallback = main?.Position ?? Vec3.Zero;
-		try
-		{
-			List<Agent> anchors = mission?.Agents?
-				.Where(a => a != null && a.IsActive() && IsEligibleCivilianAgent(a, includeHeroes: false) && !SceneCivilianAgentIndexes.Contains(a.Index))
-				.OrderBy(a => a.Index)
-				.ToList() ?? new List<Agent>();
-			if (anchors.Count == 0)
-			{
-				anchors = mission?.Agents?
-					.Where(a => a != null && a.IsActive() && IsEligibleCivilianAgent(a, includeHeroes: false))
-					.OrderBy(a => a.Index)
-					.ToList() ?? new List<Agent>();
-			}
-			Vec3 anchor = fallback;
-			if (anchors.Count > 0)
-			{
-				anchor = anchors[Math.Abs(slot) % anchors.Count].Position;
-			}
-			else if (main != null)
-			{
-				Vec2 look = main.LookDirection.AsVec2;
-				if (look.LengthSquared < 0.001f)
-				{
-					look = Vec2.Forward;
-				}
-				look.Normalize();
-				Vec2 side = new Vec2(-look.y, look.x);
-				float ring = 18f + (Math.Abs(slot) % 9) * 3.5f;
-				float lateral = ((slot % 2 == 0) ? 1f : -1f) * (6f + (Math.Abs(slot) % 7) * 2.4f);
-				anchor = main.Position + look.ToVec3() * ring + side.ToVec3() * lateral;
-			}
-			float angle = (MathF.PI * 2f * (Math.Abs(slot) % 17)) / 17f;
-			float radius = 1.2f + (Math.Abs(slot * 37) % 7) * 0.55f;
-			Vec3 position = anchor + new Vec3(MathF.Cos(angle) * radius, MathF.Sin(angle) * radius, 0f);
-			try
-			{
-				if (mission?.Scene != null)
-				{
-					position.z = mission.Scene.GetGroundHeightAtPosition(position, BodyFlags.CommonCollisionExcludeFlags);
-				}
-			}
-			catch
-			{
-				try
-				{
-					if (mission?.Scene != null)
-					{
-						position.z = mission.Scene.GetGroundHeightAtPosition(position);
-					}
-				}
-				catch
-				{
-				}
-			}
-			return position;
-		}
-		catch
-		{
-			return fallback;
-		}
-	}
-
-	private static List<CharacterObject> PickAssemblyCivilianTemplates(int count)
-	{
-		List<CharacterObject> result = new List<CharacterObject>();
-		try
-		{
-			CultureObject culture = ResolveCurrentSettlement()?.Culture ?? Hero.MainHero?.Culture;
-			IEnumerable<CharacterObject> all = CharacterObject.All ?? Enumerable.Empty<CharacterObject>();
-			List<CharacterObject> preferred = all.Where(c => IsSafeAssemblyCivilianTemplate(c, strictOccupation: true) && (culture == null || c.Culture == culture)).OrderBy(c => c.StringId ?? "").ToList();
-			foreach (CharacterObject character in preferred)
-			{
-				if (character == null || result.Contains(character))
-				{
-					continue;
-				}
-				result.Add(character);
-				if (result.Count >= Math.Max(8, Math.Min(count, 32)))
-				{
-					break;
-				}
-			}
-		}
-		catch (Exception ex)
-		{
-			Logger.Log("SiegeAiIntervention", "PickAssemblyCivilianTemplates failed: " + ex.Message);
-		}
-		return result;
-	}
-
-	private static bool IsSafeAssemblyCivilianTemplate(CharacterObject character, bool strictOccupation)
-	{
-		if (character == null || character.IsHero || character == CharacterObject.PlayerCharacter || character.HeroObject != null || IsBackstreetOrCriminalCharacter(character) || IsProtectedChildCharacter(character) || IsProtectedNotableCharacter(character) || IsGuardOrSoldier(character) || IsUnsafeAssemblyCivilianTemplate(character))
-		{
-			return false;
-		}
-		if (character.Race < 0)
-		{
-			return false;
-		}
-		if (strictOccupation)
-		{
-			switch (character.Occupation)
-			{
-			case Occupation.Townsfolk:
-			case Occupation.Villager:
-			case Occupation.GoodsTrader:
-			case Occupation.Artisan:
-			case Occupation.Merchant:
-			case Occupation.Weaponsmith:
-			case Occupation.Armorer:
-			case Occupation.HorseTrader:
-			case Occupation.ShopWorker:
-			case Occupation.Blacksmith:
-			case Occupation.Tavernkeeper:
-			case Occupation.TavernWench:
-			case Occupation.TavernGameHost:
-			case Occupation.Musician:
-			case Occupation.Preacher:
-			case Occupation.RansomBroker:
-			case Occupation.ShipWright:
-				return true;
-			default:
-				return false;
-			}
-		}
-		return IsCivilianForIntervention(character);
 	}
 
 	private static bool IsUnsafeAssemblyCivilianTemplate(CharacterObject character)
@@ -4784,46 +4625,6 @@ public class SiegeAiInterventionBehavior : CampaignBehaviorBase
 		catch
 		{
 			return false;
-		}
-	}
-
-	private static Agent SpawnAssemblyCivilian(Mission mission, CharacterObject character, Vec3 position)
-	{
-		try
-		{
-			if (mission == null || character == null)
-			{
-				return null;
-			}
-			Vec3 direction = -_civilianAssemblyForward;
-			if (direction.LengthSquared < 0.01f)
-			{
-				direction = -Vec3.Forward;
-			}
-			direction.Normalize();
-			AgentBuildData buildData = new AgentBuildData(character)
-				.TroopOrigin(new SimpleAgentOrigin(character, -1, null, default(UniqueTroopDescriptor)))
-				.Monster(TaleWorlds.Core.FaceGen.GetMonsterWithSuffix(character.Race, "_settlement"))
-				.Team(Team.Invalid)
-				.InitialPosition(in position)
-				.InitialDirection(direction.AsVec2.Normalized())
-				.Controller(AgentControllerType.AI)
-				.CivilianEquipment(civilianEquipment: true)
-				.NoWeapons(noWeapons: true)
-				.NoHorses(noHorses: true);
-			Agent agent = mission.SpawnAgent(buildData, false);
-			if (agent != null)
-			{
-				agent.SetMortalityState(Agent.MortalityState.Mortal);
-				agent.SetWatchState(Agent.WatchState.Patrolling);
-				PrepareCivilianForPreMassacreHitDetection(agent, mission);
-			}
-			return agent;
-		}
-		catch (Exception ex)
-		{
-			Logger.Log("SiegeAiIntervention", "SpawnAssemblyCivilian failed: " + (character?.StringId ?? "N/A") + ", Error=" + ex.Message);
-			return null;
 		}
 	}
 
@@ -5547,7 +5348,7 @@ public class SiegeAiInterventionBehavior : CampaignBehaviorBase
 			forward = Vec3.Forward;
 		}
 		forward.Normalize();
-		int totalSlots = Math.Max(GetDesiredCivilianAssemblyCount(mission), Math.Max(_civilianAssemblyNextSlot, _spawnedAssemblyCivilianCount));
+		int totalSlots = Math.Max(1, GetDesiredCivilianAssemblyCount(mission));
 		int rows = Math.Max(1, (int)Math.Ceiling(totalSlots / (double)Math.Max(1, CivilianAssemblyColumns)));
 		float depth = Math.Max(0f, (rows - 1) * CivilianAssemblyRowSpacing);
 		Vec3 center = _civilianAssemblyAnchor + forward * (depth * 0.5f);
@@ -5566,7 +5367,7 @@ public class SiegeAiInterventionBehavior : CampaignBehaviorBase
 
 	private static float GetCivilianAssemblyCordonRadius(Mission mission)
 	{
-		int totalSlots = Math.Max(GetDesiredCivilianAssemblyCount(mission), Math.Max(_civilianAssemblyNextSlot, _spawnedAssemblyCivilianCount));
+		int totalSlots = Math.Max(1, GetDesiredCivilianAssemblyCount(mission));
 		int columns = Math.Max(1, CivilianAssemblyColumns);
 		int rows = Math.Max(1, (int)Math.Ceiling(totalSlots / (double)columns));
 		float halfWidth = Math.Max(0f, (columns - 1) * CivilianAssemblyColumnSpacing * 0.5f);
@@ -8640,7 +8441,6 @@ public class SiegeAiInterventionBehavior : CampaignBehaviorBase
 		SceneCivilianAgentIndexes.Clear();
 		VictoryCheerAgentIndexes.Clear();
 		CordonReadyAgentIndexes.Clear();
-		CivilianAssemblySettledAgentIndexes.Clear();
 		CivilianCalmedAgentIndexes.Clear();
 		CivilianFrightenedActionAgentIndexes.Clear();
 		CivilianPreMassacrePreparedAgentIndexes.Clear();
@@ -8652,7 +8452,6 @@ public class SiegeAiInterventionBehavior : CampaignBehaviorBase
 		CommandableOriginRuntimeIds.Clear();
 		MassacreReadySoldierAgentIndexes.Clear();
 		MassacreCombatPreparedAgentIndexes.Clear();
-		CivilianAssemblySlots.Clear();
 		CivilianSpeechRallySlots.Clear();
 		LastCordonMoveOrderTimesBySoldier.Clear();
 		LastCordonLookOrderTimesBySoldier.Clear();
@@ -8668,10 +8467,6 @@ public class SiegeAiInterventionBehavior : CampaignBehaviorBase
 		LastCivilianGatherFollowTargets.Clear();
 		_civilianAssemblyPointReady = false;
 		_civilianAssemblyMessageShown = false;
-		_civilianAssemblySpawnAttempted = false;
-		_civilianAssemblyNextSlot = 0;
-		_spawnedAssemblyCivilianCount = 0;
-		_desiredCivilianAssemblyCount = 0;
 		_civilianAssemblyAnchor = Vec3.Zero;
 		_civilianAssemblyForward = Vec3.Forward;
 		_interventionCivilianEnemyTeam = null;
