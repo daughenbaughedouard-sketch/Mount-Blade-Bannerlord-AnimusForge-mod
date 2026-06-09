@@ -4116,7 +4116,7 @@ public class SiegeAiInterventionBehavior : CampaignBehaviorBase
 			string messengerName = messenger.Name?.ToString() ?? SiegeCivilianGatherUiProfile.MessengerFallbackName;
 			string targetName = target.Name?.ToString() ?? SiegeCivilianGatherUiProfile.CivilianFallbackName;
 			string factText = SiegeCivilianGatherUiProfile.BuildMessengerSpeechFactText(targetName);
-			ShoutBehavior.TriggerImmediateSceneBehaviorReactionForExternal(factText, messenger.Index, persistHeroPrivateHistory: true, suppressStare: true, postSpeechLeaveSeconds: -1f, preSpeechFailsafeSeconds: SiegeCivilianGatherInteractionProfile.ImmediateReactionFailsafeSeconds);
+			ShoutBehavior.TriggerImmediateSceneBehaviorReactionForExternal(factText, messenger.Index, persistHeroPrivateHistory: true, suppressStare: true, postSpeechLeaveSeconds: -1f);
 			Logger.Log("SiegeAiIntervention", "Triggered gather messenger speech. Messenger=" + messenger.Index + "/" + messengerName + ", Target=" + target.Index + "/" + targetName + ", Count=" + _civilianGatherMessengerSpeechCount + ", Budget=" + _civilianGatherMessengerSpeechBudget);
 		}
 		catch (Exception ex)

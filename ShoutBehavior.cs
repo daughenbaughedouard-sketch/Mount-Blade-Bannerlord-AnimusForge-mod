@@ -175,17 +175,6 @@ public class ShoutBehavior : CampaignBehaviorBase
 		public float ArmAtMissionTime;
 	}
 
-	private sealed class ImmediateSceneReactionFailsafe
-	{
-		public int AgentIndex;
-
-		public long InteractionToken;
-
-		public float DeadlineMissionTime;
-
-		public string Reason;
-	}
-
 	private sealed class PendingSceneSummonReturnAfterSpeech
 	{
 		public int AgentIndex;
@@ -1943,8 +1932,6 @@ public class ShoutBehavior : CampaignBehaviorBase
 
 	private readonly Dictionary<int, PendingInteractionTimeoutArm> _pendingInteractionTimeoutArms = new Dictionary<int, PendingInteractionTimeoutArm>();
 
-	private readonly Dictionary<int, ImmediateSceneReactionFailsafe> _immediateSceneReactionFailsafes = new Dictionary<int, ImmediateSceneReactionFailsafe>();
-
 	private readonly Dictionary<int, PendingSceneSummonReturnAfterSpeech> _pendingSceneSummonReturnsAfterSpeech = new Dictionary<int, PendingSceneSummonReturnAfterSpeech>();
 
 	private readonly Dictionary<int, PendingSceneFollowCommand> _pendingSceneFollowCommands = new Dictionary<int, PendingSceneFollowCommand>();
@@ -2588,7 +2575,6 @@ public class ShoutBehavior : CampaignBehaviorBase
 			_ttsPlaybackStartedAgents.Clear();
 		}
 		_pendingInteractionTimeoutArms.Clear();
-		_immediateSceneReactionFailsafes.Clear();
 	}
 
 	private void HandleTtsPlaybackFailed(int agentIndex, string errorMessage)
@@ -7428,7 +7414,6 @@ private static string NormalizeScenePlayerHistoryLine(string text, string target
 		_passiveCooldowns.Clear();
 		_activeInteractionSessions.Clear();
 		_pendingInteractionTimeoutArms.Clear();
-		_immediateSceneReactionFailsafes.Clear();
 		_transientSceneFollowAgentIndices.Clear();
 		lock (_immediateSceneReactionGateLock)
 		{
@@ -20817,11 +20802,11 @@ private static List<string> BuildVisibleSceneHistoryLines(List<ConversationMessa
 		}
 	}
 
-	public static void TriggerImmediateSceneBehaviorReactionForExternal(string factText, int targetAgentIndex, bool persistHeroPrivateHistory = true, bool suppressStare = false, float postSpeechLeaveSeconds = -1f, float preSpeechFailsafeSeconds = -1f)
+	public static void TriggerImmediateSceneBehaviorReactionForExternal(string factText, int targetAgentIndex, bool persistHeroPrivateHistory = true, bool suppressStare = false, float postSpeechLeaveSeconds = -1f)
 	{
 		try
 		{
-			CurrentInstance?.TriggerImmediateSceneBehaviorReaction(factText, targetAgentIndex, persistHeroPrivateHistory, suppressStare, postSpeechLeaveSeconds, skipSceneFactRecord: false, returnSceneSummonOnTimeout: false, preSpeechFailsafeSeconds: preSpeechFailsafeSeconds);
+			CurrentInstance?.TriggerImmediateSceneBehaviorReaction(factText, targetAgentIndex, persistHeroPrivateHistory, suppressStare, postSpeechLeaveSeconds);
 		}
 		catch
 		{
@@ -20957,7 +20942,7 @@ private static List<string> BuildVisibleSceneHistoryLines(List<ConversationMessa
 		}
 	}
 
-	private void TriggerImmediateSceneBehaviorReaction(string factText, int targetAgentIndex, bool persistHeroPrivateHistory, bool suppressStare, float postSpeechLeaveSeconds = -1f, bool skipSceneFactRecord = false, bool returnSceneSummonOnTimeout = false, float preSpeechFailsafeSeconds = -1f)
+	private void TriggerImmediateSceneBehaviorReaction(string factText, int targetAgentIndex, bool persistHeroPrivateHistory, bool suppressStare, float postSpeechLeaveSeconds = -1f, bool skipSceneFactRecord = false, bool returnSceneSummonOnTimeout = false)
 	{
 		if (string.IsNullOrWhiteSpace(factText) || targetAgentIndex < 0 || Mission.Current == null)
 		{
@@ -21000,7 +20985,6 @@ private static List<string> BuildVisibleSceneHistoryLines(List<ConversationMessa
 			else
 			{
 				TrackPlayerInteraction(npcDataPacket, list?.Count ?? 0, postSpeechLeaveSeconds, returnSceneSummonOnTimeout);
-				ScheduleImmediateSceneReactionFailsafe(targetAgentIndex, preSpeechFailsafeSeconds, SiegeCivilianGatherInteractionProfile.ImmediateReactionFailsafeReason);
 			}
 			if (!list.Any(d => d != null && d.AgentIndex == targetAgentIndex))
 			{
@@ -21035,7 +21019,7 @@ private static List<string> BuildVisibleSceneHistoryLines(List<ConversationMessa
 				catch (Exception ex2)
 				{
 					Logger.Log("ShoutBehavior", "[ERROR] TriggerImmediateSceneBehaviorReaction background failed: " + ex2.Message);
-					TryClearImmediateSceneReactionInteractionAfterGcczFailure(npcDataPacket, "background_exception:" + ex2.Message);
+					ClearImmediateSceneReactionInteractionAfterGcczFailure(npcDataPacket, "background_exception:" + ex2.Message);
 				}
 				finally
 				{
@@ -22183,26 +22167,6 @@ private static List<string> BuildVisibleSceneHistoryLines(List<ConversationMessa
 		_pendingInteractionTimeoutArms.Remove(primaryTarget.AgentIndex);
 	}
 
-	private void ScheduleImmediateSceneReactionFailsafe(int agentIndex, float failsafeSeconds, string reason)
-	{
-		if (agentIndex < 0 || failsafeSeconds <= 0f || Mission.Current == null)
-		{
-			return;
-		}
-		if (!_activeInteractionSessions.TryGetValue(agentIndex, out var session) || session == null || session.InteractionToken == 0L)
-		{
-			return;
-		}
-		_immediateSceneReactionFailsafes[agentIndex] = new ImmediateSceneReactionFailsafe
-		{
-			AgentIndex = agentIndex,
-			InteractionToken = session.InteractionToken,
-			DeadlineMissionTime = Mission.Current.CurrentTime + failsafeSeconds,
-			Reason = string.IsNullOrWhiteSpace(reason) ? "immediate_reaction_failsafe" : reason.Trim()
-		};
-		Logger.Log("ShoutBehavior", "[ImmediateSceneReaction] scheduled pre-speech failsafe. agent=" + agentIndex + " seconds=" + failsafeSeconds.ToString("0.###"));
-	}
-
 	private void ScheduleInteractionTimeoutArm(int agentIndex, long interactionToken, float speechDurationSeconds)
 	{
 		if (agentIndex < 0 || interactionToken == 0L || Mission.Current == null)
@@ -22796,34 +22760,6 @@ private static List<string> BuildVisibleSceneHistoryLines(List<ConversationMessa
 		}
 	}
 
-	private bool IsImmediateSceneReactionFailsafeExpired(int agentIndex, SceneInteractionSession session, float currentTime)
-	{
-		if (agentIndex < 0 || session == null)
-		{
-			return false;
-		}
-		if (!_immediateSceneReactionFailsafes.TryGetValue(agentIndex, out var failsafe) || failsafe == null)
-		{
-			return false;
-		}
-		if (failsafe.InteractionToken != session.InteractionToken)
-		{
-			_immediateSceneReactionFailsafes.Remove(agentIndex);
-			return false;
-		}
-		return failsafe.DeadlineMissionTime >= 0f && currentTime >= failsafe.DeadlineMissionTime;
-	}
-
-	private bool TryClearExpiredImmediateSceneReactionFailsafe(int agentIndex)
-	{
-		string reason = SiegeCivilianGatherInteractionProfile.ImmediateReactionFailsafeReason;
-		if (_immediateSceneReactionFailsafes.TryGetValue(agentIndex, out var failsafe) && !string.IsNullOrWhiteSpace(failsafe?.Reason))
-		{
-			reason = failsafe.Reason;
-		}
-		return TryClearImmediateSceneReactionInteractionAfterGcczFailure(agentIndex, reason);
-	}
-
 	private void UpdateActiveInteractionTimeouts()
 	{
 		if (Mission.Current == null || _activeInteractionSessions.Count == 0)
@@ -22833,7 +22769,6 @@ private static List<string> BuildVisibleSceneHistoryLines(List<ConversationMessa
 		float currentTime = Mission.Current.CurrentTime;
 		List<int> list = null;
 		HashSet<int> outOfRangeReleaseAgentIndices = null;
-		HashSet<int> immediateReactionFailsafeAgentIndices = null;
 		foreach (KeyValuePair<int, SceneInteractionSession> activeInteractionSession in _activeInteractionSessions)
 		{
 			SceneInteractionSession value = activeInteractionSession.Value;
@@ -22845,20 +22780,6 @@ private static List<string> BuildVisibleSceneHistoryLines(List<ConversationMessa
 					list = new List<int>();
 				}
 				list.Add(activeInteractionSession.Key);
-				continue;
-			}
-			if (IsImmediateSceneReactionFailsafeExpired(activeInteractionSession.Key, value, currentTime))
-			{
-				if (list == null)
-				{
-					list = new List<int>();
-				}
-				list.Add(activeInteractionSession.Key);
-				if (immediateReactionFailsafeAgentIndices == null)
-				{
-					immediateReactionFailsafeAgentIndices = new HashSet<int>();
-				}
-				immediateReactionFailsafeAgentIndices.Add(activeInteractionSession.Key);
 				continue;
 			}
 			if (!value.TimeoutArmed)
@@ -22931,14 +22852,6 @@ private static List<string> BuildVisibleSceneHistoryLines(List<ConversationMessa
 			}
 			if (_activeInteractionSessions.TryGetValue(item, out var value2))
 			{
-				if (immediateReactionFailsafeAgentIndices != null && immediateReactionFailsafeAgentIndices.Contains(item))
-				{
-					if (TryClearExpiredImmediateSceneReactionFailsafe(item))
-					{
-						continue;
-					}
-					_immediateSceneReactionFailsafes.Remove(item);
-				}
 				if (outOfRangeReleaseAgentIndices != null && outOfRangeReleaseAgentIndices.Contains(item))
 				{
 					ExpireActiveInteractionSilently(value2, deferSceneSummonReturn: false);
@@ -23624,33 +23537,26 @@ private static List<string> BuildVisibleSceneHistoryLines(List<ConversationMessa
 		_stopStaringTime = Math.Max(_stopStaringTime, Mission.Current.CurrentTime + PLAYER_DRIVEN_MULTI_SCENE_STARE_HOLD_SECONDS);
 	}
 
-	private bool TryClearImmediateSceneReactionInteractionAfterGcczFailure(NpcDataPacket targetNpc, string reason)
-	{
-		return TryClearImmediateSceneReactionInteractionAfterGcczFailure(targetNpc?.AgentIndex ?? -1, reason);
-	}
-
-	private bool TryClearImmediateSceneReactionInteractionAfterGcczFailure(int agentIndex, string reason)
+	private void ClearImmediateSceneReactionInteractionAfterGcczFailure(NpcDataPacket targetNpc, string reason)
 	{
 		try
 		{
+			int agentIndex = targetNpc?.AgentIndex ?? -1;
 			if (agentIndex < 0)
 			{
-				return false;
+				return;
 			}
 			if (!SiegeAiInterventionBehavior.TryHandleGatherMessengerImmediateReactionFailureForExternal(agentIndex, reason))
 			{
-				return false;
+				return;
 			}
 			_pendingInteractionTimeoutArms.Remove(agentIndex);
-			_immediateSceneReactionFailsafes.Remove(agentIndex);
 			_activeInteractionSessions.Remove(agentIndex);
 			Logger.Log("ShoutBehavior", "[ImmediateSceneReaction] cleared GCCZ gather messenger after failed reaction. agent=" + agentIndex + " reason=" + (reason ?? ""));
-			return true;
 		}
 		catch (Exception ex)
 		{
 			Logger.Log("ShoutBehavior", "[WARN] ImmediateSceneReaction GCCZ failure cleanup failed: " + ex.Message);
-			return false;
 		}
 	}
 
@@ -23675,7 +23581,7 @@ private static List<string> BuildVisibleSceneHistoryLines(List<ConversationMessa
 		Agent npcAgent = Mission.Current?.Agents?.FirstOrDefault(a => a != null && a.Index == targetNpc.AgentIndex);
 		if (!CanAgentParticipateInSceneSpeech(npcAgent))
 		{
-			TryClearImmediateSceneReactionInteractionAfterGcczFailure(targetNpc, "not_speech_capable");
+			ClearImmediateSceneReactionInteractionAfterGcczFailure(targetNpc, "not_speech_capable");
 			return;
 		}
 		CharacterObject npcCharacter = npcAgent.Character as CharacterObject;
@@ -23723,12 +23629,12 @@ private static List<string> BuildVisibleSceneHistoryLines(List<ConversationMessa
 		if (!AIConfigHandler.TryCallAuxiliarySimpleDialogue(messages, maxTokens, 0.35f, out var text2, out var error))
 		{
 			Logger.Log("ShoutBehavior", "[ImmediateSceneReaction] auxiliary_simple_dialogue failed: " + error);
-			TryClearImmediateSceneReactionInteractionAfterGcczFailure(targetNpc, "auxiliary_simple_dialogue_failed:" + error);
+			ClearImmediateSceneReactionInteractionAfterGcczFailure(targetNpc, "auxiliary_simple_dialogue_failed:" + error);
 			return;
 		}
 		if (string.IsNullOrWhiteSpace(text2))
 		{
-			TryClearImmediateSceneReactionInteractionAfterGcczFailure(targetNpc, "empty_content");
+			ClearImmediateSceneReactionInteractionAfterGcczFailure(targetNpc, "empty_content");
 			return;
 		}
 		string text3 = (text2 ?? "").Replace("\r", "").Trim();
@@ -23739,7 +23645,7 @@ private static List<string> BuildVisibleSceneHistoryLines(List<ConversationMessa
 		text3 = StripStageDirectionsForPassiveShout(text3);
 		if (string.IsNullOrWhiteSpace(text3))
 		{
-			TryClearImmediateSceneReactionInteractionAfterGcczFailure(targetNpc, "empty_after_strip");
+			ClearImmediateSceneReactionInteractionAfterGcczFailure(targetNpc, "empty_after_strip");
 			return;
 		}
 		if (!string.IsNullOrWhiteSpace(fullHistoryText))
@@ -23747,7 +23653,6 @@ private static List<string> BuildVisibleSceneHistoryLines(List<ConversationMessa
 			RecordResponseForAllNearbySafe(allNpcData, targetNpc.AgentIndex, targetNpc.Name, fullHistoryText);
 			PersistNpcSpeechToNamedHeroes(targetNpc.AgentIndex, targetNpc.Name, fullHistoryText, allNpcData);
 		}
-		_immediateSceneReactionFailsafes.Remove(targetNpc.AgentIndex);
 		EnqueueSpeechLine(targetNpc, text3, allNpcData, skipHistory: true, suppressStare: suppressStare);
 	}
 
