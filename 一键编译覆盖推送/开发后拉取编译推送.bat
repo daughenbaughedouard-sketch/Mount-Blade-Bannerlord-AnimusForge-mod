@@ -11,6 +11,7 @@ cd /d "%PROJECT_ROOT%"
 
 set "PATH_SCRIPT=%SCRIPT_DIR%resolve_bannerlord_paths.ps1"
 set "CONFIG=Debug"
+set "BUILD_OUTPUT=%PROJECT_ROOT%\bin\%CONFIG%\net472"
 set "DRY_RUN=0"
 set "BUILD_TARGET=1.3"
 set "COMMIT_MSG="
@@ -149,11 +150,11 @@ if "%DRY_RUN%"=="1" (
     echo   git fetch origin "%BRANCH%"
     echo   if origin/%BRANCH% has new commit^(s^): git rebase --autostash "origin/%BRANCH%"
     if defined WORKSHOP_CONTENT_DIR (
-        echo   "%DOTNET_EXE%" build "%PROJECT_ROOT%\AnimusForge.csproj" -c %CONFIG% /p:BannerlordApi=1.3 /p:BannerlordRoot="%BANNERLORD_ROOT%" /p:WorkshopContentDir="%WORKSHOP_CONTENT_DIR%"
-        if /I "%BUILD_TARGET%"=="dual" echo   "%DOTNET_EXE%" build "%PROJECT_ROOT%\AnimusForge.csproj" -c %CONFIG% /p:BannerlordApi=1.4 /p:BannerlordRoot="%BANNERLORD_ROOT%" /p:WorkshopContentDir="%WORKSHOP_CONTENT_DIR%"
+        echo   "%DOTNET_EXE%" build "%PROJECT_ROOT%\AnimusForge.csproj" -c %CONFIG% /p:BannerlordApi=1.3 /p:BannerlordRoot="%BANNERLORD_ROOT%" /p:WorkshopContentDir="%WORKSHOP_CONTENT_DIR%" /p:AnimusForgeBinDir="%BUILD_OUTPUT%"
+        if /I "%BUILD_TARGET%"=="dual" echo   "%DOTNET_EXE%" build "%PROJECT_ROOT%\AnimusForge.csproj" -c %CONFIG% /p:BannerlordApi=1.4 /p:BannerlordRoot="%BANNERLORD_ROOT%" /p:WorkshopContentDir="%WORKSHOP_CONTENT_DIR%" /p:AnimusForgeBinDir="%BUILD_OUTPUT%"
     ) else (
-        echo   "%DOTNET_EXE%" build "%PROJECT_ROOT%\AnimusForge.csproj" -c %CONFIG% /p:BannerlordApi=1.3 /p:BannerlordRoot="%BANNERLORD_ROOT%"
-        if /I "%BUILD_TARGET%"=="dual" echo   "%DOTNET_EXE%" build "%PROJECT_ROOT%\AnimusForge.csproj" -c %CONFIG% /p:BannerlordApi=1.4 /p:BannerlordRoot="%BANNERLORD_ROOT%"
+        echo   "%DOTNET_EXE%" build "%PROJECT_ROOT%\AnimusForge.csproj" -c %CONFIG% /p:BannerlordApi=1.3 /p:BannerlordRoot="%BANNERLORD_ROOT%" /p:AnimusForgeBinDir="%BUILD_OUTPUT%"
+        if /I "%BUILD_TARGET%"=="dual" echo   "%DOTNET_EXE%" build "%PROJECT_ROOT%\AnimusForge.csproj" -c %CONFIG% /p:BannerlordApi=1.4 /p:BannerlordRoot="%BANNERLORD_ROOT%" /p:AnimusForgeBinDir="%BUILD_OUTPUT%"
     )
     echo   git rm -r --cached --ignore-unmatch -- "%GIT_EXCLUDE_PATH%"
     echo   git add -A
@@ -210,9 +211,9 @@ if not "%BEHIND_COUNT%"=="0" (
 echo.
 echo [2/4] Building project for Bannerlord 1.3.x...
 if defined WORKSHOP_CONTENT_DIR (
-    "%DOTNET_EXE%" build "%PROJECT_ROOT%\AnimusForge.csproj" -c %CONFIG% /p:BannerlordApi=1.3 /p:BannerlordRoot="%BANNERLORD_ROOT%" /p:WorkshopContentDir="%WORKSHOP_CONTENT_DIR%"
+    "%DOTNET_EXE%" build "%PROJECT_ROOT%\AnimusForge.csproj" -c %CONFIG% /p:BannerlordApi=1.3 /p:BannerlordRoot="%BANNERLORD_ROOT%" /p:WorkshopContentDir="%WORKSHOP_CONTENT_DIR%" /p:AnimusForgeBinDir="%BUILD_OUTPUT%"
 ) else (
-    "%DOTNET_EXE%" build "%PROJECT_ROOT%\AnimusForge.csproj" -c %CONFIG% /p:BannerlordApi=1.3 /p:BannerlordRoot="%BANNERLORD_ROOT%"
+    "%DOTNET_EXE%" build "%PROJECT_ROOT%\AnimusForge.csproj" -c %CONFIG% /p:BannerlordApi=1.3 /p:BannerlordRoot="%BANNERLORD_ROOT%" /p:AnimusForgeBinDir="%BUILD_OUTPUT%"
 )
 set "ERR=%ERRORLEVEL%"
 if not "%ERR%"=="0" (
@@ -226,9 +227,9 @@ echo.
 if /I "%BUILD_TARGET%"=="dual" (
     echo [2/4] Building project for Bannerlord 1.4.5...
     if defined WORKSHOP_CONTENT_DIR (
-        "%DOTNET_EXE%" build "%PROJECT_ROOT%\AnimusForge.csproj" -c %CONFIG% /p:BannerlordApi=1.4 /p:BannerlordRoot="%BANNERLORD_ROOT%" /p:WorkshopContentDir="%WORKSHOP_CONTENT_DIR%"
+        "%DOTNET_EXE%" build "%PROJECT_ROOT%\AnimusForge.csproj" -c %CONFIG% /p:BannerlordApi=1.4 /p:BannerlordRoot="%BANNERLORD_ROOT%" /p:WorkshopContentDir="%WORKSHOP_CONTENT_DIR%" /p:AnimusForgeBinDir="%BUILD_OUTPUT%"
     ) else (
-        "%DOTNET_EXE%" build "%PROJECT_ROOT%\AnimusForge.csproj" -c %CONFIG% /p:BannerlordApi=1.4 /p:BannerlordRoot="%BANNERLORD_ROOT%"
+        "%DOTNET_EXE%" build "%PROJECT_ROOT%\AnimusForge.csproj" -c %CONFIG% /p:BannerlordApi=1.4 /p:BannerlordRoot="%BANNERLORD_ROOT%" /p:AnimusForgeBinDir="%BUILD_OUTPUT%"
     )
     set "ERR=%ERRORLEVEL%"
     if not "%ERR%"=="0" (

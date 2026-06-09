@@ -37,6 +37,25 @@ function Test-SourceModuleDir {
     }
 }
 
+function Get-Sha256Hash {
+    param([Parameter(Mandatory = $true)][string]$Path)
+
+    $fullPath = Get-FullPathSafe -Path $Path
+    if (-not (Test-Path -LiteralPath $fullPath -PathType Leaf)) {
+        throw "File not found for hash: $fullPath"
+    }
+
+    $sha256 = [System.Security.Cryptography.SHA256]::Create()
+    $stream = [System.IO.File]::OpenRead($fullPath)
+    try {
+        $hashBytes = $sha256.ComputeHash($stream)
+        return ([System.BitConverter]::ToString($hashBytes) -replace "-", "")
+    } finally {
+        $stream.Dispose()
+        $sha256.Dispose()
+    }
+}
+
 function Get-TargetModuleDirs {
     param([string]$BannerlordRootPath)
 
@@ -109,13 +128,13 @@ function Sync-SubModuleXmlBackToSource {
 
     $selectedTarget = @($existingTargets)[0]
     $selectedXmlPath = Join-Path $selectedTarget "SubModule.xml"
-    $selectedHash = (Get-FileHash -LiteralPath $selectedXmlPath -Algorithm SHA256).Hash
+    $selectedHash = Get-Sha256Hash -Path $selectedXmlPath
 
     if ($existingTargets.Count -gt 1) {
         $mismatchedTargets = New-Object System.Collections.Generic.List[string]
         foreach ($targetDir in $existingTargets | Select-Object -Skip 1) {
             $targetXmlPath = Join-Path $targetDir "SubModule.xml"
-            $targetHash = (Get-FileHash -LiteralPath $targetXmlPath -Algorithm SHA256).Hash
+            $targetHash = Get-Sha256Hash -Path $targetXmlPath
             if ($targetHash -ne $selectedHash) {
                 $mismatchedTargets.Add($targetDir)
             }
@@ -296,6 +315,42 @@ function Copy-BuildOutputIntoModule {
         Copy-Item -LiteralPath $buildPdbPath -Destination $targetPdbPath -Force
         Write-Host "Updated PDB : $targetPdbPath"
     }
+
+    $dependencyNames = @(
+        "0Harmony.dll",
+        "Microsoft.ML.OnnxRuntime.dll",
+        "System.Memory.dll",
+        "System.Buffers.dll",
+        "System.Runtime.CompilerServices.Unsafe.dll"
+    )
+    $candidateDependencyDirs = New-Object System.Collections.Generic.List[string]
+    $candidateDependencyDirs.Add((Split-Path -Path $buildDllFull -Parent))
+    if (-not [string]::IsNullOrWhiteSpace($script:projectRootFull)) {
+        $candidateDependencyDirs.Add((Join-Path $script:projectRootFull "bin\Debug\net472"))
+        $candidateDependencyDirs.Add((Join-Path $script:projectRootFull "bin\Release\net472"))
+        $candidateDependencyDirs.Add((Join-Path $script:projectRootFull "AnimusForge\bin\Win64_Shipping_Client"))
+    }
+
+    foreach ($dependencyName in $dependencyNames) {
+        $dependencySource = $null
+        foreach ($candidateDir in $candidateDependencyDirs) {
+            if ([string]::IsNullOrWhiteSpace($candidateDir)) {
+                continue
+            }
+            $candidatePath = Join-Path $candidateDir $dependencyName
+            if (Test-Path -LiteralPath $candidatePath -PathType Leaf) {
+                $dependencySource = $candidatePath
+                break
+            }
+        }
+
+        if ([string]::IsNullOrWhiteSpace($dependencySource)) {
+            throw "Required module-local dependency not found in build output: $dependencyName"
+        }
+
+        Copy-Item -LiteralPath $dependencySource -Destination (Join-Path $moduleBinDir $dependencyName) -Force
+        Write-Host "Updated Dep : $(Join-Path $moduleBinDir $dependencyName)"
+    }
 }
 
 function Set-SubModuleIdentity {
@@ -416,8 +471,8 @@ function Assert-SameHash {
         throw "Missing deployed file: $targetPath"
     }
 
-    $sourceHash = (Get-FileHash -LiteralPath $sourcePath -Algorithm SHA256).Hash
-    $targetHash = (Get-FileHash -LiteralPath $targetPath -Algorithm SHA256).Hash
+    $sourceHash = Get-Sha256Hash -Path $sourcePath
+    $targetHash = Get-Sha256Hash -Path $targetPath
     if ($sourceHash -ne $targetHash) {
         throw "Hash mismatch after deploy: $RelativePath"
     }
