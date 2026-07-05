@@ -1,0 +1,39 @@
+{
+    "materialRoot":  "F:\\my mod\\animusforge-1.3.x\\tools\\ActionPostprocessPromptLab\\dist\\素材",
+    "outputPath":  "F:\\my mod\\animusforge-1.3.x\\tools\\ActionPostprocessPromptLab\\cases\\material_high_value_allow_cases.jsonl",
+    "generatedAt":  "2026-07-05 12:30:26",
+    "stats":  {
+                  "Files":  50,
+                  "Blocks":  6761,
+                  "AcceptedCandidates":  635,
+                  "WrittenCases":  160,
+                  "SkippedNoRequest":  0,
+                  "SkippedInvalidRequest":  0,
+                  "SkippedNoTags":  11,
+                  "SkippedUnsupportedTags":  4789,
+                  "SkippedNoLatestReply":  0,
+                  "SkippedExplicit":  467,
+                  "SkippedDuplicate":  859
+              },
+    "maxCases":  160,
+    "maxPerRule":  24,
+    "writtenCases":  160,
+    "ruleCounts":  {
+                       "duel":  5,
+                       "settlement_transfer":  17,
+                       "kingdom_vassalage":  2,
+                       "reward":  24,
+                       "party_transfer":  10,
+                       "hero_join_party":  18,
+                       "worldmap_party_command":  17,
+                       "diplomacy":  16,
+                       "scene_mechanism_actions":  1,
+                       "kingdom_service":  12,
+                       "propose_agenda":  5,
+                       "vote_deal":  3,
+                       "vanilla_issue":  3,
+                       "scene_auto_group_relay":  24,
+                       "marriage":  2,
+                       "action:royal":  1
+                   }
+}

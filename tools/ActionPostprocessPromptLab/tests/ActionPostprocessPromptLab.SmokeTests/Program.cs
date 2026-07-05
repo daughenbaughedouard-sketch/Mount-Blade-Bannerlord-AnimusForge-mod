@@ -1,0 +1,232 @@
+using System.Text.Json;
+using ActionPostprocessPromptLab.Core;
+
+var service = new PromptLabService();
+var repoRoot = service.FindDefaultRepoRoot(AppContext.BaseDirectory);
+if (string.IsNullOrWhiteSpace(repoRoot))
+{
+    repoRoot = service.FindDefaultRepoRoot(Directory.GetCurrentDirectory());
+}
+
+if (string.IsNullOrWhiteSpace(repoRoot))
+{
+    Console.Error.WriteLine("Could not find repository root with AnimusForge/ModuleData prompt files.");
+    return 1;
+}
+
+var labRoot = service.ResolveLabRoot(repoRoot);
+var catalog = service.LoadCatalog(repoRoot);
+Console.WriteLine("repo: " + repoRoot);
+Console.WriteLine("rules: " + catalog.Rules.Count);
+Console.WriteLine("mood-rules: " + catalog.ActionConfig.MoodRules.Count);
+
+if (catalog.Rules.Count == 0)
+{
+    Console.Error.WriteLine("No postprocess rules were loaded.");
+    return 1;
+}
+
+if (catalog.ActionConfig.MoodRules.Count == 0)
+{
+    Console.Error.WriteLine("No mood rules were loaded.");
+    return 1;
+}
+
+var marriageRule = catalog.Rules.FirstOrDefault(x => x.Id == "marriage");
+if (marriageRule == null || !marriageRule.DisplayName.Contains("婚姻", StringComparison.Ordinal))
+{
+    Console.Error.WriteLine("Rule display names were not localized to Chinese.");
+    return 1;
+}
+
+var caseFile = Path.Combine(labRoot, "cases", "sample_cases.jsonl");
+var cases = service.LoadCases(caseFile);
+Console.WriteLine("cases: " + cases.Count);
+if (cases.Count == 0)
+{
+    Console.Error.WriteLine("No sample cases were loaded.");
+    return 1;
+}
+
+var tagOverrideRunDir = service.CreateRunDirectory(labRoot);
+var duelRule = catalog.Rules.FirstOrDefault(x => x.Id == "duel");
+var duelEntry = duelRule?.PostprocessRules.FirstOrDefault(x => x.Tag == "[ACTION:DUEL]");
+if (duelEntry == null)
+{
+    Console.Error.WriteLine("Duel postprocess tag was not found.");
+    return 1;
+}
+
+var duelTag = duelEntry.Tag;
+var overrideDescription = "测试用标签提示词覆盖：只有玩家和 NPC 都明确无条件同意正式决斗时才输出。";
+var versionConfig = service.CloneActionConfigWithPromptsAndRuleDescriptions(
+    catalog.ActionConfig,
+    catalog.ActionConfig.SystemPrompt,
+    catalog.ActionConfig.UserPromptTemplate,
+    catalog.Rules);
+versionConfig.RulePostprocessDescriptionOverrides["duel"][duelTag] = overrideDescription;
+var versionPath = Path.Combine(tagOverrideRunDir, "tag_prompt_override.json");
+service.SavePromptVersion(versionPath, versionConfig);
+
+var versionCatalog = service.LoadCatalog(repoRoot, versionPath);
+var versionDuelEntry = versionCatalog.Rules
+    .FirstOrDefault(x => x.Id == "duel")?
+    .PostprocessRules
+    .FirstOrDefault(x => x.Tag == duelTag);
+if (versionDuelEntry == null || versionDuelEntry.Tag != duelTag || versionDuelEntry.Description != overrideDescription)
+{
+    Console.Error.WriteLine("Saved tag prompt description override was not reloaded without changing the tag.");
+    return 1;
+}
+
+var settings = new PromptLabSettings
+{
+    ApiUrl = "https://example.invalid/v1/chat/completions",
+    ApiKey = "not-written-to-request",
+    Model = "prompt-lab-smoke",
+    Temperature = 0,
+    MaxTokens = 5000,
+    ThinkingEnabled = true,
+    ReasoningEffort = "max"
+};
+
+var rendered = service.RenderPrompt(versionCatalog, cases[0], settings);
+if (!rendered.TagRules.Contains(overrideDescription, StringComparison.Ordinal))
+{
+    Console.Error.WriteLine("Rendered tag rules did not use the edited tag prompt description.");
+    return 1;
+}
+
+if (cases.Count > 1)
+{
+    var secondRendered = service.RenderPrompt(versionCatalog, cases[1], settings);
+    if (!secondRendered.TagRules.Contains(overrideDescription, StringComparison.Ordinal))
+    {
+        Console.Error.WriteLine("Edited tag prompt description was not global across cases.");
+        return 1;
+    }
+}
+
+using var requestDocument = JsonDocument.Parse(rendered.RequestJson);
+if (!requestDocument.RootElement.TryGetProperty("messages", out var messages) || messages.GetArrayLength() != 2)
+{
+    Console.Error.WriteLine("Rendered request did not contain the expected two chat messages.");
+    return 1;
+}
+
+if (!requestDocument.RootElement.TryGetProperty("thinking", out var thinking) ||
+    !thinking.TryGetProperty("type", out var thinkingType) ||
+    thinkingType.GetString() != "enabled")
+{
+    Console.Error.WriteLine("Rendered request did not enable thinking.");
+    return 1;
+}
+
+if (!requestDocument.RootElement.TryGetProperty("reasoning_effort", out var reasoningEffort) ||
+    reasoningEffort.GetString() != "max")
+{
+    Console.Error.WriteLine("Rendered request did not contain the expected reasoning_effort.");
+    return 1;
+}
+
+if (rendered.RequestJson.Contains(settings.ApiKey, StringComparison.Ordinal))
+{
+    Console.Error.WriteLine("Request JSON leaked the API key.");
+    return 1;
+}
+
+var anthropicSettings = new PromptLabSettings
+{
+    ApiUrl = "https://api.deepseek.com/anthropic",
+    ApiKey = "not-written-to-request",
+    Model = "deepseek-chat",
+    Temperature = 0,
+    MaxTokens = 20000,
+    ThinkingEnabled = true,
+    ReasoningEffort = "max"
+};
+
+var anthropicRendered = service.RenderPrompt(versionCatalog, cases[0], anthropicSettings);
+using var anthropicRequestDocument = JsonDocument.Parse(anthropicRendered.RequestJson);
+if (!anthropicRequestDocument.RootElement.TryGetProperty("system", out var anthropicSystem) ||
+    anthropicSystem.GetString() != anthropicRendered.SystemPrompt)
+{
+    Console.Error.WriteLine("Anthropic request did not put the system prompt in the top-level system field.");
+    return 1;
+}
+
+if (!anthropicRequestDocument.RootElement.TryGetProperty("messages", out var anthropicMessages) ||
+    anthropicMessages.GetArrayLength() != 1 ||
+    anthropicMessages[0].GetProperty("role").GetString() != "user")
+{
+    Console.Error.WriteLine("Anthropic request did not contain exactly one user message.");
+    return 1;
+}
+
+if (!anthropicRequestDocument.RootElement.TryGetProperty("thinking", out var anthropicThinking) ||
+    !anthropicThinking.TryGetProperty("budget_tokens", out var anthropicBudget) ||
+    anthropicBudget.GetInt32() <= 0)
+{
+    Console.Error.WriteLine("Anthropic request did not contain a positive thinking budget.");
+    return 1;
+}
+
+if (anthropicRendered.RequestJson.Contains(anthropicSettings.ApiKey, StringComparison.Ordinal))
+{
+    Console.Error.WriteLine("Anthropic request JSON leaked the API key.");
+    return 1;
+}
+
+var runDir = tagOverrideRunDir;
+service.WriteOfflineArtifacts(runDir, 1, catalog, cases[0], settings, "[ACTION:MOOD:NEUTRAL]");
+var promptPath = Path.Combine(runDir, "001_" + cases[0].CaseId + ".prompt.txt");
+var requestPath = Path.Combine(runDir, "001_" + cases[0].CaseId + ".request.json");
+var responsePath = Path.Combine(runDir, "001_" + cases[0].CaseId + ".response.txt");
+var metaPath = Path.Combine(runDir, "001_" + cases[0].CaseId + ".meta.json");
+if (!File.Exists(promptPath) || !File.Exists(requestPath) || !File.Exists(responsePath) || !File.Exists(metaPath))
+{
+    Console.Error.WriteLine("Smoke run did not create prompt/request/response/meta files.");
+    return 1;
+}
+
+var savedPromptText = File.ReadAllText(promptPath);
+if (!savedPromptText.Contains("===== SYSTEM PROMPT =====", StringComparison.Ordinal) ||
+    !savedPromptText.Contains("===== USER PROMPT =====", StringComparison.Ordinal) ||
+    !savedPromptText.Contains("===== LATEST REPLY =====", StringComparison.Ordinal))
+{
+    Console.Error.WriteLine("Saved prompt text did not contain the expected rendered prompt sections.");
+    return 1;
+}
+
+using var savedRequest = JsonDocument.Parse(File.ReadAllText(requestPath));
+using var savedMeta = JsonDocument.Parse(File.ReadAllText(metaPath));
+if (!savedMeta.RootElement.TryGetProperty("caseId", out var caseId) || caseId.GetString() != cases[0].CaseId)
+{
+    Console.Error.WriteLine("Saved meta did not contain the expected caseId.");
+    return 1;
+}
+
+if (!savedMeta.RootElement.TryGetProperty("promptPath", out var savedPromptPath) ||
+    savedPromptPath.GetString() != promptPath)
+{
+    Console.Error.WriteLine("Saved meta did not contain the expected promptPath.");
+    return 1;
+}
+
+if (!savedRequest.RootElement.TryGetProperty("thinking", out var savedThinking) ||
+    !savedThinking.TryGetProperty("type", out var savedThinkingType) ||
+    savedThinkingType.GetString() != "enabled")
+{
+    Console.Error.WriteLine("Saved request did not keep thinking enabled.");
+    return 1;
+}
+
+if (!savedMeta.RootElement.TryGetProperty("reasoningEffortSent", out var metaReasoningEffort) ||
+    metaReasoningEffort.GetString() != "max")
+{
+    Console.Error.WriteLine("Saved meta did not contain the expected reasoning effort.");
+    return 1;
+}
+
+Console.WriteLine("smoke-run: " + runDir);
+return 0;

@@ -1,0 +1,12 @@
+<Solution>
+  <Folder Name="/src/">
+    <Project Path="src/ActionPostprocessPromptLab.App/ActionPostprocessPromptLab.App.csproj" />
+    <Project Path="src/ActionPostprocessPromptLab.Core/ActionPostprocessPromptLab.Core.csproj" />
+  </Folder>
+  <Folder Name="/tests/">
+    <Project Path="tests/ActionPostprocessPromptLab.SmokeTests/ActionPostprocessPromptLab.SmokeTests.csproj" />
+  </Folder>
+  <Folder Name="/tools/">
+    <Project Path="tools/ActionPostprocessPromptLab.Runner/ActionPostprocessPromptLab.Runner.csproj" />
+  </Folder>
+</Solution>
