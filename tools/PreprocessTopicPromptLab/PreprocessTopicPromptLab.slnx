@@ -1,0 +1,10 @@
+<Solution>
+  <Folder Name="/src/">
+    <Project Path="src/PreprocessTopicPromptLab.App/PreprocessTopicPromptLab.App.csproj" />
+    <Project Path="src/PreprocessTopicPromptLab.Cli/PreprocessTopicPromptLab.Cli.csproj" />
+    <Project Path="src/PreprocessTopicPromptLab.Core/PreprocessTopicPromptLab.Core.csproj" />
+  </Folder>
+  <Folder Name="/tests/">
+    <Project Path="tests/PreprocessTopicPromptLab.SmokeTests/PreprocessTopicPromptLab.SmokeTests.csproj" />
+  </Folder>
+</Solution>

@@ -1,0 +1,82 @@
+{
+    "SourceDir":  "F:\\my mod\\animusforge-1.3.x\\tools\\ActionPostprocessPromptLab\\dist\\训练集\\20260705",
+    "OutputPath":  "F:\\my mod\\animusforge-1.3.x\\tools\\PreprocessTopicPromptLab\\cases\\training_20260705_topics_200.jsonl",
+    "TargetCount":  200,
+    "TotalBlocks":  6761,
+    "CandidateCount":  1188,
+    "OutputCount":  200,
+    "Distribution":  [
+                         {
+                             "Topic":  "diplomacy",
+                             "Count":  18
+                         },
+                         {
+                             "Topic":  "duel",
+                             "Count":  18
+                         },
+                         {
+                             "Topic":  "encounter_release_player",
+                             "Count":  1
+                         },
+                         {
+                             "Topic":  "hero_join_party",
+                             "Count":  18
+                         },
+                         {
+                             "Topic":  "kingdom_service",
+                             "Count":  18
+                         },
+                         {
+                             "Topic":  "kingdom_vassalage",
+                             "Count":  8
+                         },
+                         {
+                             "Topic":  "lords_hall_access",
+                             "Count":  2
+                         },
+                         {
+                             "Topic":  "marriage",
+                             "Count":  17
+                         },
+                         {
+                             "Topic":  "party_transfer",
+                             "Count":  1
+                         },
+                         {
+                             "Topic":  "propose_agenda",
+                             "Count":  5
+                         },
+                         {
+                             "Topic":  "reward",
+                             "Count":  17
+                         },
+                         {
+                             "Topic":  "scene_auto_group_relay",
+                             "Count":  17
+                         },
+                         {
+                             "Topic":  "scene_mechanism_actions",
+                             "Count":  17
+                         },
+                         {
+                             "Topic":  "settlement_transfer",
+                             "Count":  2
+                         },
+                         {
+                             "Topic":  "siege_intervention_aftermath",
+                             "Count":  11
+                         },
+                         {
+                             "Topic":  "vanilla_issue",
+                             "Count":  6
+                         },
+                         {
+                             "Topic":  "vote_deal",
+                             "Count":  7
+                         },
+                         {
+                             "Topic":  "worldmap_party_command",
+                             "Count":  17
+                         }
+                     ]
+}

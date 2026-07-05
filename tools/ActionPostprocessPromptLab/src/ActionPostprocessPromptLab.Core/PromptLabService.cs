@@ -973,6 +973,13 @@ public sealed class PromptLabService
                 };
             }
         }
+        else
+        {
+            payload["thinking"] = new JsonObject
+            {
+                ["type"] = "disabled"
+            };
+        }
 
         return payload.ToJsonString(JsonFileStore.JsonOptions);
     }

@@ -1,0 +1,9 @@
+{
+  "Version": 17,
+  "IsEnabled": true,
+  "SystemPrompt": "You are a dialogue retrieval tool. Output only a comma-separated list of topic numbers, or 0 if no topic applies.",
+  "UserPromptTemplate": "MOD_SOURCE: AIConfigHandler.BuildAuxiliaryGuardrailRoutingPrompt",
+  "RoutingGuidance": "优先看最新玩家请求；历史只补指代。话题用于规则注入，不是剧情摘要。\n明确核心机制优先，不要被 NPC_RECENT/NPC_MAJOR/NOBLE_PRESSURE 替代；弱补位才用这些。\nDIPLOMACY 优先于 NOBLE_PRESSURE：和平/通商/条约/战后赔偿/割地/放行条件。\nNPC_JOIN 优先于 VASSALAGE：NPC/人物/家族加入玩家王国、队伍、阵营，或向玩家效忠。\nKINGDOM_SERVICE 优先于 VASSALAGE：玩家自己成为某王国封臣/雇佣兵或退出。\nWORLD_MAP: 率军攻城/围攻/攻打/移动到某地。\nSETTLEMENT: 明确交付/割让/收归领地、工坊、商队所有权。\nISSUE: 任务接取、完成、交付、追踪。\nNOBLE_PRESSURE: 只限用贵族身份或头衔威胁施压。\nNPC_MAJOR: 只限长期身世背景；NPC_RECENT: 只限近期行动传闻。",
+  "RuleInstructionMaxChars": 180,
+  "TopicOverrides": {}
+}

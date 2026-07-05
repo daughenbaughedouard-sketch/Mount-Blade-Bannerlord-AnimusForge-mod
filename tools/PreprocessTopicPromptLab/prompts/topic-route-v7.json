@@ -1,0 +1,9 @@
+{
+  "Version": 8,
+  "IsEnabled": true,
+  "SystemPrompt": "You are a dialogue retrieval tool. Output only a comma-separated list of topic numbers, or 0 if no topic applies.",
+  "UserPromptTemplate": "MOD_SOURCE: AIConfigHandler.BuildAuxiliaryGuardrailRoutingPrompt",
+  "RoutingGuidance": "优先看最新玩家请求；历史只用于补全指代。不要仅因 runtime 有候选清单就选话题。\nSCENE_RELAY: 玩家对诸位/大家/朋友们/多个在场NPC喊话或要求众人听见时必选。\nDIPLOMACY: 只限王国间议和/停战/通商/贡金/税率/条约；群体喊话里明确谈未来和平或通商也选；单纯战斗叙述不选。\nCOMMANDS_AND_REQUESTS: 只限大地图部队立即移动/跟随/攻击某目标；战争抱怨、守城、去大厅、学技术、场景跟随都不选。\nVASSALAGE: kingdom/clan submits as vassal only.\nSETTLEMENT: actual fief/workshop/caravan ownership handover only.\nREWARD: 只限本轮明确给钱/给物/借债/还债。",
+  "RuleInstructionMaxChars": 180,
+  "TopicOverrides": {}
+}

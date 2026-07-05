@@ -1,0 +1,9 @@
+{
+  "Version": 5,
+  "IsEnabled": true,
+  "SystemPrompt": "You are a dialogue retrieval tool. Output only a comma-separated list of topic numbers, or 0 if no topic applies.",
+  "UserPromptTemplate": "MOD_SOURCE: AIConfigHandler.BuildAuxiliaryGuardrailRoutingPrompt",
+  "RoutingGuidance": "优先看最新玩家请求；历史只用于补全指代。不要仅因 runtime 有候选清单就选话题。\nSCENE_RELAY: 玩家对诸位/大家/朋友们/多个在场NPC喊话或要求众人听见时必选。\nCOMMANDS_AND_REQUESTS: 只限大地图部队立即移动/跟随/攻击某目标；战争抱怨、守城、去大厅、学技术、场景跟随都不选。\nISSUE: 只限原版任务的委托/接取/完成/交付；释放俘虏、赔城、决斗、外交、问候工作都不选。\nSETTLEMENT: 只限实际移交城镇/城堡/工坊/商队所有权。\nVASSALAGE: 只限王国/家族整体臣服附庸；个人入队或任职不选。\nREWARD: 只限本轮明确给钱/给物/借债/还债。",
+  "RuleInstructionMaxChars": 180,
+  "TopicOverrides": {}
+}
