@@ -153,6 +153,9 @@ $falseActionFamilyTotal = 0
 $moodMatchCount = 0
 $total = $itemArray.Count
 $exactTagMatchCount = 0
+$noActionExpectedTotal = 0
+$noActionOverTriggeredCount = 0
+$unexpectedActionCaseCount = 0
 
 foreach ($item in $itemArray) {
     $rule = Get-PrimaryRule $item
@@ -232,6 +235,19 @@ foreach ($item in $itemArray) {
     $missingActionFamilies = @($expectedActionFamilies | Where-Object { $actualActionFamilies -notcontains $_ } | Select-Object -Unique)
     $unexpectedActionFamilies = @($actualActionFamilies | Where-Object { $expectedActionFamilies -notcontains $_ } | Select-Object -Unique)
     $actionFamilyMatch = ($missingActionFamilies.Count -eq 0 -and $unexpectedActionFamilies.Count -eq 0)
+    $expectedHasAction = ($expectedActionFamilies.Count -gt 0 -or $expectedActionTags.Count -gt 0)
+    $actualHasAction = ($actualActionFamilies.Count -gt 0 -or $actualActionTags.Count -gt 0)
+    if (-not $expectedHasAction) {
+        $noActionExpectedTotal++
+        if ($actualHasAction) {
+            $noActionOverTriggeredCount++
+        }
+    }
+
+    if ($unexpectedActionFamilies.Count -gt 0 -or $unexpectedActionTags.Count -gt 0) {
+        $unexpectedActionCaseCount++
+    }
+
     $expectedMood = @($expectedFamilies | Where-Object { $_.StartsWith("MOOD:", [StringComparison]::Ordinal) } | Select-Object -First 1)
     $actualMood = @($actualFamilies | Where-Object { $_.StartsWith("MOOD:", [StringComparison]::Ordinal) } | Select-Object -First 1)
     $moodMatch = ($expectedMood.Count -gt 0 -and $actualMood.Count -gt 0 -and $expectedMood[0] -eq $actualMood[0])
@@ -397,6 +413,10 @@ $analysis = [ordered]@{
     expectedActionFamilies = $expectedActionFamilyTotal
     hitActionFamilies = $hitActionFamilyTotal
     falseActionFamilies = $falseActionFamilyTotal
+    unexpectedActionCases = $unexpectedActionCaseCount
+    noActionExpected = $noActionExpectedTotal
+    noActionOverTriggered = $noActionOverTriggeredCount
+    noActionOverTriggerRate = if ($noActionExpectedTotal -gt 0) { [Math]::Round(($noActionOverTriggeredCount * 100.0 / $noActionExpectedTotal), 1) } else { 0 }
     exactTagMatch = $exactTagMatchCount
     familyMatch = $familyMatchCount
     moodMatch = $moodMatchCount
@@ -420,6 +440,9 @@ $md = New-Object System.Text.StringBuilder
 [void]$md.AppendLine("- Action family match: " + $actionFamilyMatchCount + " / " + $total)
 [void]$md.AppendLine("- Action family recall: " + $analysis.actionFamilyRecall + "%")
 [void]$md.AppendLine("- Action family precision: " + $analysis.actionFamilyPrecision + "%")
+[void]$md.AppendLine("- Unexpected action cases: " + $unexpectedActionCaseCount + " / " + $total)
+[void]$md.AppendLine("- No-action expected cases: " + $noActionExpectedTotal)
+[void]$md.AppendLine("- No-action over-triggered: " + $noActionOverTriggeredCount + " / " + $noActionExpectedTotal + " (" + $analysis.noActionOverTriggerRate + "%)")
 [void]$md.AppendLine("- Exact tag match: " + $analysis.exactTagMatch + " / " + $total)
 [void]$md.AppendLine("- Family match: " + $familyMatchCount + " / " + $total)
 [void]$md.AppendLine("- Mood match: " + $moodMatchCount + " / " + $total)
@@ -511,6 +534,8 @@ Write-Host ("Action exact match: {0}" -f $actionExactMatchCount)
 Write-Host ("Action family match: {0}" -f $actionFamilyMatchCount)
 Write-Host ("Action family recall: {0}%" -f $analysis.actionFamilyRecall)
 Write-Host ("Action family precision: {0}%" -f $analysis.actionFamilyPrecision)
+Write-Host ("Unexpected action cases: {0}" -f $unexpectedActionCaseCount)
+Write-Host ("No-action over-triggered: {0}/{1} ({2}%)" -f $noActionOverTriggeredCount, $noActionExpectedTotal, $analysis.noActionOverTriggerRate)
 Write-Host ("Exact tag match: {0}" -f $analysis.exactTagMatch)
 Write-Host ("Family match: {0}" -f $familyMatchCount)
 Write-Host ("Mood match: {0}" -f $moodMatchCount)
