@@ -96,7 +96,7 @@ if (string.IsNullOrWhiteSpace(dryResponse))
     dryResponse = "[ACTION:MOOD:NEUTRAL]";
 }
 
-var concurrency = 1;
+var concurrency = Math.Min(200, cases.Count);
 if (int.TryParse(GetOption(options, "concurrency"), out var parsedConcurrency) && parsedConcurrency > 1)
 {
     concurrency = Math.Min(parsedConcurrency, cases.Count);
