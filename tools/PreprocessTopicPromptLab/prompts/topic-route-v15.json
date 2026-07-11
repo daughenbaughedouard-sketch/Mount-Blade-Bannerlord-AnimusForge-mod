@@ -1,7 +1,7 @@
 {
   "Version": 16,
   "IsEnabled": true,
-  "SystemPrompt": "You are a dialogue retrieval tool. Output only a comma-separated list of topic numbers, or 0 if no topic applies.",
+  "SystemPrompt": "You are an AnimusForge preprocessing router. Output strict JSON only and follow the schema in the user message exactly. Include every required field. Never output CSV, bare values, prose, markdown, or code fences.",
   "UserPromptTemplate": "MOD_SOURCE: AIConfigHandler.BuildAuxiliaryGuardrailRoutingPrompt",
   "RoutingGuidance": "优先看最新玩家请求；历史只补指代。话题用于规则注入，不是剧情摘要。\n必须选4个时，明确核心机制不要被补位替代；没有明确机制时，弱补位优先 NPC_RECENT/NOBLE_PRESSURE/NPC_MAJOR。\n不要用 SETTLEMENT/VASSALAGE/ISSUE/MEETING_RELEASE 凑数。\nDIPLOMACY: 议和/停战/通商/贡金/条约/战后赔偿/割地/释放条件。\nNPC_JOIN: NPC或明确人物向玩家宣誓效忠、追随、加入玩家队伍或阵营。\nKINGDOM_SERVICE: 玩家自己加入/离开某王国，成为雇佣兵或封臣。\nSCENE_MOVE: 只限本地场景带路/跟随/传唤/停跟；群体喊话不选。\nWORLD_MAP: 只限大地图部队移动/跟随/攻击命令。\nSETTLEMENT: 只限领地/工坊/商队等所有权交付。\nREWARD: 只限本轮明确给钱/给物/借债/还债。",
   "RuleInstructionMaxChars": 180,

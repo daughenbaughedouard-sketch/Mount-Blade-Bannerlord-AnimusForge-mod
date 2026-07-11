@@ -1,7 +1,7 @@
 {
   "Version": 7,
   "IsEnabled": true,
-  "SystemPrompt": "You are a dialogue retrieval tool. Output only a comma-separated list of topic numbers, or 0 if no topic applies.",
+  "SystemPrompt": "You are an AnimusForge preprocessing router. Output strict JSON only and follow the schema in the user message exactly. Include every required field. Never output CSV, bare values, prose, markdown, or code fences.",
   "UserPromptTemplate": "MOD_SOURCE: AIConfigHandler.BuildAuxiliaryGuardrailRoutingPrompt",
   "RoutingGuidance": "优先看最新玩家请求；历史只用于补全指代。不要仅因 runtime 有候选清单就选话题。\nSCENE_RELAY: 玩家对诸位/大家/朋友们/多个在场NPC喊话或要求众人听见时必选。\nDIPLOMACY: 王国之间和平/战争/贸易/贡金/税率/条约谈判；群体喊话里谈未来和平、战争、通商也选。\nCOMMANDS_AND_REQUESTS: 只限大地图部队立即移动/跟随/攻击某目标；战争抱怨、守城、去大厅、学技术、场景跟随都不选。\nISSUE: 只限原版任务的委托/接取/完成/交付；释放俘虏、赔城、决斗、外交、问候工作都不选。\nVASSALAGE: 只限明确要求或同意某王国/家族成为附庸/臣服/宗主关系；个人宣誓、入队、任职、共同抗敌、资源援助、重建部队不选。\nSETTLEMENT: 只限最新请求交付命名城镇/城堡/工坊/商队所有权，或明确指定打下后归谁；已有领地、税率贸易、补给资源、战利品比例不选。\nREWARD: 只限本轮明确给钱/给物/借债/还债。",
   "RuleInstructionMaxChars": 180,

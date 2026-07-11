@@ -15,7 +15,7 @@ public sealed class PreprocessTopicLabService
     public const float ModAuxiliaryRouterTemperature = 0f;
 
     public const string DefaultSystemPrompt =
-        "You are a dialogue retrieval tool. Output only a comma-separated list of topic numbers, or 0 if no topic applies.";
+        "You are an AnimusForge preprocessing router. Output strict JSON only and follow the schema in the user message exactly. Include every required field. Never output CSV, bare values, prose, markdown, or code fences.";
 
     public const string DefaultUserPromptTemplate =
         "MOD_SOURCE: AIConfigHandler.BuildAuxiliaryGuardrailRoutingPrompt";
@@ -342,51 +342,28 @@ public sealed class PreprocessTopicLabService
 
     public List<string> ParseTopics(string responseText, IEnumerable<TopicRuleInfo> rules)
     {
+        TryParseTopics(responseText, rules, out var result, out var _);
+        return result;
+    }
+
+    public bool TryParseTopics(string responseText, IEnumerable<TopicRuleInfo> rules, out List<string> result, out string error)
+    {
         var ruleList = (rules ?? Enumerable.Empty<TopicRuleInfo>()).Where(IsPreprocessInjectableRule).ToList();
         var known = new HashSet<string>(ruleList
             .Select(x => NormalizeTopicId(x.Id))
             .Where(x => !string.IsNullOrWhiteSpace(x)), StringComparer.OrdinalIgnoreCase);
         var codeToId = BuildRuleCodeToIdMap(ruleList);
-        var result = new List<string>();
+        result = new List<string>();
+        error = "";
         var seen = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
         var text = (responseText ?? "").Trim();
-        if (string.IsNullOrWhiteSpace(text) || string.Equals(text, "none", StringComparison.OrdinalIgnoreCase) || text == "无")
+        if (string.IsNullOrWhiteSpace(text))
         {
-            return result;
+            error = "empty_content";
+            return false;
         }
 
-        TryAddJsonTopics(text, known, codeToId, result, seen);
-        foreach (var token in TokenizeTopicResponse(text))
-        {
-            var normalized = NormalizeTopicId(token);
-            if (known.Contains(normalized) && seen.Add(normalized))
-            {
-                result.Add(normalized);
-                continue;
-            }
-
-            var code = NormalizeRuleCode(token, "", "");
-            if (codeToId.TryGetValue(code, out var id) && seen.Add(id))
-            {
-                result.Add(id);
-            }
-        }
-
-        foreach (var id in known.OrderByDescending(x => x.Length))
-        {
-            if (seen.Contains(id))
-            {
-                continue;
-            }
-
-            if (Regex.IsMatch(text, @"(?<![A-Za-z0-9_:-])" + Regex.Escape(id) + @"(?![A-Za-z0-9_:-])", RegexOptions.IgnoreCase | RegexOptions.CultureInvariant))
-            {
-                seen.Add(id);
-                result.Add(id);
-            }
-        }
-
-        return result;
+        return TryAddJsonTopics(text, known, codeToId, result, seen, out error);
     }
 
     private static Dictionary<string, string> BuildRuleCodeToIdMap(IEnumerable<TopicRuleInfo> rules)
@@ -713,7 +690,7 @@ public sealed class PreprocessTopicLabService
         sb.AppendLine("*Latest NPC/player exchange*:");
         sb.Append("NPC: ").AppendLine(string.IsNullOrWhiteSpace(latestNpcLine) ? "(none)" : NormalizeAuxiliaryRoutingRequestText(latestNpcLine));
         sb.Append("Player: ").AppendLine(string.IsNullOrWhiteSpace(latestPlayerLine) ? "(none)" : NormalizeAuxiliaryRoutingRequestText(latestPlayerLine));
-        sb.AppendLine("Select exactly " + Math.Max(1, topN) + " closest topic codes in rule_codes. Also extract explicit third-party nouns from the latest exchange into mentioned_entities. Use heroes for named people/titles, settlements for places, clans for families, kingdoms for factions, items for item/goods/equipment names or types, troops for troop/unit/prisoner names or types, and terms for other useful raw phrases. Do not extract current speakers or player names just because they are speakers. If ambiguous, put it in the closest bucket and also terms. Order arrays by recency. Output strict JSON only: {\"rule_codes\":[\"CODE\"],\"mentioned_entities\":{\"heroes\":[],\"settlements\":[],\"clans\":[],\"kingdoms\":[],\"items\":[],\"troops\":[],\"terms\":[]}}.");
+        sb.AppendLine("Select exactly " + Math.Max(1, topN) + " closest topic codes in rule_codes. Also extract explicit third-party nouns from the latest exchange into mentioned_entities. Use heroes for named people/titles, settlements for places, clans for families, kingdoms for factions, items for item/goods/equipment names or types, troops for troop/unit/prisoner names or types, and terms for other useful raw phrases. Do not extract current speakers or player names just because they are speakers. If ambiguous, put it in the closest bucket and also terms. Order arrays by recency. Output one strict JSON object only: {\"rule_codes\":[\"CODE\"],\"mentioned_entities\":{\"heroes\":[],\"settlements\":[],\"clans\":[],\"kingdoms\":[],\"items\":[],\"troops\":[],\"terms\":[]}}.");
         return SanitizeAuxiliaryRoutingPromptDialogueSections(sb.ToString()).Trim();
     }
 
@@ -1861,36 +1838,80 @@ public sealed class PreprocessTopicLabService
         _json.WriteUtf8(metaPath, meta.ToJsonString(JsonFileStore.JsonOptions));
     }
 
-    private static void TryAddJsonTopics(string text, HashSet<string> known, Dictionary<string, string> codeToId, List<string> result, HashSet<string> seen)
+    private static bool TryAddJsonTopics(string text, HashSet<string> known, Dictionary<string, string> codeToId, List<string> result, HashSet<string> seen, out string error)
     {
+        error = "";
         try
         {
             using var doc = JsonDocument.Parse(text);
             var root = doc.RootElement;
-            if (root.ValueKind == JsonValueKind.Object)
+            if (root.ValueKind != JsonValueKind.Object)
             {
-                if (root.TryGetProperty("rule_codes", out var ruleCodes))
+                error = "root_not_object";
+                return false;
+            }
+            if (!root.TryGetProperty("rule_codes", out var ruleCodes))
+            {
+                error = "missing_rule_codes";
+                return false;
+            }
+            if (ruleCodes.ValueKind != JsonValueKind.Array)
+            {
+                error = "rule_codes_not_array";
+                return false;
+            }
+            if (!root.TryGetProperty("mentioned_entities", out var mentionedEntities))
+            {
+                error = "missing_mentioned_entities";
+                return false;
+            }
+            if (mentionedEntities.ValueKind != JsonValueKind.Object)
+            {
+                error = "mentioned_entities_not_object";
+                return false;
+            }
+            foreach (var item in ruleCodes.EnumerateArray())
+            {
+                var code = item.ValueKind == JsonValueKind.String ? item.GetString() ?? "" : "";
+                if (item.ValueKind != JsonValueKind.String)
                 {
-                    AddJsonTopicElement(ruleCodes, known, codeToId, result, seen);
+                    error = "rule_codes_item_not_string";
+                    return false;
                 }
-
-                if (root.TryGetProperty("topics", out var topics))
+                if (Regex.IsMatch(code.Trim(), "^(?:[0-9]+|TOPIC_[0-9]+|T[0-9]+)$", RegexOptions.IgnoreCase | RegexOptions.CultureInvariant))
                 {
-                    AddJsonTopicElement(topics, known, codeToId, result, seen);
-                }
-
-                if (root.TryGetProperty("selectedTopics", out var selectedTopics))
-                {
-                    AddJsonTopicElement(selectedTopics, known, codeToId, result, seen);
+                    error = "numeric_rule_code_not_allowed";
+                    return false;
                 }
             }
-            else
+            foreach (var bucket in new[] { "heroes", "settlements", "clans", "kingdoms", "items", "troops", "terms" })
             {
-                AddJsonTopicElement(root, known, codeToId, result, seen);
+                if (!mentionedEntities.TryGetProperty(bucket, out var values))
+                {
+                    error = "missing_mentioned_entities_" + bucket;
+                    return false;
+                }
+                if (values.ValueKind != JsonValueKind.Array)
+                {
+                    error = "mentioned_entities_" + bucket + "_not_array";
+                    return false;
+                }
+                foreach (var item in values.EnumerateArray())
+                {
+                    if (item.ValueKind != JsonValueKind.String)
+                    {
+                        error = "mentioned_entities_" + bucket + "_item_not_string";
+                        return false;
+                    }
+                }
             }
+            AddJsonTopicElement(ruleCodes, known, codeToId, result, seen);
+            return true;
         }
-        catch
+        catch (Exception ex)
         {
+            error = "invalid_json:" + ex.GetType().Name;
+            return false;
         }
     }
 
@@ -1926,13 +1947,6 @@ public sealed class PreprocessTopicLabService
         {
             result.Add(ruleId);
         }
-    }
-
-    private static IEnumerable<string> TokenizeTopicResponse(string text)
-    {
-        return Regex.Split(text ?? "", "[\\s,，;；\\[\\]\"'`]+", RegexOptions.CultureInvariant)
-            .Select(x => x.Trim().Trim('.', ':', '：', '-', '*'))
-            .Where(x => !string.IsNullOrWhiteSpace(x));
     }
 
     private static List<string> NormalizeTopicList(IEnumerable<string>? values, bool excludeNonPreprocessTopics = false)
