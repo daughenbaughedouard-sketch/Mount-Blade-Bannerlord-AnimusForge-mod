@@ -17,6 +17,7 @@ var duel = catalog.Rules.FirstOrDefault(x => x.Id == "duel");
 var reward = catalog.Rules.FirstOrDefault(x => x.Id == "reward");
 var sceneMove = catalog.Rules.FirstOrDefault(x => x.Id == "scene_mechanism_actions");
 var sceneRelay = catalog.Rules.FirstOrDefault(x => x.Id == "scene_auto_group_relay");
+var kingdomAgenda = catalog.Rules.FirstOrDefault(x => x.Id == "kingdom_agenda");
 if (duel == null || reward == null)
 {
     throw new InvalidOperationException("Expected duel and reward topics.");
@@ -24,6 +25,12 @@ if (duel == null || reward == null)
 if (sceneMove == null || sceneRelay != null)
 {
     throw new InvalidOperationException("Preprocess catalog should include scene movement but exclude scene relay.");
+}
+if (kingdomAgenda == null || !kingdomAgenda.IsEnabled ||
+    catalog.Rules.Any(x => x.IsEnabled && x.Id is "vote_deal" or "propose_agenda") ||
+    !string.Equals(kingdomAgenda.Code, "KINGDOM_AGENDA", StringComparison.Ordinal))
+{
+    throw new InvalidOperationException("Preprocess catalog should expose only the unified kingdom agenda topic.");
 }
 
 var labCase = new PreprocessLabCase
@@ -78,9 +85,10 @@ if (!string.Equals(rendered.SystemPrompt, PreprocessTopicLabService.DefaultSyste
     !rendered.UserPrompt.Contains("Output one strict JSON object only", StringComparison.Ordinal) ||
     rendered.UserPrompt.Contains("comma-separated list of topic numbers", StringComparison.OrdinalIgnoreCase) ||
     rendered.UserPrompt.Contains("0 if no topic applies", StringComparison.OrdinalIgnoreCase) ||
-    !rendered.UserPrompt.Contains("\"mentioned_entities\":{\"heroes\":[],\"settlements\":[],\"clans\":[],\"kingdoms\":[],\"items\":[],\"troops\":[],\"terms\":[]}", StringComparison.Ordinal) ||
+    !rendered.UserPrompt.Contains("\"mentioned_entities\":{\"heroes\":[],\"settlements\":[],\"clans\":[],\"kingdoms\":[],\"items\":[],\"troops\":[],\"policies\":[],\"terms\":[]}", StringComparison.Ordinal) ||
     !string.Equals(renderedUserMessage, rendered.UserPrompt, StringComparison.Ordinal) ||
     !rendered.UserPrompt.Contains("DUEL: Duel", StringComparison.Ordinal) ||
+    !rendered.UserPrompt.Contains("KINGDOM_AGENDA:", StringComparison.Ordinal) ||
     !rendered.UserPrompt.Contains("SCENE_MOVE:", StringComparison.Ordinal) ||
     rendered.UserPrompt.Contains("SCENE_RELAY:", StringComparison.Ordinal))
 {
@@ -168,7 +176,7 @@ foreach (var promptPresetFile in promptPresetFiles)
     }
 }
 
-var validPreprocessResponse = "{\"rule_codes\":[\"DUEL\",\"ITEM_TRANSFER\",\"NPC_RECENT\",\"NOBLE_PRESSURE\"],\"mentioned_entities\":{\"heroes\":[],\"settlements\":[],\"clans\":[],\"kingdoms\":[],\"items\":[],\"troops\":[],\"terms\":[]}}";
+var validPreprocessResponse = "{\"rule_codes\":[\"DUEL\",\"ITEM_TRANSFER\",\"NPC_RECENT\",\"NOBLE_PRESSURE\"],\"mentioned_entities\":{\"heroes\":[],\"settlements\":[],\"clans\":[],\"kingdoms\":[],\"items\":[],\"troops\":[],\"policies\":[],\"terms\":[]}}";
 if (!service.TryParseTopics(validPreprocessResponse, catalog.Rules, out var parsedTopics, out var validParseError))
 {
     throw new InvalidOperationException("Valid preprocessing response was rejected: " + validParseError);
@@ -180,7 +188,7 @@ if (!score.ExactMatch)
     throw new InvalidOperationException("Score should be exact when reward is allowed extra.");
 }
 
-var parsedSceneTopics = service.ParseTopics("{\"rule_codes\":[\"SCENE_RELAY\",\"SCENE_MOVE\"],\"mentioned_entities\":{\"heroes\":[],\"settlements\":[],\"clans\":[],\"kingdoms\":[],\"items\":[],\"troops\":[],\"terms\":[]}}", catalog.Rules);
+var parsedSceneTopics = service.ParseTopics("{\"rule_codes\":[\"SCENE_RELAY\",\"SCENE_MOVE\"],\"mentioned_entities\":{\"heroes\":[],\"settlements\":[],\"clans\":[],\"kingdoms\":[],\"items\":[],\"troops\":[],\"policies\":[],\"terms\":[]}}", catalog.Rules);
 if (parsedSceneTopics.Contains("scene_auto_group_relay", StringComparer.OrdinalIgnoreCase) ||
     !parsedSceneTopics.Contains("scene_mechanism_actions", StringComparer.OrdinalIgnoreCase))
 {
@@ -194,11 +202,11 @@ var invalidPreprocessResponses = new[]
     "0",
     "\"DUEL\"",
     "[\"DUEL\",\"ITEM_TRANSFER\"]",
-    "{\"rule_codes\":[\"2\",\"13\"],\"mentioned_entities\":{\"heroes\":[],\"settlements\":[],\"clans\":[],\"kingdoms\":[],\"items\":[],\"troops\":[],\"terms\":[]}}",
-    "{\"rule_codes\":[\"TOPIC_2\",\"T13\"],\"mentioned_entities\":{\"heroes\":[],\"settlements\":[],\"clans\":[],\"kingdoms\":[],\"items\":[],\"troops\":[],\"terms\":[]}}",
-    "{\"rule_codes\":\"DUEL,ITEM_TRANSFER\",\"mentioned_entities\":{\"heroes\":[],\"settlements\":[],\"clans\":[],\"kingdoms\":[],\"items\":[],\"troops\":[],\"terms\":[]}}",
+    "{\"rule_codes\":[\"2\",\"13\"],\"mentioned_entities\":{\"heroes\":[],\"settlements\":[],\"clans\":[],\"kingdoms\":[],\"items\":[],\"troops\":[],\"policies\":[],\"terms\":[]}}",
+    "{\"rule_codes\":[\"TOPIC_2\",\"T13\"],\"mentioned_entities\":{\"heroes\":[],\"settlements\":[],\"clans\":[],\"kingdoms\":[],\"items\":[],\"troops\":[],\"policies\":[],\"terms\":[]}}",
+    "{\"rule_codes\":\"DUEL,ITEM_TRANSFER\",\"mentioned_entities\":{\"heroes\":[],\"settlements\":[],\"clans\":[],\"kingdoms\":[],\"items\":[],\"troops\":[],\"policies\":[],\"terms\":[]}}",
     "{\"rule_codes\":[\"DUEL\"]}",
-    "{\"rule_codes\":[\"DUEL\"],\"mentioned_entities\":{\"heroes\":\"NPC\",\"settlements\":[],\"clans\":[],\"kingdoms\":[],\"items\":[],\"troops\":[],\"terms\":[]}}"
+    "{\"rule_codes\":[\"DUEL\"],\"mentioned_entities\":{\"heroes\":\"NPC\",\"settlements\":[],\"clans\":[],\"kingdoms\":[],\"items\":[],\"troops\":[],\"policies\":[],\"terms\":[]}}"
 };
 foreach (var invalidPreprocessResponse in invalidPreprocessResponses)
 {
@@ -214,7 +222,7 @@ foreach (var invalidPreprocessResponse in invalidPreprocessResponses)
 
 var labRoot = service.GetLabRoot(repoRoot);
 var runDir = service.CreateRunDirectory(labRoot);
-var artifact = service.WriteOfflineArtifacts(runDir, 1, catalog, labCase, settings, promptConfig, "{\"rule_codes\":[\"DUEL\",\"ITEM_TRANSFER\",\"NPC_RECENT\",\"NOBLE_PRESSURE\"],\"mentioned_entities\":{\"heroes\":[],\"settlements\":[],\"clans\":[],\"kingdoms\":[],\"items\":[],\"troops\":[],\"terms\":[]}}");
+var artifact = service.WriteOfflineArtifacts(runDir, 1, catalog, labCase, settings, promptConfig, "{\"rule_codes\":[\"DUEL\",\"ITEM_TRANSFER\",\"NPC_RECENT\",\"NOBLE_PRESSURE\"],\"mentioned_entities\":{\"heroes\":[],\"settlements\":[],\"clans\":[],\"kingdoms\":[],\"items\":[],\"troops\":[],\"policies\":[],\"terms\":[]}}");
 Console.WriteLine("smoke-run: " + runDir);
 
 var siegeCase = new PreprocessLabCase
@@ -224,7 +232,7 @@ var siegeCase = new PreprocessLabCase
     PlayerText = "攻城结束后，诸位听我处置这座城。",
     ExpectedTopics = new List<string> { "siege_intervention_aftermath" }
 };
-var overrideArtifact = service.WriteOfflineArtifacts(runDir, 2, catalog, siegeCase, settings, overrideConfig, "{\"rule_codes\":[\"SIEGE_AFTER_SCENE\"],\"mentioned_entities\":{\"heroes\":[],\"settlements\":[],\"clans\":[],\"kingdoms\":[],\"items\":[],\"troops\":[],\"terms\":[]}}");
+var overrideArtifact = service.WriteOfflineArtifacts(runDir, 2, catalog, siegeCase, settings, overrideConfig, "{\"rule_codes\":[\"SIEGE_AFTER_SCENE\"],\"mentioned_entities\":{\"heroes\":[],\"settlements\":[],\"clans\":[],\"kingdoms\":[],\"items\":[],\"troops\":[],\"policies\":[],\"terms\":[]}}");
 if (!overrideArtifact.Score.ExactMatch)
 {
     throw new InvalidOperationException("Topic route override code did not map back to the expected topic id.");

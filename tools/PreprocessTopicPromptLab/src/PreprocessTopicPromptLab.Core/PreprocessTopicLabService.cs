@@ -690,7 +690,7 @@ public sealed class PreprocessTopicLabService
         sb.AppendLine("*Latest NPC/player exchange*:");
         sb.Append("NPC: ").AppendLine(string.IsNullOrWhiteSpace(latestNpcLine) ? "(none)" : NormalizeAuxiliaryRoutingRequestText(latestNpcLine));
         sb.Append("Player: ").AppendLine(string.IsNullOrWhiteSpace(latestPlayerLine) ? "(none)" : NormalizeAuxiliaryRoutingRequestText(latestPlayerLine));
-        sb.AppendLine("Select exactly " + Math.Max(1, topN) + " closest topic codes in rule_codes. Also extract explicit third-party nouns from the latest exchange into mentioned_entities. Use heroes for named people/titles, settlements for places, clans for families, kingdoms for factions, items for item/goods/equipment names or types, troops for troop/unit/prisoner names or types, and terms for other useful raw phrases. Do not extract current speakers or player names just because they are speakers. If ambiguous, put it in the closest bucket and also terms. Order arrays by recency. Output one strict JSON object only: {\"rule_codes\":[\"CODE\"],\"mentioned_entities\":{\"heroes\":[],\"settlements\":[],\"clans\":[],\"kingdoms\":[],\"items\":[],\"troops\":[],\"terms\":[]}}.");
+        sb.AppendLine("Select exactly " + Math.Max(1, topN) + " closest topic codes in rule_codes. Also extract explicit third-party nouns from the latest exchange into mentioned_entities. Use heroes for named people/titles, settlements for places, clans for families, kingdoms for factions, items for item/goods/equipment names or types, troops for troop/unit/prisoner names or types, policies for kingdom policy/law names, and terms for other useful raw phrases. Do not extract current speakers or player names just because they are speakers. If ambiguous, put it in the closest bucket and also terms. Order arrays by recency. Output one strict JSON object only: {\"rule_codes\":[\"CODE\"],\"mentioned_entities\":{\"heroes\":[],\"settlements\":[],\"clans\":[],\"kingdoms\":[],\"items\":[],\"troops\":[],\"policies\":[],\"terms\":[]}}.");
         return SanitizeAuxiliaryRoutingPromptDialogueSections(sb.ToString()).Trim();
     }
 
@@ -1884,7 +1884,7 @@ public sealed class PreprocessTopicLabService
                     return false;
                 }
             }
-            foreach (var bucket in new[] { "heroes", "settlements", "clans", "kingdoms", "items", "troops", "terms" })
+            foreach (var bucket in new[] { "heroes", "settlements", "clans", "kingdoms", "items", "troops", "policies", "terms" })
             {
                 if (!mentionedEntities.TryGetProperty(bucket, out var values))
                 {
@@ -1999,7 +1999,7 @@ public sealed class PreprocessTopicLabService
                 "encounter_release_player" => "MEETING_RELEASE",
                 "hero_join_party" => "HERO_JOIN",
                 "noble_deference" => "NOBLE_PRESSURE",
-                "vote_deal" => "VOTE_DEAL",
+                "kingdom_agenda" => "KINGDOM_AGENDA",
                 "diplomacy" => "DIPLOMACY",
                 _ => ""
             };

@@ -39,6 +39,19 @@ if (marriageRule == null || !marriageRule.DisplayName.Contains("婚姻", StringC
     return 1;
 }
 
+var agendaRule = catalog.Rules.FirstOrDefault(x => x.Id == "kingdom_agenda");
+var agendaTag = agendaRule?.PostprocessRules.SingleOrDefault()?.Tag;
+if (agendaRule == null ||
+    agendaTag != "[ACTION:AGENDA:议程ID:选项ID:权重]" ||
+    catalog.Rules.Any(x => x.Id is "vote_deal" or "propose_agenda") ||
+    catalog.Rules.SelectMany(x => x.PostprocessRules).Any(x =>
+        x.Tag.Contains("ACTION:VOTE_DEAL", StringComparison.Ordinal) ||
+        x.Tag.Contains("ACTION:PROPOSE", StringComparison.Ordinal)))
+{
+    Console.Error.WriteLine("Kingdom agenda postprocess rule was not migrated to the unified three-field tag.");
+    return 1;
+}
+
 var caseFile = Path.Combine(labRoot, "cases", "sample_cases.jsonl");
 var cases = service.LoadCases(caseFile);
 Console.WriteLine("cases: " + cases.Count);

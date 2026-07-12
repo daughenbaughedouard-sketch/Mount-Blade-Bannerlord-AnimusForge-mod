@@ -49,8 +49,7 @@ function Get-TagFamily {
     if ($text -match "^\[ACTION:QUEST_TURN_IN\]$") { return "QUEST_TURN_IN" }
     if ($text -eq "[ACTION:LET_PLAYER_GO]") { return "LET_PLAYER_GO" }
     if ($text -eq "[A:H_J_P_P]") { return "H_J_P_P" }
-    if ($text -match "^\[ACTION:VOTE_DEAL:") { return "VOTE_DEAL" }
-    if ($text -match "^\[ACTION:PROPOSE:([^:]+):") { return "PROPOSE:" + $Matches[1] }
+    if ($text -match "^\[ACTION:AGENDA:") { return "AGENDA" }
     if ($text -match "^\[ACTION:WORLDMAP_ORDER:([^:\]]+)") { return "WORLDMAP_ORDER:" + $Matches[1] }
     if ($text -match "^\[ACTION:NOBLE_GATHERING:") { return "NOBLE_GATHERING" }
     if ($text -match "^\[RELAY:") { return "RELAY" }

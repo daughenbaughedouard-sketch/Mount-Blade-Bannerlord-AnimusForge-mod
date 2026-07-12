@@ -92,8 +92,7 @@ function Infer-RuleId {
     if ($text -match "^\[ACTION:SETTLEMENT_TRANSFER:") { return "settlement_transfer" }
     if ($text -match "^\[ACTION:DIPLOMACY:" -or $text -match "^\[ACTION:KINGDOM_ANNEX:") { return "diplomacy" }
     if ($text -match "^\[ACTION:VASSALAGE:") { return "kingdom_vassalage" }
-    if ($text -match "^\[ACTION:PROPOSE:") { return "propose_agenda" }
-    if ($text -match "^\[ACTION:VOTE_DEAL:") { return "vote_deal" }
+    if ($text -match "^\[ACTION:AGENDA:") { return "kingdom_agenda" }
     if ($text -match "^\[ACTION:WORLDMAP_ORDER:") { return "worldmap_party_command" }
     if ($text -match "^\[ACTION:MARRIAGE_") { return "marriage" }
     if ($text -match "^\[ACTION:ISSUE_" -or $text -match "^\[ACTION:QUEST_") { return "vanilla_issue" }
@@ -367,10 +366,10 @@ $MoodOnlyIds = @(
 )
 
 $CustomExpectedTags = @{
-    "material_diplomacy_004" = @("[ACTION:MOOD:JOY]", "[ACTION:PROPOSE:TRADE:new_kingdom2:]")
-    "material_diplomacy_005" = @("[ACTION:MOOD:JOY]", "[ACTION:PROPOSE:TRADE:斯特吉亚波耶联合领:]")
-    "material_diplomacy_006" = @("[ACTION:MOOD:JOY]", "[ACTION:PROPOSE:TRADE:new_kingdom2:]")
-    "material_diplomacy_007" = @("[ACTION:MOOD:JOY]", "[ACTION:PROPOSE:TRADE:new_kingdom2:]")
+    "material_diplomacy_004" = @("[ACTION:MOOD:JOY]", "[ACTION:AGENDA:A1:O1:FULLY_PUSH]")
+    "material_diplomacy_005" = @("[ACTION:MOOD:JOY]", "[ACTION:AGENDA:A1:O1:FULLY_PUSH]")
+    "material_diplomacy_006" = @("[ACTION:MOOD:JOY]", "[ACTION:AGENDA:A1:O1:FULLY_PUSH]")
+    "material_diplomacy_007" = @("[ACTION:MOOD:JOY]", "[ACTION:AGENDA:A1:O1:FULLY_PUSH]")
     "material_kingdom_service_003" = @("[ACTION:MOOD:DELIGHTED]", "[ACTION:KINGDOM_SERVICE:MERCENARY:empire_w]")
     "material_worldmap_party_command_014" = @("[ACTION:MOOD:JOY]", "[ACTION:WORLDMAP_ORDER:ATTACK:settlement:castle_S2:15:AI]")
 }

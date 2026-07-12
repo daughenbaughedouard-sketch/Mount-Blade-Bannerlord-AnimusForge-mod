@@ -31,8 +31,7 @@ $script:caseTopics = @(
     "vanilla_issue",
     "encounter_release_player",
     "hero_join_party",
-    "vote_deal",
-    "propose_agenda",
+    "kingdom_agenda",
     "worldmap_party_command",
     "diplomacy",
     "kingdom_vassalage",
@@ -152,8 +151,7 @@ function Has-TopicTag {
         "vanilla_issue" { return $TagTable -match "ISSUE_ACCEPT|QUEST_TURN_IN" }
         "encounter_release_player" { return $TagTable -match "LET_PLAYER_GO" }
         "hero_join_party" { return $TagTable -match "H_J_P_P|CLAN_JOIN_PLAYER_KINGDOM" }
-        "vote_deal" { return $TagTable -match "VOTE_DEAL" }
-        "propose_agenda" { return $TagTable -match "PROPOSE:" }
+        "kingdom_agenda" { return $TagTable -match "ACTION:AGENDA" }
         "worldmap_party_command" { return $TagTable -match "WORLDMAP_ORDER" }
         "diplomacy" { return $TagTable -match "DIPLOMACY|KINGDOM_ANNEX" }
         "kingdom_vassalage" { return $TagTable -match "VASSALAGE:SUBMIT" }
@@ -190,8 +188,7 @@ function Test-WeakTopicSignal {
         "vanilla_issue" { return Test-AnyPattern $Text @("任务", "委托", "差事", "交任务", "完成任务") }
         "encounter_release_player" { return Test-AnyPattern $Text @("放我走", "让我离开", "释放我", "放行", "饶我") }
         "hero_join_party" { return Test-AnyPattern $Text @("加入我的队伍", "加入我们", "跟随我", "随我同行", "来我队里", "为我效力", "入队") }
-        "vote_deal" { return Test-AnyPattern $Text @("投票", "议案", "议程", "影响力", "支持.*选项", "反对.*选项") }
-        "propose_agenda" { return Test-AnyPattern $Text @("提出.*议案", "提交.*议程", "发起.*投票", "王国政策", "法律提案", "提案") }
+        "kingdom_agenda" { return Test-AnyPattern $Text @("投票", "议案", "议程", "影响力", "支持.*选项", "反对.*选项", "提出.*议案", "提交.*议程", "发起.*投票", "王国政策", "法律提案", "提案") }
         "worldmap_party_command" { return Test-AnyPattern $Text @("大地图", "带兵.*前往", "部队.*前往", "前往", "驻守", "驻扎", "巡逻", "攻击", "攻打", "追击", "护送", "合并", "停止行动") }
         "diplomacy" { return Test-AnyPattern $Text @("宣战", "停战", "和平", "议和", "结盟", "同盟", "贸易协定", "断交", "吞并", "战争", "贡金", "赔款") }
         "kingdom_vassalage" { return Test-AnyPattern $Text @("臣服", "附庸", "朝贡", "纳贡", "宗主", "保护国", "卫戍", "称臣") }
@@ -269,12 +266,8 @@ function Get-ExpectedTopics {
         Add-Unique $topics "diplomacy"
     }
 
-    if (Test-AnyPattern $text @("投票", "议案投票", "议程投票", "支持.*选项", "反对.*选项", "影响力", "贵族会议投票")) {
-        Add-Unique $topics "vote_deal"
-    }
-
-    if (Test-AnyPattern $text @("提出.*议案", "提交.*议程", "发起.*投票", "拿到议会", "王国政策", "法律提案", "提案")) {
-        Add-Unique $topics "propose_agenda"
+    if (Test-AnyPattern $text @("投票", "议案投票", "议程投票", "支持.*选项", "反对.*选项", "影响力", "贵族会议投票", "提出.*议案", "提交.*议程", "发起.*投票", "拿到议会", "王国政策", "法律提案", "提案")) {
+        Add-Unique $topics "kingdom_agenda"
     }
 
     if (Test-AnyPattern $text @("婚", "联姻", "提亲", "嫁给", "娶", "求婚", "私奔", "离婚", "婚约", "成亲")) {

@@ -38,8 +38,7 @@ $RuleLabels = @{
     "vanilla_issue" = "vanilla issue"
     "encounter_release_player" = "release player"
     "hero_join_party" = "hero join party"
-    "vote_deal" = "vote deal"
-    "propose_agenda" = "propose agenda"
+    "kingdom_agenda" = "kingdom agenda"
     "worldmap_party_command" = "worldmap command"
     "diplomacy" = "diplomacy"
     "kingdom_vassalage" = "vassalage"
@@ -365,8 +364,7 @@ function Infer-RuleId {
     if ($Tag -match "^\[ACTION:(ISSUE_ACCEPT_SELF|ISSUE_ACCEPT_ALT|QUEST_TURN_IN)") { return "vanilla_issue" }
     if ($Tag -eq "[ACTION:LET_PLAYER_GO]") { return "encounter_release_player" }
     if ($Tag -eq "[A:H_J_P_P]" -or $Tag -match "^\[ACTION:KINGDOM_SERVICE:CLAN_JOIN_PLAYER_KINGDOM:") { return "hero_join_party" }
-    if ($Tag -match "^\[ACTION:VOTE_DEAL:") { return "vote_deal" }
-    if ($Tag -match "^\[ACTION:PROPOSE:") { return "propose_agenda" }
+    if ($Tag -match "^\[ACTION:AGENDA:") { return "kingdom_agenda" }
     if ($Tag -match "^\[ACTION:WORLDMAP_ORDER:") { return "worldmap_party_command" }
     if ($Tag -match "^\[ACTION:(DIPLOMACY|KINGDOM_ANNEX):") { return "diplomacy" }
     if ($Tag -match "^\[ACTION:VASSALAGE:") { return "kingdom_vassalage" }
