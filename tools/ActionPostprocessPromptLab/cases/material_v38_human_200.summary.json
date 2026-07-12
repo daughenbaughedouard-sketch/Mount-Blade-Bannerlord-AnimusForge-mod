@@ -1,0 +1,241 @@
+{
+    "generatedAt":  "2026-07-06 08:32:35",
+    "basePath":  "F:\\my mod\\animusforge-1.3.x\\tools\\ActionPostprocessPromptLab\\cases\\material_high_value_allow_cases.jsonl",
+    "trainingRoot":  "F:\\my mod\\animusforge-1.3.x\\tools\\ActionPostprocessPromptLab\\dist\\训练集\\20260705",
+    "outputPath":  "F:\\my mod\\animusforge-1.3.x\\tools\\ActionPostprocessPromptLab\\cases\\material_v38_human_200.jsonl",
+    "total":  200,
+    "baseCases":  160,
+    "negativeCases":  40,
+    "baseManualChanged":  22,
+    "baseRuntimeContextRepaired":  158,
+    "noActionExpectedCases":  56,
+    "baseMoodOnlyCaseIds":  [
+                                "material_diplomacy_009",
+                                "material_duel_002",
+                                "material_hero_join_party_002",
+                                "material_hero_join_party_009",
+                                "material_hero_join_party_018",
+                                "material_kingdom_service_004",
+                                "material_kingdom_service_005",
+                                "material_kingdom_service_009",
+                                "material_party_transfer_004",
+                                "material_party_transfer_006",
+                                "material_propose_agenda_005",
+                                "material_reward_015",
+                                "material_reward_018",
+                                "material_reward_020",
+                                "material_settlement_transfer_013",
+                                "material_settlement_transfer_016"
+                            ],
+    "baseCustomExpectedCaseIds":  [
+                                      "material_diplomacy_004",
+                                      "material_diplomacy_005",
+                                      "material_diplomacy_006",
+                                      "material_diplomacy_007",
+                                      "material_kingdom_service_003",
+                                      "material_worldmap_party_command_014"
+                                  ],
+    "negativeSources":  [
+                            {
+                                "file":  "Token_Stats (100).txt",
+                                "line":  2511,
+                                "expectedMood":  "[ACTION:MOOD:NEUTRAL]"
+                            },
+                            {
+                                "file":  "Token_Stats (100).txt",
+                                "line":  3960,
+                                "expectedMood":  "[ACTION:MOOD:NEUTRAL]"
+                            },
+                            {
+                                "file":  "Token_Stats (100).txt",
+                                "line":  4676,
+                                "expectedMood":  "[ACTION:MOOD:NEUTRAL]"
+                            },
+                            {
+                                "file":  "Token_Stats (100).txt",
+                                "line":  5395,
+                                "expectedMood":  "[ACTION:MOOD:NEUTRAL]"
+                            },
+                            {
+                                "file":  "Token_Stats (100).txt",
+                                "line":  6131,
+                                "expectedMood":  "[ACTION:MOOD:NEUTRAL]"
+                            },
+                            {
+                                "file":  "Token_Stats (100).txt",
+                                "line":  7631,
+                                "expectedMood":  "[ACTION:MOOD:NEUTRAL]"
+                            },
+                            {
+                                "file":  "Token_Stats (100).txt",
+                                "line":  8786,
+                                "expectedMood":  "[ACTION:MOOD:NEUTRAL]"
+                            },
+                            {
+                                "file":  "Token_Stats (111).txt",
+                                "line":  1055,
+                                "expectedMood":  "[ACTION:MOOD:NEUTRAL]"
+                            },
+                            {
+                                "file":  "Token_Stats (111).txt",
+                                "line":  1575,
+                                "expectedMood":  "[ACTION:MOOD:JOY]"
+                            },
+                            {
+                                "file":  "Token_Stats (111).txt",
+                                "line":  2502,
+                                "expectedMood":  "[ACTION:MOOD:ANNOYED]"
+                            },
+                            {
+                                "file":  "Token_Stats (111).txt",
+                                "line":  4798,
+                                "expectedMood":  "[ACTION:MOOD:DELIGHTED]"
+                            },
+                            {
+                                "file":  "Token_Stats (111).txt",
+                                "line":  5119,
+                                "expectedMood":  "[ACTION:MOOD:NEUTRAL]"
+                            },
+                            {
+                                "file":  "Token_Stats (111).txt",
+                                "line":  5445,
+                                "expectedMood":  "[ACTION:MOOD:NEUTRAL]"
+                            },
+                            {
+                                "file":  "Token_Stats (111).txt",
+                                "line":  6852,
+                                "expectedMood":  "[ACTION:MOOD:DELIGHTED]"
+                            },
+                            {
+                                "file":  "Token_Stats (111).txt",
+                                "line":  10428,
+                                "expectedMood":  "[ACTION:MOOD:NEUTRAL]"
+                            },
+                            {
+                                "file":  "Token_Stats (111).txt",
+                                "line":  13037,
+                                "expectedMood":  "[ACTION:MOOD:ANNOYED]"
+                            },
+                            {
+                                "file":  "Token_Stats (112).txt",
+                                "line":  10920,
+                                "expectedMood":  "[ACTION:MOOD:NEUTRAL]"
+                            },
+                            {
+                                "file":  "Token_Stats (112).txt",
+                                "line":  11521,
+                                "expectedMood":  "[ACTION:MOOD:BORED]"
+                            },
+                            {
+                                "file":  "Token_Stats (113).txt",
+                                "line":  455,
+                                "expectedMood":  "[ACTION:MOOD:JOY]"
+                            },
+                            {
+                                "file":  "Token_Stats (113).txt",
+                                "line":  1007,
+                                "expectedMood":  "[ACTION:MOOD:NEUTRAL]"
+                            },
+                            {
+                                "file":  "Token_Stats (113).txt",
+                                "line":  1326,
+                                "expectedMood":  "[ACTION:MOOD:NEUTRAL]"
+                            },
+                            {
+                                "file":  "Token_Stats (72).txt",
+                                "line":  16143,
+                                "expectedMood":  "[ACTION:MOOD:JOY]"
+                            },
+                            {
+                                "file":  "Token_Stats (72).txt",
+                                "line":  16510,
+                                "expectedMood":  "[ACTION:MOOD:JOY]"
+                            },
+                            {
+                                "file":  "Token_Stats (72).txt",
+                                "line":  16842,
+                                "expectedMood":  "[ACTION:MOOD:NEUTRAL]"
+                            },
+                            {
+                                "file":  "Token_Stats (72).txt",
+                                "line":  17231,
+                                "expectedMood":  "[ACTION:MOOD:NEUTRAL]"
+                            },
+                            {
+                                "file":  "Token_Stats (72).txt",
+                                "line":  17566,
+                                "expectedMood":  "[ACTION:MOOD:JOY]"
+                            },
+                            {
+                                "file":  "Token_Stats (72).txt",
+                                "line":  18880,
+                                "expectedMood":  "[ACTION:MOOD:NEUTRAL]"
+                            },
+                            {
+                                "file":  "Token_Stats (72).txt",
+                                "line":  19195,
+                                "expectedMood":  "[ACTION:MOOD:NEUTRAL]"
+                            },
+                            {
+                                "file":  "Token_Stats (72).txt",
+                                "line":  19613,
+                                "expectedMood":  "[ACTION:MOOD:ANNOYED]"
+                            },
+                            {
+                                "file":  "Token_Stats (72).txt",
+                                "line":  19951,
+                                "expectedMood":  "[ACTION:MOOD:ANNOYED]"
+                            },
+                            {
+                                "file":  "Token_Stats (72).txt",
+                                "line":  20279,
+                                "expectedMood":  "[ACTION:MOOD:ANNOYED]"
+                            },
+                            {
+                                "file":  "Token_Stats (72).txt",
+                                "line":  20583,
+                                "expectedMood":  "[ACTION:MOOD:NEUTRAL]"
+                            },
+                            {
+                                "file":  "Token_Stats (72).txt",
+                                "line":  22331,
+                                "expectedMood":  "[ACTION:MOOD:JOY]"
+                            },
+                            {
+                                "file":  "Token_Stats (72).txt",
+                                "line":  23423,
+                                "expectedMood":  "[ACTION:MOOD:NEUTRAL]"
+                            },
+                            {
+                                "file":  "Token_Stats (72).txt",
+                                "line":  25149,
+                                "expectedMood":  "[ACTION:MOOD:JOY]"
+                            },
+                            {
+                                "file":  "Token_Stats (72).txt",
+                                "line":  25463,
+                                "expectedMood":  "[ACTION:MOOD:JOY]"
+                            },
+                            {
+                                "file":  "Token_Stats (72).txt",
+                                "line":  25815,
+                                "expectedMood":  "[ACTION:MOOD:NEUTRAL]"
+                            },
+                            {
+                                "file":  "Token_Stats (72).txt",
+                                "line":  26175,
+                                "expectedMood":  "[ACTION:MOOD:JOY]"
+                            },
+                            {
+                                "file":  "Token_Stats (72).txt",
+                                "line":  26574,
+                                "expectedMood":  "[ACTION:MOOD:JOY]"
+                            },
+                            {
+                                "file":  "Token_Stats (72).txt",
+                                "line":  27618,
+                                "expectedMood":  "[ACTION:MOOD:JOY]"
+                            }
+                        ],
+    "note":  "expectedTags are manually curated for v38 over-trigger training; log AI outputs are not used as answers."
+}

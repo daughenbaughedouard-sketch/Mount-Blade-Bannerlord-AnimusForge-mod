@@ -1,0 +1,12 @@
+{
+    "generatedAt":  "2026-07-07 21:45:46",
+    "materialRoot":  "tools/ActionPostprocessPromptLab/dist/训练集/20260705",
+    "outputPath":  "tools/ActionPostprocessPromptLab/cases/material_ad_np_direction_50.jsonl",
+    "total":  50,
+    "counts":  {
+                   "N":  34,
+                   "P":  6,
+                   "NONE":  10
+               },
+    "note":  "50条均从20260705原始训练日志候选中提取，expectedTags已按AD N/P方向人工改写；备注正文不作为结构准确性重点。"
+}

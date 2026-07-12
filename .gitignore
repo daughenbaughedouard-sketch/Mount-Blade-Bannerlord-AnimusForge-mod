@@ -18,6 +18,13 @@ packages/
 Logs/
 AnimusForge/ONNX/reranker/
 
+tools/ActionPostprocessPromptLab/runs/
+tools/ActionPostprocessPromptLab/local.settings.json
+tools/ActionPostprocessPromptLab/dist/
+tools/PreprocessTopicPromptLab/runs/
+tools/PreprocessTopicPromptLab/local.settings.json
+tools/PreprocessTopicPromptLab/dist/
+
 # Local Codex/release-prep scratch and large handoff backups.
 _codex_tmp/
 FUYONG/

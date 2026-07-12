@@ -1,0 +1,79 @@
+{
+  "Version": 2,
+  "IsEnabled": true,
+  "SystemPrompt": "You are an AnimusForge preprocessing router. Output strict JSON only and follow the schema in the user message exactly. Include every required field. Never output CSV, bare values, prose, markdown, or code fences.",
+  "UserPromptTemplate": "MOD_SOURCE: AIConfigHandler.BuildAuxiliaryGuardrailRoutingPrompt",
+  "RuleInstructionMaxChars": 180,
+  "TopicOverrides": {
+    "duel": {
+      "TopicLabel": "单挑决斗/赌注"
+    },
+    "reward": {
+      "TopicLabel": "明确给钱给物/借债"
+    },
+    "surroundings": {
+      "TopicLabel": "询问附近城镇信息"
+    },
+    "kingdom_service": {
+      "TopicLabel": "玩家加入/退出王国职务"
+    },
+    "lords_hall_access": {
+      "TopicLabel": "请求通行/进大厅"
+    },
+    "marriage": {
+      "TopicLabel": "求婚联姻"
+    },
+    "scene_mechanism_actions": {
+      "TopicLabel": "场景内带路/跟随一人"
+    },
+    "party_transfer": {
+      "TopicLabel": "交出士兵/俘虏/释放亲属"
+    },
+    "settlement_transfer": {
+      "TopicLabel": "实际转让城镇城堡所有权"
+    },
+    "npc_major_actions": {
+      "TopicLabel": "NPC身世长期背景"
+    },
+    "npc_recent_actions": {
+      "TopicLabel": "NPC近期行为传闻"
+    },
+    "vanilla_issue": {
+      "TopicLabel": "原版任务委托/交付"
+    },
+    "encounter_release_player": {
+      "TopicLabel": "NPC遭遇中放玩家走"
+    },
+    "hero_join_party": {
+      "TopicLabel": "当前NPC本人入队"
+    },
+    "noble_deference": {
+      "TopicLabel": "贵族头衔威胁施压"
+    },
+    "vote_deal": {
+      "TopicLabel": "王国投票交易"
+    },
+    "propose_agenda": {
+      "TopicLabel": "请NPC提交议程"
+    },
+    "worldmap_party_command": {
+      "TopicLabel": "大地图部队移动/攻击命令"
+    },
+    "diplomacy": {
+      "TopicLabel": "君主和平/贸易/条约谈判"
+    },
+    "kingdom_vassalage": {
+      "TopicLabel": "王国向对方称臣附庸"
+    },
+    "noble_gathering": {
+      "TopicLabel": "宴会聚会邀请"
+    },
+    "scene_auto_group_relay": {
+      "TopicLabel": "场景内对众人喊话接力"
+    },
+    "siege_intervention_aftermath": {
+      "Code": "SIEGE_AFTER_SCENE",
+      "TopicLabel": "攻城后场景结算/处置"
+    }
+  }
+}

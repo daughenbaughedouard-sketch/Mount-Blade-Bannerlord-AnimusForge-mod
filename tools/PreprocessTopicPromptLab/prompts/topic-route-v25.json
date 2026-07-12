@@ -1,0 +1,9 @@
+{
+  "Version": 26,
+  "IsEnabled": true,
+  "SystemPrompt": "You are an AnimusForge preprocessing router. Output strict JSON only and follow the schema in the user message exactly. Include every required field. Never output CSV, bare values, prose, markdown, or code fences.",
+  "UserPromptTemplate": "MOD_SOURCE: AIConfigHandler.BuildAuxiliaryGuardrailRoutingPrompt",
+  "RoutingGuidance": "优先看最新玩家请求；历史/AFEF只补指代和已发生事实。话题用于规则注入，不是剧情摘要。\n必须选4个时，先本轮明确机制，再弱补位 NPC_RECENT/NPC_MAJOR/NOBLE_PRESSURE。不要用强机制凑数。\nNPC回复只确认玩家已提出的机制；不得把NPC自述、背景、已发生事实补成强机制。\n群体喊话、威胁、处决、礼遇，不等于 SETTLEMENT/RELEASE/JOIN/DUEL。\nSETTLEMENT: 本轮明确买卖/交付领地、工坊、商队；历史已转交不选。\nREWARD: 本轮有金额、资源、赎金、贡金、摊派、报酬、借债/还债就优先选。\nMEETING_RELEASE: 只限NPC放行玩家；玩家放走俘虏/众人不选。\nNPC_JOIN: NPC或明确人物本轮加入/效忠玩家；泛称愿效力不选。\nDUEL: 本轮约战或接受决斗；辱骂、威胁、处决不选。\nWORLD_MAP: 只限大地图部队移动/跟随/攻击命令。",
+  "RuleInstructionMaxChars": 180,
+  "TopicOverrides": {}
+}

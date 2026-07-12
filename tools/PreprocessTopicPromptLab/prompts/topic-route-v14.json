@@ -1,0 +1,9 @@
+{
+  "Version": 15,
+  "IsEnabled": true,
+  "SystemPrompt": "You are an AnimusForge preprocessing router. Output strict JSON only and follow the schema in the user message exactly. Include every required field. Never output CSV, bare values, prose, markdown, or code fences.",
+  "UserPromptTemplate": "MOD_SOURCE: AIConfigHandler.BuildAuxiliaryGuardrailRoutingPrompt",
+  "RoutingGuidance": "优先看最新玩家请求；历史只补指代。话题用于规则注入，不是剧情摘要。\n必须选4个时，明确机制优先，不要被 NPC_RECENT/NPC_MAJOR/NOBLE_PRESSURE 替代；弱补位才用这些低风险话题。\nDIPLOMACY: 议和/停战/通商/贡金/条约/战后条件，明确就选。\nNPC_JOIN: 当前NPC或明确人物/家族宣誓追随、加入玩家阵营或队伍，明确就选。\nKINGDOM_SERVICE: 玩家自己加入/离开某王国，成为雇佣兵或封臣，明确就选。\nSETTLEMENT: 只限领地/工坊/商队等所有权交付。\nVASSALAGE: 某王国/家族臣服于玩家或另一王国；不要用于玩家自己投效。\nMEETING_RELEASE: 只限NPC放玩家离开遭遇。\nSCENE_MOVE: 本地带路/跟随/传唤/停跟；群体喊话不选。\nISSUE: 只限原版任务接取/交付/追踪。",
+  "RuleInstructionMaxChars": 180,
+  "TopicOverrides": {}
+}

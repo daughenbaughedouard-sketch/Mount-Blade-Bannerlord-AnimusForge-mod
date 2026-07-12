@@ -1,0 +1,52 @@
+{
+  "Version": 3,
+  "IsEnabled": true,
+  "SystemPrompt": "You are an AnimusForge preprocessing router. Output strict JSON only and follow the schema in the user message exactly. Include every required field. Never output CSV, bare values, prose, markdown, or code fences.",
+  "UserPromptTemplate": "MOD_SOURCE: AIConfigHandler.BuildAuxiliaryGuardrailRoutingPrompt",
+  "RuleInstructionMaxChars": 180,
+  "TopicOverrides": {
+    "duel": {
+      "TopicLabel": "Formal one-on-one duel challenge"
+    },
+    "reward": {
+      "TopicLabel": "Immediate gold/item/debt transfer"
+    },
+    "kingdom_service": {
+      "TopicLabel": "Player joins/leaves kingdom service"
+    },
+    "scene_mechanism_actions": {
+      "TopicLabel": "Local scene lead/follow one NPC"
+    },
+    "party_transfer": {
+      "TopicLabel": "Transfer/free troops or prisoners"
+    },
+    "settlement_transfer": {
+      "TopicLabel": "Actual fief ownership handover only"
+    },
+    "vanilla_issue": {
+      "TopicLabel": "Native quest offer/turn-in only"
+    },
+    "encounter_release_player": {
+      "TopicLabel": "NPC releases player from encounter"
+    },
+    "hero_join_party": {
+      "TopicLabel": "Current NPC joins player party"
+    },
+    "worldmap_party_command": {
+      "TopicLabel": "World-map party move/attack order"
+    },
+    "diplomacy": {
+      "TopicLabel": "Ruler peace/trade treaty diplomacy"
+    },
+    "kingdom_vassalage": {
+      "TopicLabel": "Kingdom submits as vassal only"
+    },
+    "scene_auto_group_relay": {
+      "TopicLabel": "Group speech to nearby NPCs"
+    },
+    "siege_intervention_aftermath": {
+      "Code": "SIEGE_AFTER_SCENE",
+      "TopicLabel": "Post-siege scene aftermath"
+    }
+  }
+}

@@ -1,0 +1,9 @@
+{
+  "Version": 28,
+  "IsEnabled": true,
+  "SystemPrompt": "You are an AnimusForge preprocessing router. Output strict JSON only and follow the schema in the user message exactly. Include every required field. Never output CSV, bare values, prose, markdown, or code fences.",
+  "UserPromptTemplate": "MOD_SOURCE: AIConfigHandler.BuildAuxiliaryGuardrailRoutingPrompt",
+  "RoutingGuidance": "优先看最新玩家请求；历史只补指代。话题用于规则注入，不是剧情摘要。\n必须选4个时，明确核心机制优先；弱补位才用 NPC_RECENT/NPC_MAJOR/NOBLE_PRESSURE。\nNPC回复可确认玩家请求，但不能把未由玩家提出的强机制当补位。\n弱补位也要有语义：NPC_RECENT=近期行动传闻；NPC_MAJOR=长期身世背景；NOBLE_PRESSURE=用贵族身份/头衔威胁施压。不要因说话者是贵族或国王就选 NOBLE_PRESSURE。\n不要用 SETTLEMENT/VASSALAGE/ISSUE/MEETING_RELEASE/HERO_JOIN/REWARD/WORLD_MAP/DUEL/SCENE_MOVE 凑数。\nAFEF/历史中“已转交固定资产”只是已发生事实；只有最新交换在谈新的买卖/交付才选 SETTLEMENT。\nSCENE_MOVE: 本地“请带路/跟着我走/随我走”优先；不是大地图 WORLD_MAP。\nWORLD_MAP: 只限大地图部队撤军/进军/跟随/攻击某地或部队。\nPARTY_TRANSFER: 部队/巡逻队/俘虏/人马并入或交给玩家。\nNPC_JOIN: 单个NPC/英雄加入、随行、当侍女、效忠玩家。\nKINGDOM_SERVICE: 玩家/玩家家族申请成为雇佣兵或封臣。\nVASSALAGE: 对方王国/家族臣服、归顺、附庸、宗主关系。\nDIPLOMACY: 议和/停战/通商/贡金/条约/战后赔偿/割地/放行条件。\nSETTLEMENT: 只限领地/工坊/商队等所有权交付。\nREWARD: 明确交付/索要金额、资源、赎金、摊派、报酬、借债/还债；只谈分成/利益背景不选。",
+  "RuleInstructionMaxChars": 180,
+  "TopicOverrides": {}
+}
