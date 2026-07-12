@@ -1,7 +1,7 @@
 {
   "Version": 4,
   "IsEnabled": true,
-  "SystemPrompt": "You are a dialogue retrieval tool. Output only a comma-separated list of topic numbers, or 0 if no topic applies.",
+  "SystemPrompt": "You are an AnimusForge preprocessing router. Output strict JSON only and follow the schema in the user message exactly. Include every required field. Never output CSV, bare values, prose, markdown, or code fences.",
   "UserPromptTemplate": "MOD_SOURCE: AIConfigHandler.BuildAuxiliaryGuardrailRoutingPrompt",
   "RoutingGuidance": "Prefer the latest player request; use history only to resolve references. Do not select a topic only because runtime context lists candidates.\nSCENE_RELAY: group speech to several nearby NPCs; not movement.\nDIPLOMACY: ruler peace/war/trade treaty/tribute between kingdoms.\nSETTLEMENT: actual fief/workshop/caravan ownership handover only.\nVASSALAGE: kingdom/clan submits as vassal only.\nCOMMANDS_AND_REQUESTS: direct world-map party move/attack order only.\nISSUE: native quest offer/accept/turn-in only.\nREWARD: current explicit gold/item/debt transfer only.",
   "RuleInstructionMaxChars": 180,

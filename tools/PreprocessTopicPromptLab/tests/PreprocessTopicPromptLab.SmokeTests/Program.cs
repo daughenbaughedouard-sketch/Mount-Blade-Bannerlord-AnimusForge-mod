@@ -1,3 +1,4 @@
+using System.Text;
 using System.Text.Json;
 using PreprocessTopicPromptLab.Core;
 
@@ -65,8 +66,20 @@ if (requestDoc.RootElement.GetProperty("max_tokens").GetInt32() != PreprocessTop
 {
     throw new InvalidOperationException("Request JSON does not use the lab-safe auxiliary router max_tokens.");
 }
-if (!rendered.SystemPrompt.Contains("dialogue retrieval tool", StringComparison.Ordinal) ||
+var renderedSystemMessage = messages[0].GetProperty("content").GetString() ?? "";
+var renderedUserMessage = messages[1].GetProperty("content").GetString() ?? "";
+if (!string.Equals(rendered.SystemPrompt, PreprocessTopicLabService.DefaultSystemPrompt, StringComparison.Ordinal) ||
+    !string.Equals(renderedSystemMessage, PreprocessTopicLabService.DefaultSystemPrompt, StringComparison.Ordinal) ||
+    !rendered.SystemPrompt.Contains("Output strict JSON only", StringComparison.Ordinal) ||
+    !rendered.SystemPrompt.Contains("Never output CSV", StringComparison.Ordinal) ||
+    rendered.SystemPrompt.Contains("comma-separated list of topic numbers", StringComparison.OrdinalIgnoreCase) ||
+    rendered.SystemPrompt.Contains("0 if no topic applies", StringComparison.OrdinalIgnoreCase) ||
     !rendered.UserPrompt.Contains("Select exactly 4 closest topic codes in rule_codes", StringComparison.Ordinal) ||
+    !rendered.UserPrompt.Contains("Output one strict JSON object only", StringComparison.Ordinal) ||
+    rendered.UserPrompt.Contains("comma-separated list of topic numbers", StringComparison.OrdinalIgnoreCase) ||
+    rendered.UserPrompt.Contains("0 if no topic applies", StringComparison.OrdinalIgnoreCase) ||
+    !rendered.UserPrompt.Contains("\"mentioned_entities\":{\"heroes\":[],\"settlements\":[],\"clans\":[],\"kingdoms\":[],\"items\":[],\"troops\":[],\"terms\":[]}", StringComparison.Ordinal) ||
+    !string.Equals(renderedUserMessage, rendered.UserPrompt, StringComparison.Ordinal) ||
     !rendered.UserPrompt.Contains("DUEL: Duel", StringComparison.Ordinal) ||
     !rendered.UserPrompt.Contains("SCENE_MOVE:", StringComparison.Ordinal) ||
     rendered.UserPrompt.Contains("SCENE_RELAY:", StringComparison.Ordinal))
@@ -107,7 +120,8 @@ if (anthropicMessages.GetArrayLength() != 1 ||
 {
     throw new InvalidOperationException("Anthropic-compatible mod router request should contain one user message.");
 }
-if (anthropicSystem.GetString()?.Contains("dialogue retrieval tool", StringComparison.Ordinal) != true)
+if (!string.Equals(anthropicSystem.GetString(), PreprocessTopicLabService.DefaultSystemPrompt, StringComparison.Ordinal) ||
+    !string.Equals(anthropicMessages[0].GetProperty("content").GetString(), anthropicRendered.UserPrompt, StringComparison.Ordinal))
 {
     throw new InvalidOperationException("Anthropic-compatible request system prompt does not match the mod router.");
 }
@@ -128,7 +142,37 @@ if (!overrideRendered.UserPrompt.Contains("DUEL: 单挑决斗/赌注", StringCom
     throw new InvalidOperationException("Topic route overrides or guidance were not rendered into the local lab prompt.");
 }
 
-var parsedTopics = service.ParseTopics("{\"rule_codes\":[\"DUEL\",\"ITEM_TRANSFER\",\"NPC_RECENT\",\"NOBLE_PRESSURE\"],\"mentioned_entities\":{\"heroes\":[],\"settlements\":[],\"clans\":[],\"kingdoms\":[],\"items\":[],\"troops\":[],\"terms\":[]}}", catalog.Rules);
+var legacyPromptConfig = service.GetDefaultPromptConfig();
+legacyPromptConfig.SystemPrompt = "legacy csv prompt";
+var legacyConfigRendered = service.RenderPrompt(catalog, labCase, settings, legacyPromptConfig);
+if (!string.Equals(legacyConfigRendered.SystemPrompt, PreprocessTopicLabService.DefaultSystemPrompt, StringComparison.Ordinal))
+{
+    throw new InvalidOperationException("Legacy prompt configuration must not override the strict preprocessing system contract.");
+}
+
+var promptPresetDirectory = Path.Combine(service.GetLabRoot(repoRoot), "prompts");
+var promptPresetFiles = Directory.GetFiles(promptPresetDirectory, "topic-route-v*.json");
+if (promptPresetFiles.Length == 0)
+{
+    throw new InvalidOperationException("No preprocessing prompt presets were found.");
+}
+var strictUtf8 = new UTF8Encoding(false, true);
+foreach (var promptPresetFile in promptPresetFiles)
+{
+    var presetText = strictUtf8.GetString(File.ReadAllBytes(promptPresetFile));
+    using var presetDocument = JsonDocument.Parse(presetText);
+    var presetSystemPrompt = presetDocument.RootElement.GetProperty("SystemPrompt").GetString() ?? "";
+    if (!string.Equals(presetSystemPrompt, PreprocessTopicLabService.DefaultSystemPrompt, StringComparison.Ordinal))
+    {
+        throw new InvalidOperationException("Prompt preset uses a stale preprocessing system contract: " + Path.GetFileName(promptPresetFile));
+    }
+}
+
+var validPreprocessResponse = "{\"rule_codes\":[\"DUEL\",\"ITEM_TRANSFER\",\"NPC_RECENT\",\"NOBLE_PRESSURE\"],\"mentioned_entities\":{\"heroes\":[],\"settlements\":[],\"clans\":[],\"kingdoms\":[],\"items\":[],\"troops\":[],\"terms\":[]}}";
+if (!service.TryParseTopics(validPreprocessResponse, catalog.Rules, out var parsedTopics, out var validParseError))
+{
+    throw new InvalidOperationException("Valid preprocessing response was rejected: " + validParseError);
+}
 var score = service.ScoreTopics(labCase, parsedTopics);
 Console.WriteLine("exact: " + score.ExactMatch + " recall=" + score.Recall + " precision=" + score.Precision);
 if (!score.ExactMatch)
@@ -141,6 +185,31 @@ if (parsedSceneTopics.Contains("scene_auto_group_relay", StringComparer.OrdinalI
     !parsedSceneTopics.Contains("scene_mechanism_actions", StringComparer.OrdinalIgnoreCase))
 {
     throw new InvalidOperationException("Scene relay should be ignored by preprocess parsing while scene movement remains injectable.");
+}
+
+var invalidPreprocessResponses = new[]
+{
+    "2,13",
+    "DUEL,ITEM_TRANSFER",
+    "0",
+    "\"DUEL\"",
+    "[\"DUEL\",\"ITEM_TRANSFER\"]",
+    "{\"rule_codes\":[\"2\",\"13\"],\"mentioned_entities\":{\"heroes\":[],\"settlements\":[],\"clans\":[],\"kingdoms\":[],\"items\":[],\"troops\":[],\"terms\":[]}}",
+    "{\"rule_codes\":[\"TOPIC_2\",\"T13\"],\"mentioned_entities\":{\"heroes\":[],\"settlements\":[],\"clans\":[],\"kingdoms\":[],\"items\":[],\"troops\":[],\"terms\":[]}}",
+    "{\"rule_codes\":\"DUEL,ITEM_TRANSFER\",\"mentioned_entities\":{\"heroes\":[],\"settlements\":[],\"clans\":[],\"kingdoms\":[],\"items\":[],\"troops\":[],\"terms\":[]}}",
+    "{\"rule_codes\":[\"DUEL\"]}",
+    "{\"rule_codes\":[\"DUEL\"],\"mentioned_entities\":{\"heroes\":\"NPC\",\"settlements\":[],\"clans\":[],\"kingdoms\":[],\"items\":[],\"troops\":[],\"terms\":[]}}"
+};
+foreach (var invalidPreprocessResponse in invalidPreprocessResponses)
+{
+    if (service.TryParseTopics(invalidPreprocessResponse, catalog.Rules, out var _, out var invalidParseError))
+    {
+        throw new InvalidOperationException("Invalid preprocessing response was accepted: " + invalidPreprocessResponse);
+    }
+    if (string.IsNullOrWhiteSpace(invalidParseError))
+    {
+        throw new InvalidOperationException("Invalid preprocessing response did not report a format error: " + invalidPreprocessResponse);
+    }
 }
 
 var labRoot = service.GetLabRoot(repoRoot);
