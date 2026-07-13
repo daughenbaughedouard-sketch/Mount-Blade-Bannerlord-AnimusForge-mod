@@ -49,6 +49,11 @@ function Get-TagFamily {
     if ($text -eq "[ACTION:LET_PLAYER_GO]") { return "LET_PLAYER_GO" }
     if ($text -eq "[A:H_J_P_P]") { return "H_J_P_P" }
     if ($text -eq "[A:C_J_P_K]") { return "C_J_P_K" }
+    if ($text -match "^\[A:C_J_K:") { return "C_J_K" }
+    if ($text -eq "[A:P_J_K_M]") { return "KINGDOM_SERVICE:MERCENARY" }
+    if ($text -eq "[A:P_J_K_V]") { return "KINGDOM_SERVICE:VASSAL" }
+    if ($text -eq "[A:P_L_K]") { return "KINGDOM_SERVICE:LEAVE" }
+    if ($text -match "^\[ACTION:KINGDOM_SERVICE:CLAN_JOIN_KINGDOM:") { return "C_J_K" }
     if ($text -match "^\[ACTION:AGENDA:") { return "AGENDA" }
     if ($text -match "^\[ACTION:WORLDMAP_ORDER:([^:\]]+)") { return "WORLDMAP_ORDER:" + $Matches[1] }
     if ($text -match "^\[ACTION:NOBLE_GATHERING:") { return "NOBLE_GATHERING" }

@@ -141,14 +141,14 @@ function Has-TopicTag {
     switch ($Topic) {
         "duel" { return $TagTable -match "\[ACTION:DUEL\]|DUEL_LINE" }
         "reward" { return $TagTable -match "GIVE_ASSET|\[AD;|\[ADP;" }
-        "kingdom_service" { return $TagTable -match "KINGDOM_SERVICE:(LEAVE|MERCENARY|VASSAL)" }
+        "kingdom_service" { return $TagTable -match "P_J_K_[MV]|P_L_K|KINGDOM_SERVICE:(LEAVE|MERCENARY|VASSAL)" }
         "lords_hall_access" { return $TagTable -match "OPEN_LORDS_HALL" }
         "marriage" { return $TagTable -match "MARRIAGE|DIVORCE" }
         "scene_mechanism_actions" { return $TagTable -match "SCENE_FOLLOW|SCENE_STOP|SCENE_SUMMON|SCENE_GUIDE|\[END\]" }
         "party_transfer" { return $TagTable -match "\[ATT:|\[ATP:" }
         "vanilla_issue" { return $TagTable -match "ISSUE_ACCEPT|QUEST_TURN_IN" }
         "encounter_release_player" { return $TagTable -match "LET_PLAYER_GO" }
-        "hero_join_party" { return $TagTable -match "H_J_P_P|C_J_P_K|CLAN_JOIN_PLAYER_KINGDOM" }
+        "hero_join_party" { return $TagTable -match "H_J_P_P|C_J_P_K|C_J_K|CLAN_JOIN_(PLAYER_KINGDOM|KINGDOM)" }
         "kingdom_agenda" { return $TagTable -match "ACTION:AGENDA" }
         "worldmap_party_command" { return $TagTable -match "WORLDMAP_ORDER" }
         "diplomacy" { return $TagTable -match "DIPLOMACY|KINGDOM_ANNEX" }
