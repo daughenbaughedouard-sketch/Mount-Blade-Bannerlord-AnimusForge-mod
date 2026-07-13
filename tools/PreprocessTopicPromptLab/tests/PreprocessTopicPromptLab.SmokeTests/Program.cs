@@ -22,6 +22,11 @@ if (duel == null || reward == null)
 {
     throw new InvalidOperationException("Expected duel and reward topics.");
 }
+if (!string.Equals(reward.Code, "Asset Transfer", StringComparison.Ordinal) ||
+    catalog.Rules.Any(x => x.Id == "settlement_transfer"))
+{
+    throw new InvalidOperationException("Fixed assets should route through the unified Asset Transfer reward topic.");
+}
 if (sceneMove == null || sceneRelay != null)
 {
     throw new InvalidOperationException("Preprocess catalog should include scene movement but exclude scene relay.");
@@ -51,7 +56,7 @@ var labCase = new PreprocessLabCase
     RuntimeContext = "目标是有名NPC，允许决斗。",
     ExpectedTopics = new List<string> { "duel" },
     AllowedExtraTopics = new List<string> { "reward", "npc_recent_actions", "noble_deference" },
-    ForbiddenTopics = new List<string> { "settlement_transfer", "marriage" }
+    ForbiddenTopics = new List<string> { "marriage" }
 };
 
 var settings = new PreprocessLabSettings
@@ -176,7 +181,7 @@ foreach (var promptPresetFile in promptPresetFiles)
     }
 }
 
-var validPreprocessResponse = "{\"rule_codes\":[\"DUEL\",\"ITEM_TRANSFER\",\"NPC_RECENT\",\"NOBLE_PRESSURE\"],\"mentioned_entities\":{\"heroes\":[],\"settlements\":[],\"clans\":[],\"kingdoms\":[],\"items\":[],\"troops\":[],\"policies\":[],\"terms\":[]}}";
+var validPreprocessResponse = "{\"rule_codes\":[\"DUEL\",\"ASSET_TRANSFER\",\"NPC_RECENT\",\"NOBLE_PRESSURE\"],\"mentioned_entities\":{\"heroes\":[],\"settlements\":[],\"clans\":[],\"kingdoms\":[],\"items\":[],\"troops\":[],\"policies\":[],\"terms\":[]}}";
 if (!service.TryParseTopics(validPreprocessResponse, catalog.Rules, out var parsedTopics, out var validParseError))
 {
     throw new InvalidOperationException("Valid preprocessing response was rejected: " + validParseError);
@@ -198,13 +203,13 @@ if (parsedSceneTopics.Contains("scene_auto_group_relay", StringComparer.OrdinalI
 var invalidPreprocessResponses = new[]
 {
     "2,13",
-    "DUEL,ITEM_TRANSFER",
+    "DUEL,ASSET_TRANSFER",
     "0",
     "\"DUEL\"",
-    "[\"DUEL\",\"ITEM_TRANSFER\"]",
+    "[\"DUEL\",\"ASSET_TRANSFER\"]",
     "{\"rule_codes\":[\"2\",\"13\"],\"mentioned_entities\":{\"heroes\":[],\"settlements\":[],\"clans\":[],\"kingdoms\":[],\"items\":[],\"troops\":[],\"policies\":[],\"terms\":[]}}",
     "{\"rule_codes\":[\"TOPIC_2\",\"T13\"],\"mentioned_entities\":{\"heroes\":[],\"settlements\":[],\"clans\":[],\"kingdoms\":[],\"items\":[],\"troops\":[],\"policies\":[],\"terms\":[]}}",
-    "{\"rule_codes\":\"DUEL,ITEM_TRANSFER\",\"mentioned_entities\":{\"heroes\":[],\"settlements\":[],\"clans\":[],\"kingdoms\":[],\"items\":[],\"troops\":[],\"policies\":[],\"terms\":[]}}",
+    "{\"rule_codes\":\"DUEL,ASSET_TRANSFER\",\"mentioned_entities\":{\"heroes\":[],\"settlements\":[],\"clans\":[],\"kingdoms\":[],\"items\":[],\"troops\":[],\"policies\":[],\"terms\":[]}}",
     "{\"rule_codes\":[\"DUEL\"]}",
     "{\"rule_codes\":[\"DUEL\"],\"mentioned_entities\":{\"heroes\":\"NPC\",\"settlements\":[],\"clans\":[],\"kingdoms\":[],\"items\":[],\"troops\":[],\"policies\":[],\"terms\":[]}}"
 };
@@ -222,7 +227,7 @@ foreach (var invalidPreprocessResponse in invalidPreprocessResponses)
 
 var labRoot = service.GetLabRoot(repoRoot);
 var runDir = service.CreateRunDirectory(labRoot);
-var artifact = service.WriteOfflineArtifacts(runDir, 1, catalog, labCase, settings, promptConfig, "{\"rule_codes\":[\"DUEL\",\"ITEM_TRANSFER\",\"NPC_RECENT\",\"NOBLE_PRESSURE\"],\"mentioned_entities\":{\"heroes\":[],\"settlements\":[],\"clans\":[],\"kingdoms\":[],\"items\":[],\"troops\":[],\"policies\":[],\"terms\":[]}}");
+var artifact = service.WriteOfflineArtifacts(runDir, 1, catalog, labCase, settings, promptConfig, "{\"rule_codes\":[\"DUEL\",\"ASSET_TRANSFER\",\"NPC_RECENT\",\"NOBLE_PRESSURE\"],\"mentioned_entities\":{\"heroes\":[],\"settlements\":[],\"clans\":[],\"kingdoms\":[],\"items\":[],\"troops\":[],\"policies\":[],\"terms\":[]}}");
 Console.WriteLine("smoke-run: " + runDir);
 
 var siegeCase = new PreprocessLabCase

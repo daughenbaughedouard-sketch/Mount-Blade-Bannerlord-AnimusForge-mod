@@ -38,7 +38,7 @@ public sealed class TopicRuleInfo
     private static readonly Dictionary<string, string> ChineseLabelsById = new(StringComparer.OrdinalIgnoreCase)
     {
         ["duel"] = "决斗",
-        ["reward"] = "交易、转让、赠予、借贷与偿还",
+		["reward"] = "资产交易、转让、赠予、借贷与偿还",
         ["loan"] = "借贷",
         ["surroundings"] = "周边定居点信息",
         ["kingdom_service"] = "加入或离开王国：雇佣兵/封臣",
@@ -46,7 +46,6 @@ public sealed class TopicRuleInfo
         ["marriage"] = "婚姻与联姻",
         ["scene_mechanism_actions"] = "本地 3D 场景移动：带路/跟随",
         ["party_transfer"] = "NPC 部队/俘虏转交给玩家；名人志愿兵招募",
-        ["settlement_transfer"] = "固定资产转移：领地、工坊、商队、贸易车队",
         ["vanilla_issue"] = "原版任务",
         ["npc_major_actions"] = "NPC 重大背景/历史",
         ["npc_recent_actions"] = "NPC 近期行动",

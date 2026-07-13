@@ -29,7 +29,6 @@ $allRiskTopics = @(
     "marriage",
     "scene_mechanism_actions",
     "party_transfer",
-    "settlement_transfer",
     "vanilla_issue",
     "encounter_release_player",
     "hero_join_party",

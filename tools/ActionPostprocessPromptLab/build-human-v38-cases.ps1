@@ -85,11 +85,10 @@ function Infer-RuleId {
     $text = if ($null -eq $Tag) { "" } else { $Tag.Trim() }
     if ($text -match "^\[ACTION:MOOD:") { return "mood" }
     if ($text -eq "[ACTION:DUEL]" -or $text -match "^\[ACTION:DUEL_LINE_") { return "duel" }
-    if ($text -match "^\[ACTION:GIVE_" -or $text -match "^\[(AD|ADP);") { return "reward" }
+    if ($text -match "^\[ACTION:GIVE_ASSET:" -or $text -match "^\[(AD|ADP);") { return "reward" }
     if ($text -match "^\[(ATT|ATP):") { return "party_transfer" }
-    if ($text -eq "[A:H_J_P_P]" -or $text -match "^\[ACTION:KINGDOM_SERVICE:CLAN_JOIN_PLAYER_KINGDOM:") { return "hero_join_party" }
+    if ($text -eq "[A:H_J_P_P]" -or $text -eq "[A:C_J_P_K]" -or $text -match "^\[ACTION:KINGDOM_SERVICE:CLAN_JOIN_PLAYER_KINGDOM:") { return "hero_join_party" }
     if ($text -match "^\[ACTION:KINGDOM_SERVICE:") { return "kingdom_service" }
-    if ($text -match "^\[ACTION:SETTLEMENT_TRANSFER:") { return "settlement_transfer" }
     if ($text -match "^\[ACTION:DIPLOMACY:" -or $text -match "^\[ACTION:KINGDOM_ANNEX:") { return "diplomacy" }
     if ($text -match "^\[ACTION:VASSALAGE:") { return "kingdom_vassalage" }
     if ($text -match "^\[ACTION:AGENDA:") { return "kingdom_agenda" }

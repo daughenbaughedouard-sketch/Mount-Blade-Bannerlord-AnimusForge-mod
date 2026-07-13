@@ -34,7 +34,6 @@ $RuleLabels = @{
     "marriage" = "marriage"
     "scene_mechanism_actions" = "scene movement"
     "party_transfer" = "party transfer"
-    "settlement_transfer" = "settlement transfer"
     "vanilla_issue" = "vanilla issue"
     "encounter_release_player" = "release player"
     "hero_join_party" = "hero join party"
@@ -354,16 +353,15 @@ function Infer-RuleId {
     param([string]$Tag)
     if ($Tag -match "^\[ACTION:MOOD:") { return "mood" }
     if ($Tag -eq "[ACTION:DUEL]" -or $Tag -match "^\[ACTION:DUEL_LINE_") { return "duel" }
-    if ($Tag -match "^\[ACTION:GIVE_(GOLD|ITEM):" -or $Tag -match "^\[(AD|ADP);") { return "reward" }
+    if ($Tag -match "^\[ACTION:GIVE_ASSET:" -or $Tag -match "^\[(AD|ADP);") { return "reward" }
     if ($Tag -match "^\[ACTION:KINGDOM_SERVICE:(LEAVE|MERCENARY|VASSAL):") { return "kingdom_service" }
     if ($Tag -eq "[ACTION:OPEN_LORDS_HALL]") { return "lords_hall_access" }
     if ($Tag -match "^\[ACTION:(MARRIAGE_FORMAL|MARRIAGE_ELOPE|DIVORCE):") { return "marriage" }
     if ($Tag -match "^\[ACTION:SCENE_(FOLLOW_PLAYER|STOP_FOLLOW|SUMMON|GUIDE):" -or $Tag -match "^\[ACTION:SCENE_(FOLLOW_PLAYER|STOP_FOLLOW)\]$" -or $Tag -eq "[END]") { return "scene_mechanism_actions" }
     if ($Tag -match "^\[(ATT|ATP):") { return "party_transfer" }
-    if ($Tag -match "^\[ACTION:SETTLEMENT_TRANSFER:") { return "settlement_transfer" }
     if ($Tag -match "^\[ACTION:(ISSUE_ACCEPT_SELF|ISSUE_ACCEPT_ALT|QUEST_TURN_IN)") { return "vanilla_issue" }
     if ($Tag -eq "[ACTION:LET_PLAYER_GO]") { return "encounter_release_player" }
-    if ($Tag -eq "[A:H_J_P_P]" -or $Tag -match "^\[ACTION:KINGDOM_SERVICE:CLAN_JOIN_PLAYER_KINGDOM:") { return "hero_join_party" }
+    if ($Tag -eq "[A:H_J_P_P]" -or $Tag -eq "[A:C_J_P_K]" -or $Tag -match "^\[ACTION:KINGDOM_SERVICE:CLAN_JOIN_PLAYER_KINGDOM:") { return "hero_join_party" }
     if ($Tag -match "^\[ACTION:AGENDA:") { return "kingdom_agenda" }
     if ($Tag -match "^\[ACTION:WORLDMAP_ORDER:") { return "worldmap_party_command" }
     if ($Tag -match "^\[ACTION:(DIPLOMACY|KINGDOM_ANNEX):") { return "diplomacy" }

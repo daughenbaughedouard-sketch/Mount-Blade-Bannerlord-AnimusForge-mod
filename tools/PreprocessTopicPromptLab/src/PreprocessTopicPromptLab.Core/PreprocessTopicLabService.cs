@@ -1984,7 +1984,7 @@ public sealed class PreprocessTopicLabService
             text = ruleId switch
             {
                 "duel" => "DUEL",
-                "reward" => "TRADE",
+				"reward" => "ASSET_TRANSFER",
                 "loan" => "DEBT",
                 "surroundings" => "NEARBY",
                 "kingdom_service" => "KINGDOM",
@@ -1992,7 +1992,6 @@ public sealed class PreprocessTopicLabService
                 "marriage" => "MARRIAGE",
                 "scene_mechanism_actions" => "SCENE_MOVE",
                 "party_transfer" => "PARTY_TRANSFER",
-                "settlement_transfer" => "SETTLEMENT",
                 "vanilla_issue" => "ISSUE",
                 "npc_major_actions" => "NPC_MAJOR",
                 "npc_recent_actions" => "NPC_RECENT",

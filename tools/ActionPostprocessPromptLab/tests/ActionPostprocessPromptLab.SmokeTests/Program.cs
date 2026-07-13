@@ -52,6 +52,20 @@ if (agendaRule == null ||
     return 1;
 }
 
+var assetTransferRule = catalog.Rules.FirstOrDefault(x => x.Id == "reward");
+var allConfiguredTags = catalog.Rules.SelectMany(x => x.PostprocessRules).Select(x => x.Tag ?? "").ToList();
+if (assetTransferRule == null ||
+    assetTransferRule.Code != "Asset Transfer" ||
+    assetTransferRule.PostprocessRules.Count(x => x.Tag.StartsWith("[ACTION:GIVE_ASSET:", StringComparison.OrdinalIgnoreCase)) != 1 ||
+    catalog.Rules.Any(x => x.Id == "settlement_transfer") ||
+    allConfiguredTags.Any(x => x.Contains("GIVE_GOLD", StringComparison.OrdinalIgnoreCase) ||
+                               x.Contains("GIVE_ITEM", StringComparison.OrdinalIgnoreCase) ||
+                               x.Contains("SETTLEMENT_TRANSFER", StringComparison.OrdinalIgnoreCase)))
+{
+    Console.Error.WriteLine("Asset Transfer was not migrated to the single GIVE_ASSET tag family.");
+    return 1;
+}
+
 var caseFile = Path.Combine(labRoot, "cases", "sample_cases.jsonl");
 var cases = service.LoadCases(caseFile);
 Console.WriteLine("cases: " + cases.Count);
