@@ -14,14 +14,29 @@ public sealed class PreprocessTopicLabService
     public const int LabSafeAuxiliaryRouterMaxTokens = 512;
     public const float ModAuxiliaryRouterTemperature = 0f;
 
-    public const string DefaultSystemPrompt =
-        "You are an AnimusForge preprocessing router. Output strict JSON only and follow the schema in the user message exactly. Include every required field. Never output CSV, bare values, prose, markdown, or code fences.";
+    public static string DefaultSystemPrompt
+    {
+        get
+        {
+            try
+            {
+                var service = new PreprocessTopicLabService();
+                var root = service.FindDefaultRepoRoot(Directory.GetCurrentDirectory());
+                return service.LoadModulePreprocessPrompts(Path.Combine(root, "AnimusForge", "ModuleData", "PreprocessPrompts.json")).StrictJson.SystemPrompt;
+            }
+            catch
+            {
+                return "";
+            }
+        }
+    }
 
     public const string DefaultUserPromptTemplate =
         "MOD_SOURCE: AIConfigHandler.BuildAuxiliaryGuardrailRoutingPrompt";
 
     private static readonly string[] ApiProtocolValues = { "auto", "openai", "anthropic" };
     private static readonly string[] ReasoningEffortValues = { "low", "medium", "high", "xhigh", "max" };
+    private static readonly Regex PreprocessTemplateVariableRegex = new("\\{([a-z][a-z0-9_]*)\\}", RegexOptions.Compiled | RegexOptions.CultureInvariant);
     private static readonly HashSet<string> NonPreprocessInjectedTopicIds = new(StringComparer.OrdinalIgnoreCase)
     {
         "scene_auto_group_relay"
@@ -37,7 +52,8 @@ public sealed class PreprocessTopicLabService
         var current = new DirectoryInfo(string.IsNullOrWhiteSpace(startDirectory) ? Directory.GetCurrentDirectory() : startDirectory);
         while (current != null)
         {
-            if (File.Exists(Path.Combine(current.FullName, "AnimusForge", "ModuleData", "RuleBehaviorPrompts.json")))
+            if (File.Exists(Path.Combine(current.FullName, "AnimusForge", "ModuleData", "RuleBehaviorPrompts.json")) &&
+                File.Exists(Path.Combine(current.FullName, "AnimusForge", "ModuleData", "PreprocessPrompts.json")))
             {
                 return current.FullName;
             }
@@ -57,17 +73,94 @@ public sealed class PreprocessTopicLabService
     {
         var root = string.IsNullOrWhiteSpace(repoRoot) ? FindDefaultRepoRoot(Directory.GetCurrentDirectory()) : repoRoot;
         var rulePath = Path.Combine(root, "AnimusForge", "ModuleData", "RuleBehaviorPrompts.json");
+        var preprocessPath = Path.Combine(root, "AnimusForge", "ModuleData", "PreprocessPrompts.json");
         if (!File.Exists(rulePath))
         {
             throw new FileNotFoundException("RuleBehaviorPrompts.json was not found.", rulePath);
+        }
+        if (!File.Exists(preprocessPath))
+        {
+            throw new FileNotFoundException("PreprocessPrompts.json was not found.", preprocessPath);
         }
 
         return new PromptCatalog
         {
             RepoRoot = root,
             RuleBehaviorPath = rulePath,
+            PreprocessPromptsPath = preprocessPath,
+            PreprocessPrompts = LoadModulePreprocessPrompts(preprocessPath),
             Rules = LoadRules(rulePath).Where(IsPreprocessInjectableRule).ToList()
         };
+    }
+
+    public ModulePreprocessPromptsConfig LoadModulePreprocessPrompts(string filePath)
+    {
+        var config = _json.Deserialize<ModulePreprocessPromptsConfig>(_json.ReadUtf8(filePath)) ?? new ModulePreprocessPromptsConfig();
+        ValidateModulePreprocessPrompts(config);
+        return config;
+    }
+
+    private static void ValidateModulePreprocessPrompts(ModulePreprocessPromptsConfig config)
+    {
+        RequirePreprocessValue(config?.StrictJson?.SystemPrompt, "StrictJson.SystemPrompt");
+        var schema = config?.StrictJson?.MentionedEntitiesSchema;
+        foreach (var bucket in new[] { "heroes", "settlements", "clans", "kingdoms", "items", "policies", "troops", "terms" })
+        {
+            if (schema == null || !schema.ContainsKey(bucket))
+            {
+                throw new InvalidDataException("PreprocessPrompts.json schema is missing: StrictJson.MentionedEntitiesSchema." + bucket);
+            }
+        }
+
+        RequirePreprocessValue(config?.TopicRouting?.EmptyValue, "TopicRouting.EmptyValue");
+        ValidateTemplateVariables(config?.TopicRouting?.UserPromptTemplate, "TopicRouting.UserPromptTemplate", "topic_list", "routing_guidance", "history", "latest_npc", "latest_player", "top_n", "mentioned_entities_schema");
+        RequirePreprocessValue(config?.MemorySelection?.ParallelModeInstruction, "MemorySelection.ParallelModeInstruction");
+        RequirePreprocessValue(config?.MemorySelection?.UnifiedModeInstruction, "MemorySelection.UnifiedModeInstruction");
+        RequirePreprocessValue(config?.MemorySelection?.EmptyValue, "MemorySelection.EmptyValue");
+        ValidateTemplateVariables(config?.MemorySelection?.UserPromptTemplate, "MemorySelection.UserPromptTemplate", "mode_instruction", "mentioned_entities_schema", "final_count", "latest_player_input", "latest_npc_input", "current_scene", "memory_candidates");
+        ValidateTemplateVariables(config?.MemorySelection?.CandidateLineTemplate, "MemorySelection.CandidateLineTemplate", "memory_id", "game_date", "age_suffix", "hour_range", "rich_title");
+        ValidateTemplateVariables(config?.MemorySelection?.FallbackGameDateTemplate, "MemorySelection.FallbackGameDateTemplate", "game_day");
+        RequirePreprocessValue(config?.ConnectionTest?.ExpectedRuleCode, "ConnectionTest.ExpectedRuleCode");
+        ValidateTemplateVariables(config?.ConnectionTest?.UserPromptTemplate, "ConnectionTest.UserPromptTemplate", "expected_rule_code", "mentioned_entities_schema");
+    }
+
+    private static string RequirePreprocessValue(string? value, string configPath)
+    {
+        var text = (value ?? "").Trim();
+        if (string.IsNullOrWhiteSpace(text))
+        {
+            throw new InvalidDataException("PreprocessPrompts.json is missing: " + configPath);
+        }
+
+        return text;
+    }
+
+    private static void ValidateTemplateVariables(string? template, string configPath, params string[] requiredVariables)
+    {
+        var text = RequirePreprocessValue(template, configPath);
+        var variables = PreprocessTemplateVariableRegex.Matches(text).Select(x => x.Groups[1].Value).ToHashSet(StringComparer.Ordinal);
+        foreach (var requiredVariable in requiredVariables ?? Array.Empty<string>())
+        {
+            if (!variables.Contains(requiredVariable))
+            {
+                throw new InvalidDataException("PreprocessPrompts.json template is missing: " + configPath + ".{" + requiredVariable + "}");
+            }
+        }
+    }
+
+    private static string RenderPreprocessTemplate(string? template, string configPath, IReadOnlyDictionary<string, string> values)
+    {
+        var text = RequirePreprocessValue(template, configPath);
+        return PreprocessTemplateVariableRegex.Replace(text, match =>
+        {
+            var key = match.Groups[1].Value;
+            if (!values.TryGetValue(key, out var value))
+            {
+                throw new InvalidDataException("PreprocessPrompts.json template has an unknown or missing value: " + configPath + ".{" + key + "}");
+            }
+
+            return value ?? "";
+        }).Trim();
     }
 
     public PreprocessPromptConfig GetDefaultPromptConfig()
@@ -91,6 +184,8 @@ public sealed class PreprocessTopicLabService
         {
             RepoRoot = catalog?.RepoRoot ?? "",
             RuleBehaviorPath = catalog?.RuleBehaviorPath ?? "",
+            PreprocessPromptsPath = catalog?.PreprocessPromptsPath ?? "",
+            PreprocessPrompts = catalog?.PreprocessPrompts ?? new ModulePreprocessPromptsConfig(),
             Rules = (catalog?.Rules ?? new List<TopicRuleInfo>()).Where(IsPreprocessInjectableRule).Select(CloneRule).ToList()
         };
 
@@ -221,10 +316,11 @@ public sealed class PreprocessTopicLabService
             runtimeGuardrailContext,
             effectiveCatalog.Rules.ToList(),
             ModGuardrailReturnCap,
+            effectiveCatalog.PreprocessPrompts,
             promptConfig?.RoutingGuidance);
         var rendered = new RenderedPreprocessPrompt
         {
-            SystemPrompt = DefaultSystemPrompt,
+            SystemPrompt = RequirePreprocessValue(effectiveCatalog.PreprocessPrompts?.StrictJson?.SystemPrompt, "StrictJson.SystemPrompt"),
             UserPrompt = NormalizeAuxiliaryRoutingRequestText(rawUserPrompt),
             TopicRules = topicRules,
             HistoryText = historyText,
@@ -655,43 +751,41 @@ public sealed class PreprocessTopicLabService
         string runtimeGuardrailContext,
         List<TopicRuleInfo> rules,
         int topN,
+        ModulePreprocessPromptsConfig preprocessPrompts,
         string? routingGuidance = null)
     {
         var text = NormalizeSemanticText(userText);
         var userTextIsAfefFact = IsAuxiliaryAfefFactLine(text);
         var routingRuntimeContext = userTextIsAfefFact ? AppendAuxiliaryAfefFactToRoutingContext(runtimeGuardrailContext, text) : runtimeGuardrailContext;
         var routingLatestPlayerText = userTextIsAfefFact ? "" : userText;
-        var historyBlock = BuildAuxiliaryGuardrailHistoryBlock(routingRuntimeContext, secondaryText, routingLatestPlayerText, out var latestNpcText);
+        var historyBlock = StripAuxiliaryHistoryInnerThoughts(BuildAuxiliaryGuardrailHistoryBlock(routingRuntimeContext, secondaryText, routingLatestPlayerText, out var latestNpcText));
         var latestNpcLine = StripAuxiliaryHistoryInnerThoughtsFromLine(NormalizeSemanticText(latestNpcText));
         var latestPlayerLine = userTextIsAfefFact ? "" : NormalizeAuxiliaryPlayerRoutingLine(text);
-        var sb = new StringBuilder();
-        sb.AppendLine("You are a dialogue retrieval tool. Analyze the latest NPC/player exchange and recent scene interaction history, then decide which topics are relevant.");
+        var topicList = new StringBuilder();
         foreach (var rule in (rules ?? new List<TopicRuleInfo>()).Where(x => x.IsEnabled).OrderBy(x => x.TopicNumber <= 0 ? 999 : x.TopicNumber).ThenBy(x => x.Id, StringComparer.OrdinalIgnoreCase))
         {
             var code = NormalizeRuleCode(rule.Code, rule.Id, rule.TopicLabel);
             var label = (rule.TopicLabel ?? "").Trim();
             if (rule.TopicNumber > 0 && !string.IsNullOrWhiteSpace(rule.Id) && !string.IsNullOrWhiteSpace(code) && !string.IsNullOrWhiteSpace(label))
             {
-                sb.AppendLine(code + ": " + label);
+                topicList.AppendLine(code + ": " + label);
             }
         }
 
-        var guidance = NormalizeAuxiliaryRoutingRequestText(routingGuidance ?? "");
-        if (!string.IsNullOrWhiteSpace(guidance))
+        var config = preprocessPrompts?.TopicRouting ?? new ModuleTopicRoutingPreprocessPromptConfig();
+        var emptyValue = RequirePreprocessValue(config.EmptyValue, "TopicRouting.EmptyValue");
+        var guidance = string.IsNullOrWhiteSpace(routingGuidance) ? config.RoutingGuidance : routingGuidance;
+        var mentionedEntitiesSchema = JsonSerializer.Serialize(preprocessPrompts?.StrictJson?.MentionedEntitiesSchema ?? new Dictionary<string, List<string>>());
+        return RenderPreprocessTemplate(config.UserPromptTemplate, "TopicRouting.UserPromptTemplate", new Dictionary<string, string>(StringComparer.Ordinal)
         {
-            sb.AppendLine("Routing hints:");
-            sb.AppendLine(guidance);
-        }
-
-        sb.AppendLine();
-        sb.AppendLine("Scene interaction history (up to the previous 3 dialogue turns):");
-        sb.AppendLine(NormalizeAuxiliaryRoutingRequestText(historyBlock));
-        sb.AppendLine();
-        sb.AppendLine("*Latest NPC/player exchange*:");
-        sb.Append("NPC: ").AppendLine(string.IsNullOrWhiteSpace(latestNpcLine) ? "(none)" : NormalizeAuxiliaryRoutingRequestText(latestNpcLine));
-        sb.Append("Player: ").AppendLine(string.IsNullOrWhiteSpace(latestPlayerLine) ? "(none)" : NormalizeAuxiliaryRoutingRequestText(latestPlayerLine));
-        sb.AppendLine("Select exactly " + Math.Max(1, topN) + " closest topic codes in rule_codes. Also extract explicit third-party nouns from the latest exchange into mentioned_entities. Use heroes for named people/titles, settlements for places, clans for families, kingdoms for factions, items for item/goods/equipment names or types, troops for troop/unit/prisoner names or types, policies for kingdom policy/law names, and terms for other useful raw phrases. Do not extract current speakers or player names just because they are speakers. If ambiguous, put it in the closest bucket and also terms. Order arrays by recency. Output one strict JSON object only: {\"rule_codes\":[\"CODE\"],\"mentioned_entities\":{\"heroes\":[],\"settlements\":[],\"clans\":[],\"kingdoms\":[],\"items\":[],\"troops\":[],\"policies\":[],\"terms\":[]}}.");
-        return SanitizeAuxiliaryRoutingPromptDialogueSections(sb.ToString()).Trim();
+            ["topic_list"] = topicList.ToString().TrimEnd(),
+            ["routing_guidance"] = NormalizeAuxiliaryRoutingRequestText(guidance ?? ""),
+            ["history"] = string.IsNullOrWhiteSpace(historyBlock) ? emptyValue : NormalizeAuxiliaryRoutingRequestText(historyBlock),
+            ["latest_npc"] = string.IsNullOrWhiteSpace(latestNpcLine) ? emptyValue : NormalizeAuxiliaryRoutingRequestText(latestNpcLine),
+            ["latest_player"] = string.IsNullOrWhiteSpace(latestPlayerLine) ? emptyValue : NormalizeAuxiliaryRoutingRequestText(latestPlayerLine),
+            ["top_n"] = Math.Max(1, topN).ToString(CultureInfo.InvariantCulture),
+            ["mentioned_entities_schema"] = mentionedEntitiesSchema
+        });
     }
 
     private static string BuildHistoryText(PreprocessLabCase labCase)
@@ -1242,52 +1336,6 @@ public sealed class PreprocessTopicLabService
         return text.Trim();
     }
 
-    private static string SanitizeAuxiliaryRoutingPromptDialogueSections(string prompt)
-    {
-        var text = (prompt ?? "").Replace("\r\n", "\n").Replace('\r', '\n');
-        if (string.IsNullOrWhiteSpace(text))
-        {
-            return "";
-        }
-
-        var lines = text.Split('\n');
-        var inHistory = false;
-        var inLatest = false;
-        for (var i = 0; i < lines.Length; i++)
-        {
-            var line = (lines[i] ?? "").Trim();
-            if (line.StartsWith("Scene interaction history ", StringComparison.Ordinal))
-            {
-                inHistory = true;
-                inLatest = false;
-                continue;
-            }
-
-            if (line.Equals("*Latest NPC/player exchange*:", StringComparison.Ordinal))
-            {
-                inHistory = false;
-                inLatest = true;
-                continue;
-            }
-
-            if (line.StartsWith("Select the most similar topics.", StringComparison.Ordinal) || line.StartsWith("Select exactly ", StringComparison.Ordinal))
-            {
-                inHistory = false;
-                inLatest = false;
-                continue;
-            }
-
-            if ((inHistory || inLatest) && !string.IsNullOrWhiteSpace(line))
-            {
-                lines[i] = inLatest && IsAuxiliaryPlayerHistoryLine(line)
-                    ? NormalizeAuxiliaryPlayerRoutingLine(lines[i])
-                    : StripAuxiliaryHistoryInnerThoughtsFromLine(lines[i]);
-            }
-        }
-
-        return string.Join("\n", lines).Trim();
-    }
-
     private static string NormalizeAuxiliaryRoutingRequestText(string text)
     {
         try
@@ -1833,7 +1881,8 @@ public sealed class PreprocessTopicLabService
             ["recall"] = score.Recall,
             ["precision"] = score.Precision,
             ["topicRules"] = rendered.TopicRules ?? "",
-            ["ruleBehaviorPath"] = catalog.RuleBehaviorPath ?? ""
+            ["ruleBehaviorPath"] = catalog.RuleBehaviorPath ?? "",
+            ["preprocessPromptsPath"] = catalog.PreprocessPromptsPath ?? ""
         };
         _json.WriteUtf8(metaPath, meta.ToJsonString(JsonFileStore.JsonOptions));
     }

@@ -1,5 +1,58 @@
 namespace PreprocessTopicPromptLab.Core;
 
+public sealed class ModulePreprocessPromptsConfig
+{
+    public int Version { get; set; }
+
+    public Dictionary<string, string> TemplateVariables { get; set; } = new();
+
+    public ModuleStrictPreprocessPromptConfig StrictJson { get; set; } = new();
+
+    public ModuleTopicRoutingPreprocessPromptConfig TopicRouting { get; set; } = new();
+
+    public ModuleMemorySelectionPreprocessPromptConfig MemorySelection { get; set; } = new();
+
+    public ModuleConnectionTestPreprocessPromptConfig ConnectionTest { get; set; } = new();
+}
+
+public sealed class ModuleStrictPreprocessPromptConfig
+{
+    public string SystemPrompt { get; set; } = "";
+
+    public Dictionary<string, List<string>> MentionedEntitiesSchema { get; set; } = new(StringComparer.OrdinalIgnoreCase);
+}
+
+public sealed class ModuleTopicRoutingPreprocessPromptConfig
+{
+    public string RoutingGuidance { get; set; } = "";
+
+    public string EmptyValue { get; set; } = "";
+
+    public string UserPromptTemplate { get; set; } = "";
+}
+
+public sealed class ModuleMemorySelectionPreprocessPromptConfig
+{
+    public string ParallelModeInstruction { get; set; } = "";
+
+    public string UnifiedModeInstruction { get; set; } = "";
+
+    public string EmptyValue { get; set; } = "";
+
+    public string UserPromptTemplate { get; set; } = "";
+
+    public string CandidateLineTemplate { get; set; } = "";
+
+    public string FallbackGameDateTemplate { get; set; } = "";
+}
+
+public sealed class ModuleConnectionTestPreprocessPromptConfig
+{
+    public string ExpectedRuleCode { get; set; } = "";
+
+    public string UserPromptTemplate { get; set; } = "";
+}
+
 public sealed class PostprocessRuleEntry
 {
     public string Tag { get; set; } = "";
@@ -106,6 +159,10 @@ public sealed class PromptCatalog
     public string RepoRoot { get; set; } = "";
 
     public string RuleBehaviorPath { get; set; } = "";
+
+    public string PreprocessPromptsPath { get; set; } = "";
+
+    public ModulePreprocessPromptsConfig PreprocessPrompts { get; set; } = new();
 
     public List<TopicRuleInfo> Rules { get; set; } = new();
 }

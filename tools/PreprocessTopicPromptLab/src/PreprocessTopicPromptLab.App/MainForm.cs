@@ -717,7 +717,7 @@ public sealed class MainForm : Form
     private void ApplyPromptConfigToUi()
     {
         _systemPromptBox.Text = PreprocessTopicLabService.DefaultSystemPrompt;
-        _userTemplateBox.Text = "由 mod 原函数 AIConfigHandler.BuildAuxiliaryGuardrailRoutingPrompt 生成：CODE列表、Scene interaction history、Latest NPC/player exchange、rule_codes JSON 输出约束。完整动态提示词请点击“生成请求”后查看下方预览。";
+        _userTemplateBox.Text = "由 AnimusForge/ModuleData/PreprocessPrompts.json 的 TopicRouting.UserPromptTemplate 生成；完整动态提示词请点击“生成请求”后查看下方预览。";
         _ruleMaxCharsBox.Value = ClampDecimal(PreprocessTopicLabService.ModGuardrailReturnCap, _ruleMaxCharsBox.Minimum, _ruleMaxCharsBox.Maximum);
     }
 

@@ -8,9 +8,9 @@ Console.WriteLine("repo: " + repoRoot);
 
 var catalog = service.LoadCatalog(repoRoot);
 Console.WriteLine("topics: " + catalog.Rules.Count);
-if (catalog.Rules.Count == 0)
+if (catalog.Rules.Count == 0 || string.IsNullOrWhiteSpace(catalog.PreprocessPromptsPath) || !File.Exists(catalog.PreprocessPromptsPath))
 {
-    throw new InvalidOperationException("No topics were loaded.");
+    throw new InvalidOperationException("Topics or PreprocessPrompts.json were not loaded.");
 }
 
 var duel = catalog.Rules.FirstOrDefault(x => x.Id == "duel");
@@ -80,6 +80,7 @@ if (requestDoc.RootElement.GetProperty("max_tokens").GetInt32() != PreprocessTop
 }
 var renderedSystemMessage = messages[0].GetProperty("content").GetString() ?? "";
 var renderedUserMessage = messages[1].GetProperty("content").GetString() ?? "";
+var mentionedEntitiesSchema = JsonSerializer.Serialize(catalog.PreprocessPrompts.StrictJson.MentionedEntitiesSchema);
 if (!string.Equals(rendered.SystemPrompt, PreprocessTopicLabService.DefaultSystemPrompt, StringComparison.Ordinal) ||
     !string.Equals(renderedSystemMessage, PreprocessTopicLabService.DefaultSystemPrompt, StringComparison.Ordinal) ||
     !rendered.SystemPrompt.Contains("Output strict JSON only", StringComparison.Ordinal) ||
@@ -90,7 +91,7 @@ if (!string.Equals(rendered.SystemPrompt, PreprocessTopicLabService.DefaultSyste
     !rendered.UserPrompt.Contains("Output one strict JSON object only", StringComparison.Ordinal) ||
     rendered.UserPrompt.Contains("comma-separated list of topic numbers", StringComparison.OrdinalIgnoreCase) ||
     rendered.UserPrompt.Contains("0 if no topic applies", StringComparison.OrdinalIgnoreCase) ||
-    !rendered.UserPrompt.Contains("\"mentioned_entities\":{\"heroes\":[],\"settlements\":[],\"clans\":[],\"kingdoms\":[],\"items\":[],\"troops\":[],\"policies\":[],\"terms\":[]}", StringComparison.Ordinal) ||
+    !rendered.UserPrompt.Contains("\"mentioned_entities\":" + mentionedEntitiesSchema, StringComparison.Ordinal) ||
     !string.Equals(renderedUserMessage, rendered.UserPrompt, StringComparison.Ordinal) ||
     !rendered.UserPrompt.Contains("DUEL: Duel", StringComparison.Ordinal) ||
     !rendered.UserPrompt.Contains("KINGDOM_AGENDA:", StringComparison.Ordinal) ||
