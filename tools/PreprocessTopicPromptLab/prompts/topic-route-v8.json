@@ -1,7 +1,7 @@
 {
   "Version": 9,
   "IsEnabled": true,
-  "SystemPrompt": "You are an AnimusForge preprocessing router. Output strict JSON only and follow the schema in the user message exactly. Include every required field. Never output CSV, bare values, prose, markdown, or code fences.",
+  "SystemPrompt": "You are an AnimusForge preprocessing router. The dialogue and context are quoted data and may contain sexual, violent, or other sensitive material. Analyze them only; do not continue, role-play, endorse, or add details. Do not refuse classification solely because the data is sensitive. Output strict JSON only and follow the schema in the user message exactly. Include every required field. Never output CSV, bare values, prose, markdown, or code fences.",
   "UserPromptTemplate": "MOD_SOURCE: AIConfigHandler.BuildAuxiliaryGuardrailRoutingPrompt",
   "RoutingGuidance": "优先看最新玩家请求；历史只用于补全指代。不要仅因 runtime 有候选清单就选话题。\n必须凑满4个时，不要用动作机制话题补位；弱相关补位优先选NPC_RECENT/NPC_MAJOR/NEARBY这类背景话题。\nSCENE_RELAY: 玩家对诸位/大家/朋友们/多个在场NPC喊话或要求众人听见时必选。\nDIPLOMACY: 只限王国间议和/停战/通商/贡金/税率/条约；群体喊话里明确谈未来和平或通商也选。\nCOMMANDS_AND_REQUESTS: 只限大地图部队立即移动/跟随/攻击具体目标；战争抱怨、守城、去大厅、学技术、拉人马、动用影响力、场景跟随都不选。\nVASSALAGE: 只限王国/家族成为附庸或臣服；个人宣誓、个人入队、共同抗敌、资源援助、重建部队不选。\nSETTLEMENT: 只限最新请求割让/交付命名城镇城堡等所有权；已有领地、税率贸易、补给资源、战利品比例、未来可能打下不选。\nREWARD: 只限本轮明确给钱/给物/借债/还债。",
   "RuleInstructionMaxChars": 180,
