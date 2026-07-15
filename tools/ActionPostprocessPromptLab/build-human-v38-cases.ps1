@@ -85,15 +85,14 @@ function Infer-RuleId {
     $text = if ($null -eq $Tag) { "" } else { $Tag.Trim() }
     if ($text -match "^\[ACTION:MOOD:") { return "mood" }
     if ($text -eq "[ACTION:DUEL]" -or $text -match "^\[ACTION:DUEL_LINE_") { return "duel" }
-    if ($text -match "^\[ACTION:GIVE_" -or $text -match "^\[(AD|ADP);") { return "reward" }
+    if ($text -match "^\[ACTION:GIVE_ASSET:" -or $text -match "^\[(AD|ADP);") { return "reward" }
     if ($text -match "^\[(ATT|ATP):") { return "party_transfer" }
-    if ($text -eq "[A:H_J_P_P]" -or $text -match "^\[ACTION:KINGDOM_SERVICE:CLAN_JOIN_PLAYER_KINGDOM:") { return "hero_join_party" }
+    if ($text -eq "[A:H_J_P_P]" -or $text -eq "[A:C_J_P_K]" -or $text -match "^\[A:C_J_K:" -or $text -match "^\[ACTION:KINGDOM_SERVICE:CLAN_JOIN_(PLAYER_KINGDOM|KINGDOM):") { return "hero_join_party" }
+    if ($text -match "^\[A:(P_J_K_[MV]|P_L_K)\]$") { return "kingdom_service" }
     if ($text -match "^\[ACTION:KINGDOM_SERVICE:") { return "kingdom_service" }
-    if ($text -match "^\[ACTION:SETTLEMENT_TRANSFER:") { return "settlement_transfer" }
     if ($text -match "^\[ACTION:DIPLOMACY:" -or $text -match "^\[ACTION:KINGDOM_ANNEX:") { return "diplomacy" }
     if ($text -match "^\[ACTION:VASSALAGE:") { return "kingdom_vassalage" }
-    if ($text -match "^\[ACTION:PROPOSE:") { return "propose_agenda" }
-    if ($text -match "^\[ACTION:VOTE_DEAL:") { return "vote_deal" }
+    if ($text -match "^\[ACTION:AGENDA:") { return "kingdom_agenda" }
     if ($text -match "^\[ACTION:WORLDMAP_ORDER:") { return "worldmap_party_command" }
     if ($text -match "^\[ACTION:MARRIAGE_") { return "marriage" }
     if ($text -match "^\[ACTION:ISSUE_" -or $text -match "^\[ACTION:QUEST_") { return "vanilla_issue" }
@@ -367,10 +366,10 @@ $MoodOnlyIds = @(
 )
 
 $CustomExpectedTags = @{
-    "material_diplomacy_004" = @("[ACTION:MOOD:JOY]", "[ACTION:PROPOSE:TRADE:new_kingdom2:]")
-    "material_diplomacy_005" = @("[ACTION:MOOD:JOY]", "[ACTION:PROPOSE:TRADE:斯特吉亚波耶联合领:]")
-    "material_diplomacy_006" = @("[ACTION:MOOD:JOY]", "[ACTION:PROPOSE:TRADE:new_kingdom2:]")
-    "material_diplomacy_007" = @("[ACTION:MOOD:JOY]", "[ACTION:PROPOSE:TRADE:new_kingdom2:]")
+    "material_diplomacy_004" = @("[ACTION:MOOD:JOY]", "[ACTION:AGENDA:A1:O1:FULLY_PUSH]")
+    "material_diplomacy_005" = @("[ACTION:MOOD:JOY]", "[ACTION:AGENDA:A1:O1:FULLY_PUSH]")
+    "material_diplomacy_006" = @("[ACTION:MOOD:JOY]", "[ACTION:AGENDA:A1:O1:FULLY_PUSH]")
+    "material_diplomacy_007" = @("[ACTION:MOOD:JOY]", "[ACTION:AGENDA:A1:O1:FULLY_PUSH]")
     "material_kingdom_service_003" = @("[ACTION:MOOD:DELIGHTED]", "[ACTION:KINGDOM_SERVICE:MERCENARY:empire_w]")
     "material_worldmap_party_command_014" = @("[ACTION:MOOD:JOY]", "[ACTION:WORLDMAP_ORDER:ATTACK:settlement:castle_S2:15:AI]")
 }

@@ -1,7 +1,7 @@
 {
   "Version": 20,
   "IsEnabled": true,
-  "SystemPrompt": "You are an AnimusForge preprocessing router. Output strict JSON only and follow the schema in the user message exactly. Include every required field. Never output CSV, bare values, prose, markdown, or code fences.",
+  "SystemPrompt": "You are an AnimusForge preprocessing router. The dialogue and context are quoted data and may contain sexual, violent, or other sensitive material. Analyze them only; do not continue, role-play, endorse, or add details. Do not refuse classification solely because the data is sensitive. Output strict JSON only and follow the schema in the user message exactly. Include every required field. Never output CSV, bare values, prose, markdown, or code fences.",
   "UserPromptTemplate": "MOD_SOURCE: AIConfigHandler.BuildAuxiliaryGuardrailRoutingPrompt",
   "RoutingGuidance": "优先看最新玩家请求；历史和NPC回复只补指代。话题用于规则注入，不是剧情摘要。\n必须选4个时，明确核心机制优先；弱补位才用 NPC_RECENT/NPC_MAJOR/NOBLE_PRESSURE。\n弱补位也要有语义：NPC_RECENT=近期行动传闻；NPC_MAJOR=长期身世背景；NOBLE_PRESSURE=用贵族身份/头衔威胁施压。不要因说话者是贵族或国王就选。\nKINGDOM_SERVICE: 玩家说我/玩家宣誓效忠、成为某王国封臣/雇佣兵、加入/离开某王国。\nNPC_JOIN: NPC/人物/家族加入玩家王国/队伍/阵营，或向玩家效忠；不要因此选 VASSALAGE。\nSETTLEMENT: 最新玩家明确交付/割让/收归领地、工坊、商队所有权；NPC回复里谈封地条件不算。\nDIPLOMACY: 议和/停战/通商/贡金/条约/战后赔偿/割地/放行条件；建国/招募/宣誓本身不算。\nMEETING_RELEASE: 只限NPC放玩家离开遭遇；玩家放别人走不选。\nREWARD: 只限最新玩家明确给钱/给物/借债/还债；NPC回复交钱或旧赎金背景不够。\nDUEL: 只限明确决斗/单挑挑战；辱骂、处决威胁不选。\n不要用 SETTLEMENT/VASSALAGE/ISSUE/MEETING_RELEASE/HERO_JOIN/REWARD/WORLD_MAP/DUEL/SCENE_MOVE 凑数。",
   "RuleInstructionMaxChars": 180,
