@@ -104,7 +104,7 @@ public sealed class PreprocessTopicLabService
     {
         RequirePreprocessValue(config?.StrictJson?.SystemPrompt, "StrictJson.SystemPrompt");
         var schema = config?.StrictJson?.MentionedEntitiesSchema;
-        foreach (var bucket in new[] { "heroes", "settlements", "clans", "kingdoms", "items", "policies", "troops", "terms" })
+        foreach (var bucket in new[] { "entities" })
         {
             if (schema == null || !schema.ContainsKey(bucket))
             {
@@ -1919,6 +1919,14 @@ public sealed class PreprocessTopicLabService
                 error = "mentioned_entities_not_object";
                 return false;
             }
+            foreach (var property in mentionedEntities.EnumerateObject())
+            {
+                if (!string.Equals(property.Name, "entities", StringComparison.Ordinal))
+                {
+                    error = "mentioned_entities_unexpected_field_" + property.Name;
+                    return false;
+                }
+            }
             foreach (var item in ruleCodes.EnumerateArray())
             {
                 var code = item.ValueKind == JsonValueKind.String ? item.GetString() ?? "" : "";
@@ -1933,7 +1941,7 @@ public sealed class PreprocessTopicLabService
                     return false;
                 }
             }
-            foreach (var bucket in new[] { "heroes", "settlements", "clans", "kingdoms", "items", "troops", "policies", "terms" })
+            foreach (var bucket in new[] { "entities" })
             {
                 if (!mentionedEntities.TryGetProperty(bucket, out var values))
                 {
