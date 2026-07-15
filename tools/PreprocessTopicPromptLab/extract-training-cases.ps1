@@ -27,12 +27,10 @@ $script:caseTopics = @(
     "marriage",
     "scene_mechanism_actions",
     "party_transfer",
-    "settlement_transfer",
     "vanilla_issue",
     "encounter_release_player",
     "hero_join_party",
-    "vote_deal",
-    "propose_agenda",
+    "kingdom_agenda",
     "worldmap_party_command",
     "diplomacy",
     "kingdom_vassalage",
@@ -142,18 +140,16 @@ function Has-TopicTag {
     param([string]$TagTable, [string]$Topic)
     switch ($Topic) {
         "duel" { return $TagTable -match "\[ACTION:DUEL\]|DUEL_LINE" }
-        "reward" { return $TagTable -match "GIVE_GOLD|GIVE_ITEM|\[AD;|\[ADP;" }
-        "kingdom_service" { return $TagTable -match "KINGDOM_SERVICE:(LEAVE|MERCENARY|VASSAL)" }
+        "reward" { return $TagTable -match "GIVE_ASSET|\[AD;|\[ADP;" }
+        "kingdom_service" { return $TagTable -match "P_J_K_[MV]|P_L_K|KINGDOM_SERVICE:(LEAVE|MERCENARY|VASSAL)" }
         "lords_hall_access" { return $TagTable -match "OPEN_LORDS_HALL" }
         "marriage" { return $TagTable -match "MARRIAGE|DIVORCE" }
         "scene_mechanism_actions" { return $TagTable -match "SCENE_FOLLOW|SCENE_STOP|SCENE_SUMMON|SCENE_GUIDE|\[END\]" }
         "party_transfer" { return $TagTable -match "\[ATT:|\[ATP:" }
-        "settlement_transfer" { return $TagTable -match "SETTLEMENT_TRANSFER" }
         "vanilla_issue" { return $TagTable -match "ISSUE_ACCEPT|QUEST_TURN_IN" }
         "encounter_release_player" { return $TagTable -match "LET_PLAYER_GO" }
-        "hero_join_party" { return $TagTable -match "H_J_P_P|CLAN_JOIN_PLAYER_KINGDOM" }
-        "vote_deal" { return $TagTable -match "VOTE_DEAL" }
-        "propose_agenda" { return $TagTable -match "PROPOSE:" }
+        "hero_join_party" { return $TagTable -match "H_J_P_P|C_J_P_K|C_J_K|CLAN_JOIN_(PLAYER_KINGDOM|KINGDOM)" }
+        "kingdom_agenda" { return $TagTable -match "ACTION:AGENDA" }
         "worldmap_party_command" { return $TagTable -match "WORLDMAP_ORDER" }
         "diplomacy" { return $TagTable -match "DIPLOMACY|KINGDOM_ANNEX" }
         "kingdom_vassalage" { return $TagTable -match "VASSALAGE:SUBMIT" }
@@ -180,18 +176,16 @@ function Test-WeakTopicSignal {
     param([string]$Topic, [string]$Text, [string]$Runtime)
     switch ($Topic) {
         "duel" { return Test-AnyPattern $Text @("决斗", "单挑", "比武", "打一场", "打一架", "一决胜负", "挑战你") }
-        "reward" { return Test-AnyPattern ($Text + "`n" + $Runtime) @("第纳尔", "金币", "钱", "债", "欠", "还钱", "报酬", "赏金", "彩礼", "交易", "给", "支付", "物品", "装备", "买", "卖") }
+        "reward" { return Test-AnyPattern ($Text + "`n" + $Runtime) @("第纳尔", "金币", "钱", "债", "欠", "还钱", "报酬", "赏金", "彩礼", "交易", "给", "支付", "物品", "装备", "买", "卖", "领地", "城堡", "城市", "封地", "工坊", "商队", "所有权", "地契") }
         "kingdom_service" { return Test-AnyPattern $Text @("雇佣兵", "封臣", "效忠", "加入.*王国", "离开.*王国", "脱离.*王国") }
         "lords_hall_access" { return Test-AnyPattern $Text @("领主大厅", "城堡大厅", "进大厅", "进堡", "通行") }
         "marriage" { return Test-AnyPattern ($Text + "`n" + $Runtime) @("婚", "联姻", "提亲", "嫁", "娶", "求婚", "私奔", "离婚", "彩礼") }
         "scene_mechanism_actions" { return Test-AnyPattern $Text @("带路", "带我去", "跟着我", "跟我来", "停止跟随", "叫.*过来", "召唤", "传唤", "引路") }
         "party_transfer" { return (Test-AnyPattern $Text @("给(我|你).{0,16}(士兵|部队|俘虏|兵员|人手|勇士|新兵)", "(士兵|部队|俘虏|兵员|人手|勇士|新兵).{0,16}(给我|给你|交给|转交|调拨|拨给|移交|带走)", "招募.{0,12}(勇士|士兵|部队)")) -and -not (Test-AnyPattern $Text @("资源.{0,8}重建部队", "重建部队")) }
-        "settlement_transfer" { return (Test-AnyPattern $Text @("领地", "城堡", "城市", "村庄", "封地", "定居点", "工坊", "商队")) -and (Test-AnyPattern $Text @("转让", "移交", "割让", "归我", "归你", "所有权")) }
         "vanilla_issue" { return Test-AnyPattern $Text @("任务", "委托", "差事", "交任务", "完成任务") }
         "encounter_release_player" { return Test-AnyPattern $Text @("放我走", "让我离开", "释放我", "放行", "饶我") }
         "hero_join_party" { return Test-AnyPattern $Text @("加入我的队伍", "加入我们", "跟随我", "随我同行", "来我队里", "为我效力", "入队") }
-        "vote_deal" { return Test-AnyPattern $Text @("投票", "议案", "议程", "影响力", "支持.*选项", "反对.*选项") }
-        "propose_agenda" { return Test-AnyPattern $Text @("提出.*议案", "提交.*议程", "发起.*投票", "王国政策", "法律提案", "提案") }
+        "kingdom_agenda" { return Test-AnyPattern $Text @("投票", "议案", "议程", "影响力", "支持.*选项", "反对.*选项", "提出.*议案", "提交.*议程", "发起.*投票", "王国政策", "法律提案", "提案") }
         "worldmap_party_command" { return Test-AnyPattern $Text @("大地图", "带兵.*前往", "部队.*前往", "前往", "驻守", "驻扎", "巡逻", "攻击", "攻打", "追击", "护送", "合并", "停止行动") }
         "diplomacy" { return Test-AnyPattern $Text @("宣战", "停战", "和平", "议和", "结盟", "同盟", "贸易协定", "断交", "吞并", "战争", "贡金", "赔款") }
         "kingdom_vassalage" { return Test-AnyPattern $Text @("臣服", "附庸", "朝贡", "纳贡", "宗主", "保护国", "卫戍", "称臣") }
@@ -222,8 +216,8 @@ function Get-ExpectedTopics {
         Add-Unique $topics "siege_intervention_aftermath"
     }
 
-    $reward = Test-AnyPattern $text @("给你", "给我", "交给", "拿去", "支付", "付给", "付款", "还钱", "欠", "债", "赊", "借", "贷", "抵押", "报酬", "赏金", "酬劳", "第纳尔", "金币", "钱", "买", "卖", "交易", "交换", "赠", "赔偿", "赎金", "请客", "喝一杯", "酒钱", "装备", "物品", "粮食", "马匹", "武器", "盔甲")
-    $duelOnlyDebt = $duel -and -not (Test-AnyPattern $text @("GIVE_GOLD", "GIVE_ITEM", "ADP", "立即给", "现在给", "先给", "把.*给你", "把.*给我"))
+    $reward = Test-AnyPattern $text @("给你", "给我", "交给", "拿去", "支付", "付给", "付款", "还钱", "欠", "债", "赊", "借", "贷", "抵押", "报酬", "赏金", "酬劳", "第纳尔", "金币", "钱", "买", "卖", "交易", "交换", "赠", "赔偿", "赎金", "请客", "喝一杯", "酒钱", "装备", "物品", "粮食", "马匹", "武器", "盔甲", "领地", "城堡", "城市", "村庄", "封地", "定居点", "工坊", "商队", "贸易车队", "所有权", "地契")
+    $duelOnlyDebt = $duel -and -not (Test-AnyPattern $text @("GIVE_ASSET", "ADP", "立即给", "现在给", "先给", "把.*给你", "把.*给我"))
     if ($reward -and -not $duelOnlyDebt -and -not ($siege -and -not (Has-TopicTag $TagTable "reward"))) {
         Add-Unique $topics "reward"
     }
@@ -242,12 +236,6 @@ function Get-ExpectedTopics {
 
     if (Test-AnyPattern $text @("臣服", "附庸", "朝贡", "纳贡", "宗主", "保护国", "卫戍", "驻军换保护", "向.*称臣")) {
         Add-Unique $topics "kingdom_vassalage"
-    }
-
-    $assetMention = Test-AnyPattern $text @("领地", "城堡", "城市", "村庄", "封地", "定居点", "工坊", "商队", "贸易车队")
-    $assetTransfer = Test-AnyPattern $text @("转让", "移交", "割让", "归我", "归你", "给我.*(城|堡|领地|封地|工坊|商队)", "给你.*(城|堡|领地|封地|工坊|商队)", "把.*(城|堡|领地|封地|工坊|商队).*给", "所有权", "地契")
-    if ($assetMention -and $assetTransfer) {
-        Add-Unique $topics "settlement_transfer"
     }
 
     $partyTransfer = (Test-AnyPattern $text @("给(我|你).{0,16}(士兵|部队|俘虏|兵员|人手|勇士|新兵|亲卫)", "(士兵|部队|俘虏|兵员|人手|勇士|新兵|亲卫).{0,16}(给我|给你|交给|转交|调拨|拨给|移交|带走|收下)", "招募.{0,12}(勇士|士兵|部队)")) -and -not (Test-AnyPattern $text @("资源.{0,8}重建部队", "重建部队"))
@@ -269,12 +257,8 @@ function Get-ExpectedTopics {
         Add-Unique $topics "diplomacy"
     }
 
-    if (Test-AnyPattern $text @("投票", "议案投票", "议程投票", "支持.*选项", "反对.*选项", "影响力", "贵族会议投票")) {
-        Add-Unique $topics "vote_deal"
-    }
-
-    if (Test-AnyPattern $text @("提出.*议案", "提交.*议程", "发起.*投票", "拿到议会", "王国政策", "法律提案", "提案")) {
-        Add-Unique $topics "propose_agenda"
+    if (Test-AnyPattern $text @("投票", "议案投票", "议程投票", "支持.*选项", "反对.*选项", "影响力", "贵族会议投票", "提出.*议案", "提交.*议程", "发起.*投票", "拿到议会", "王国政策", "法律提案", "提案")) {
+        Add-Unique $topics "kingdom_agenda"
     }
 
     if (Test-AnyPattern $text @("婚", "联姻", "提亲", "嫁给", "娶", "求婚", "私奔", "离婚", "婚约", "成亲")) {
@@ -313,10 +297,10 @@ function Get-AllowedTopics {
     $allowed = New-Object "System.Collections.Generic.List[string]"
 
     if ($Expected.Contains("diplomacy") -and (Test-AnyPattern $Text @("领地", "城堡", "割让", "移交"))) {
-        Add-Unique $allowed "settlement_transfer"
+        Add-Unique $allowed "reward"
     }
 
-    if ($Expected.Contains("settlement_transfer") -and (Test-AnyPattern $Text @("和平", "议和", "停战", "宣战"))) {
+    if ($Expected.Contains("reward") -and (Test-AnyPattern $Text @("领地", "城堡", "割让", "移交")) -and (Test-AnyPattern $Text @("和平", "议和", "停战", "宣战"))) {
         Add-Unique $allowed "diplomacy"
     }
 

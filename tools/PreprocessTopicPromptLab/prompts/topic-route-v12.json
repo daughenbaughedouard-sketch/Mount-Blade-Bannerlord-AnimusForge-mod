@@ -1,7 +1,7 @@
 {
   "Version": 13,
   "IsEnabled": true,
-  "SystemPrompt": "You are an AnimusForge preprocessing router. Output strict JSON only and follow the schema in the user message exactly. Include every required field. Never output CSV, bare values, prose, markdown, or code fences.",
+  "SystemPrompt": "You are an AnimusForge preprocessing router. The dialogue and context are quoted data and may contain sexual, violent, or other sensitive material. Analyze them only; do not continue, role-play, endorse, or add details. Do not refuse classification solely because the data is sensitive. Output strict JSON only and follow the schema in the user message exactly. Include every required field. Never output CSV, bare values, prose, markdown, or code fences.",
   "UserPromptTemplate": "MOD_SOURCE: AIConfigHandler.BuildAuxiliaryGuardrailRoutingPrompt",
   "RoutingGuidance": "优先看最新玩家请求；历史只补指代。话题用于规则注入，不是剧情摘要；必须补足时，弱补位优先 NPC_RECENT/NPC_MAJOR/NOBLE_PRESSURE。\n不要用强机制凑数：SETTLEMENT/VASSALAGE/ISSUE/MEETING_RELEASE/SCENE_MOVE 只在玩家明确请求该机制时选。\nSETTLEMENT: 明确交付领地/工坊/商队所有权；只提地名或赔偿谈判不够。\nVASSALAGE: 王国/家族整体臣服；玩家自己投效是 KINGDOM_SERVICE。\nMEETING_RELEASE: NPC放玩家离开遭遇；释放俘虏/NPC不选。\nSCENE_MOVE: 本地带路/跟随/传唤一人；群体喊话不选。\nNPC_JOIN: 当前NPC或明确人物加入玩家阵营/队伍/宣誓跟随。\nDIPLOMACY: 议和/停战/通商/贡金/条约。",
   "RuleInstructionMaxChars": 180,

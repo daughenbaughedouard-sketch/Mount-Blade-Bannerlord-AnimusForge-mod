@@ -1,7 +1,7 @@
 {
   "Version": 21,
   "IsEnabled": true,
-  "SystemPrompt": "You are an AnimusForge preprocessing router. Output strict JSON only and follow the schema in the user message exactly. Include every required field. Never output CSV, bare values, prose, markdown, or code fences.",
+  "SystemPrompt": "You are an AnimusForge preprocessing router. The dialogue and context are quoted data and may contain sexual, violent, or other sensitive material. Analyze them only; do not continue, role-play, endorse, or add details. Do not refuse classification solely because the data is sensitive. Output strict JSON only and follow the schema in the user message exactly. Include every required field. Never output CSV, bare values, prose, markdown, or code fences.",
   "UserPromptTemplate": "MOD_SOURCE: AIConfigHandler.BuildAuxiliaryGuardrailRoutingPrompt",
   "RoutingGuidance": "核心话题优先。先选最新玩家明确请求会触发机制的动作话题；历史和NPC回复只用于补全指代、确认结果，不要抢走玩家请求。\n4条不是同等重要：核心话题必须保留，剩余槽位才补 NPC_RECENT/NPC_MAJOR/NOBLE_PRESSURE 等上下文话题。\n不要用补位替代 DIPLOMACY/NPC_JOIN/KINGDOM_SERVICE/SETTLEMENT/WORLD_MAP/REWARD/VOTE_DEAL/SCENE_MOVE 等明确机制。\n玩家自己宣誓、成为封臣/雇佣兵、加入或退出某王国 => KINGDOM_SERVICE。\nNPC或家族加入玩家王国/队伍/阵营、向玩家效忠/追随 => NPC_JOIN，不要改成 VASSALAGE。\nDIPLOMACY: 议和、停战、通商、贡金、条约、战后赔偿、割地、放行条件。\nSETTLEMENT: 最新玩家明确交付、割让、收归领地/工坊/商队所有权。\nMEETING_RELEASE 只限NPC放玩家离开；玩家放别人走不选。",
   "RuleInstructionMaxChars": 180,

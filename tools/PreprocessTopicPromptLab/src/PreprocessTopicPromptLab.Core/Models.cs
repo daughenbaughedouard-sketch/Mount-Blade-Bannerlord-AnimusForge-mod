@@ -1,5 +1,58 @@
 namespace PreprocessTopicPromptLab.Core;
 
+public sealed class ModulePreprocessPromptsConfig
+{
+    public int Version { get; set; }
+
+    public Dictionary<string, string> TemplateVariables { get; set; } = new();
+
+    public ModuleStrictPreprocessPromptConfig StrictJson { get; set; } = new();
+
+    public ModuleTopicRoutingPreprocessPromptConfig TopicRouting { get; set; } = new();
+
+    public ModuleMemorySelectionPreprocessPromptConfig MemorySelection { get; set; } = new();
+
+    public ModuleConnectionTestPreprocessPromptConfig ConnectionTest { get; set; } = new();
+}
+
+public sealed class ModuleStrictPreprocessPromptConfig
+{
+    public string SystemPrompt { get; set; } = "";
+
+    public Dictionary<string, List<string>> MentionedEntitiesSchema { get; set; } = new(StringComparer.OrdinalIgnoreCase);
+}
+
+public sealed class ModuleTopicRoutingPreprocessPromptConfig
+{
+    public string RoutingGuidance { get; set; } = "";
+
+    public string EmptyValue { get; set; } = "";
+
+    public string UserPromptTemplate { get; set; } = "";
+}
+
+public sealed class ModuleMemorySelectionPreprocessPromptConfig
+{
+    public string ParallelModeInstruction { get; set; } = "";
+
+    public string UnifiedModeInstruction { get; set; } = "";
+
+    public string EmptyValue { get; set; } = "";
+
+    public string UserPromptTemplate { get; set; } = "";
+
+    public string CandidateLineTemplate { get; set; } = "";
+
+    public string FallbackGameDateTemplate { get; set; } = "";
+}
+
+public sealed class ModuleConnectionTestPreprocessPromptConfig
+{
+    public string ExpectedRuleCode { get; set; } = "";
+
+    public string UserPromptTemplate { get; set; } = "";
+}
+
 public sealed class PostprocessRuleEntry
 {
     public string Tag { get; set; } = "";
@@ -38,7 +91,7 @@ public sealed class TopicRuleInfo
     private static readonly Dictionary<string, string> ChineseLabelsById = new(StringComparer.OrdinalIgnoreCase)
     {
         ["duel"] = "决斗",
-        ["reward"] = "交易、转让、赠予、借贷与偿还",
+		["reward"] = "资产交易、转让、赠予、借贷与偿还",
         ["loan"] = "借贷",
         ["surroundings"] = "周边定居点信息",
         ["kingdom_service"] = "加入或离开王国：雇佣兵/封臣",
@@ -46,15 +99,13 @@ public sealed class TopicRuleInfo
         ["marriage"] = "婚姻与联姻",
         ["scene_mechanism_actions"] = "本地 3D 场景移动：带路/跟随",
         ["party_transfer"] = "NPC 部队/俘虏转交给玩家；名人志愿兵招募",
-        ["settlement_transfer"] = "固定资产转移：领地、工坊、商队、贸易车队",
         ["vanilla_issue"] = "原版任务",
         ["npc_major_actions"] = "NPC 重大背景/历史",
         ["npc_recent_actions"] = "NPC 近期行动",
         ["encounter_release_player"] = "遭遇时释放玩家",
         ["hero_join_party"] = "招募 NPC 加入玩家队伍",
         ["noble_deference"] = "贵族身份压迫/头衔威慑",
-        ["vote_deal"] = "政治投票与议程交易",
-        ["propose_agenda"] = "说服 NPC 提出新王国议程",
+        ["kingdom_agenda"] = "王国议程投票与提案",
         ["worldmap_party_command"] = "大地图移动与攻击命令",
         ["diplomacy"] = "王室外交 / 国王谈判",
         ["kingdom_vassalage"] = "王国附庸与臣服",
@@ -108,6 +159,10 @@ public sealed class PromptCatalog
     public string RepoRoot { get; set; } = "";
 
     public string RuleBehaviorPath { get; set; } = "";
+
+    public string PreprocessPromptsPath { get; set; } = "";
+
+    public ModulePreprocessPromptsConfig PreprocessPrompts { get; set; } = new();
 
     public List<TopicRuleInfo> Rules { get; set; } = new();
 }
