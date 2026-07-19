@@ -31,6 +31,7 @@ var reward = catalog.Rules.FirstOrDefault(x => x.Id == "reward");
 var sceneMove = catalog.Rules.FirstOrDefault(x => x.Id == "scene_mechanism_actions");
 var sceneRelay = catalog.Rules.FirstOrDefault(x => x.Id == "scene_auto_group_relay");
 var kingdomAgenda = catalog.Rules.FirstOrDefault(x => x.Id == "kingdom_agenda");
+var rulerPolicyProposal = catalog.Rules.FirstOrDefault(x => x.Id == "ruler_policy_proposal");
 if (duel == null || reward == null)
 {
     throw new InvalidOperationException("Expected duel and reward topics.");
@@ -49,6 +50,28 @@ if (kingdomAgenda == null || !kingdomAgenda.IsEnabled ||
     !string.Equals(kingdomAgenda.Code, "KINGDOM_AGENDA", StringComparison.Ordinal))
 {
     throw new InvalidOperationException("Preprocess catalog should expose only the unified kingdom agenda topic.");
+}
+if (rulerPolicyProposal == null || !rulerPolicyProposal.IsEnabled ||
+    rulerPolicyProposal.TopicNumber != 23 ||
+    !string.Equals(rulerPolicyProposal.Code, "RULER_POLICY_PROPOSAL", StringComparison.Ordinal) ||
+    rulerPolicyProposal.Instruction.Contains("[ACTION:", StringComparison.OrdinalIgnoreCase) ||
+    rulerPolicyProposal.PostprocessRules.Count != 1 ||
+    rulerPolicyProposal.PostprocessRules[0].Tag != "[ACTION:RULER_POLICY_PROPOSAL]")
+{
+    throw new InvalidOperationException("Ruler policy proposal should be an independent topic whose action tag exists only in postprocess rules.");
+}
+
+var sampleCasesPath = Path.Combine(service.GetLabRoot(repoRoot), "cases", "sample_cases.jsonl");
+var sampleCases = service.LoadCases(sampleCasesPath);
+var rulerProposalSample = sampleCases.FirstOrDefault(x => x.CaseId == "ruler_policy_proposal_001");
+var existingAgendaSample = sampleCases.FirstOrDefault(x => x.CaseId == "kingdom_agenda_existing_vote_001");
+if (rulerProposalSample == null ||
+    !rulerProposalSample.ExpectedTopics.Contains("ruler_policy_proposal", StringComparer.OrdinalIgnoreCase) ||
+    existingAgendaSample == null ||
+    !existingAgendaSample.ExpectedTopics.Contains("kingdom_agenda", StringComparer.OrdinalIgnoreCase) ||
+    !existingAgendaSample.ForbiddenTopics.Contains("ruler_policy_proposal", StringComparer.OrdinalIgnoreCase))
+{
+    throw new InvalidOperationException("Ruler policy proposal preprocessing samples are missing or do not preserve existing agenda routing.");
 }
 
 var labCase = new PreprocessLabCase
@@ -110,6 +133,7 @@ if (!string.Equals(rendered.SystemPrompt, PreprocessTopicLabService.DefaultSyste
     !string.Equals(renderedUserMessage, rendered.UserPrompt, StringComparison.Ordinal) ||
     !rendered.UserPrompt.Contains("DUEL: Duel", StringComparison.Ordinal) ||
     !rendered.UserPrompt.Contains("KINGDOM_AGENDA:", StringComparison.Ordinal) ||
+    !rendered.UserPrompt.Contains("RULER_POLICY_PROPOSAL:", StringComparison.Ordinal) ||
     !rendered.UserPrompt.Contains("SCENE_MOVE:", StringComparison.Ordinal) ||
     rendered.UserPrompt.Contains("SCENE_RELAY:", StringComparison.Ordinal))
 {
@@ -214,6 +238,12 @@ if (parsedSceneTopics.Contains("scene_auto_group_relay", StringComparer.OrdinalI
     !parsedSceneTopics.Contains("scene_mechanism_actions", StringComparer.OrdinalIgnoreCase))
 {
     throw new InvalidOperationException("Scene relay should be ignored by preprocess parsing while scene movement remains injectable.");
+}
+
+var parsedProposalTopics = service.ParseTopics("{\"rule_codes\":[\"RULER_POLICY_PROPOSAL\",\"KINGDOM_AGENDA\",\"NPC_RECENT\",\"NOBLE_PRESSURE\"],\"mentioned_entities\":{\"entities\":[]}}", catalog.Rules);
+if (!parsedProposalTopics.Contains("ruler_policy_proposal", StringComparer.OrdinalIgnoreCase))
+{
+    throw new InvalidOperationException("RULER_POLICY_PROPOSAL did not map back to the ruler policy proposal topic.");
 }
 
 var invalidPreprocessResponses = new[]

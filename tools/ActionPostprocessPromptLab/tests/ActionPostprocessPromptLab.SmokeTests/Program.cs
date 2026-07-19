@@ -52,6 +52,20 @@ if (agendaRule == null ||
     return 1;
 }
 
+var rulerPolicyProposalRule = catalog.Rules.FirstOrDefault(x => x.Id == "ruler_policy_proposal");
+var rulerPolicyProposalEntry = rulerPolicyProposalRule?.PostprocessRules.SingleOrDefault();
+if (rulerPolicyProposalRule == null || !rulerPolicyProposalRule.IsEnabled ||
+    rulerPolicyProposalRule.TopicNumber != 23 ||
+    rulerPolicyProposalRule.Code != "RULER_POLICY_PROPOSAL" ||
+    rulerPolicyProposalEntry?.Tag != "[ACTION:RULER_POLICY_PROPOSAL]" ||
+    !rulerPolicyProposalEntry.Description.Contains("无条件", StringComparison.Ordinal) ||
+    !rulerPolicyProposalEntry.Description.Contains("现任统治者", StringComparison.Ordinal) ||
+    !rulerPolicyProposalEntry.Description.Contains("禁止输出", StringComparison.Ordinal))
+{
+    Console.Error.WriteLine("Ruler policy proposal postprocess rule is missing or insufficiently gated.");
+    return 1;
+}
+
 var assetTransferRule = catalog.Rules.FirstOrDefault(x => x.Id == "reward");
 var allConfiguredTags = catalog.Rules.SelectMany(x => x.PostprocessRules).Select(x => x.Tag ?? "").ToList();
 if (assetTransferRule == null ||
@@ -72,6 +86,18 @@ Console.WriteLine("cases: " + cases.Count);
 if (cases.Count == 0)
 {
     Console.Error.WriteLine("No sample cases were loaded.");
+    return 1;
+}
+
+var rulerProposalCases = cases.Where(x => x.CaseId.StartsWith("ruler_policy_proposal_", StringComparison.Ordinal)).ToList();
+var rulerProposalAcceptCase = rulerProposalCases.FirstOrDefault(x => x.CaseId == "ruler_policy_proposal_accept_001");
+if (rulerProposalCases.Count < 5 ||
+    rulerProposalAcceptCase == null ||
+    !rulerProposalAcceptCase.ExpectedTags.Contains("[ACTION:RULER_POLICY_PROPOSAL]", StringComparer.Ordinal) ||
+    rulerProposalCases.Where(x => x.CaseId != "ruler_policy_proposal_accept_001")
+        .Any(x => x.ExpectedTags.Contains("[ACTION:RULER_POLICY_PROPOSAL]", StringComparer.Ordinal)))
+{
+    Console.Error.WriteLine("Ruler policy proposal accept/refuse/negotiate/consider/non-ruler samples are missing or incorrectly labeled.");
     return 1;
 }
 
