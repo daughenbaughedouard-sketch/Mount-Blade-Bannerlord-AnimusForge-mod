@@ -12,6 +12,19 @@ if (catalog.Rules.Count == 0 || string.IsNullOrWhiteSpace(catalog.PreprocessProm
 {
     throw new InvalidOperationException("Topics or PreprocessPrompts.json were not loaded.");
 }
+var memorySelectionPrompt = string.Join("\n", new[]
+{
+    catalog.PreprocessPrompts.MemorySelection.ParallelModeInstruction,
+    catalog.PreprocessPrompts.MemorySelection.UnifiedModeInstruction,
+    catalog.PreprocessPrompts.MemorySelection.UserPromptTemplate
+});
+if (!memorySelectionPrompt.Contains("\"memory_ids\"", StringComparison.Ordinal) ||
+    memorySelectionPrompt.Contains("mentioned_entities", StringComparison.OrdinalIgnoreCase) ||
+    memorySelectionPrompt.Contains("noun", StringComparison.OrdinalIgnoreCase) ||
+    memorySelectionPrompt.Contains("名词", StringComparison.Ordinal))
+{
+    throw new InvalidOperationException("Memory preprocessing must select only memory IDs and must not extract nouns.");
+}
 
 var duel = catalog.Rules.FirstOrDefault(x => x.Id == "duel");
 var reward = catalog.Rules.FirstOrDefault(x => x.Id == "reward");

@@ -58,6 +58,8 @@ public sealed class PostprocessRuleEntry
     public string Tag { get; set; } = "";
 
     public string Description { get; set; } = "";
+
+    public string SingleFramedNpcDescription { get; set; } = "";
 }
 
 public sealed class PreprocessPromptConfig
