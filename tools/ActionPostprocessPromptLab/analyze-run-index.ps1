@@ -22,8 +22,8 @@ function Get-TagFamily {
     $text = if ($null -eq $Tag) { "" } else { $Tag.Trim() }
     if ($text -match "^\[ACTION:MOOD:([^\]]+)\]$") { return "MOOD:" + $Matches[1] }
     if ($text -eq "[ACTION:DUEL]") { return "DUEL" }
-    if ($text -match "^\[AD;") { return "AD" }
-    if ($text -match "^\[ADP;") { return "ADP" }
+    if ($text -match "^\[AD:") { return "AD" }
+    if ($text -match "^\[ADP:") { return "ADP" }
     if ($text -match "^\[ACTION:DUEL_LINE_WIN:") { return "DUEL_LINE_WIN" }
     if ($text -match "^\[ACTION:DUEL_LINE_LOSE:") { return "DUEL_LINE_LOSE" }
     if ($text -match "^\[ACTION:GIVE_ASSET:GOLD:") { return "GIVE_ASSET:GOLD" }
@@ -76,14 +76,14 @@ function Normalize-ScoredTag {
         return "[ACTION:DUEL_LINE_LOSE:*]"
     }
 
-    if ($text -match '^\[AD;(.+)\]$') {
-        $parts = @($Matches[1].Split([char]';') | ForEach-Object { ([string]$_).Trim() })
+    if ($text -match '^\[AD:(.+)\]$') {
+        $parts = @($Matches[1].Split([char]':') | ForEach-Object { ([string]$_).Trim() })
         if ($parts.Count -ge 4 -and ($parts[2].Equals("N", [System.StringComparison]::OrdinalIgnoreCase) -or $parts[2].Equals("P", [System.StringComparison]::OrdinalIgnoreCase))) {
-            return ("[AD;{0};{1};{2};*]" -f $parts[0], $parts[1], $parts[2].ToUpperInvariant())
+            return ("[AD:{0}:{1}:{2}:*]" -f $parts[0], $parts[1], $parts[2].ToUpperInvariant())
         }
 
         if ($parts.Count -ge 3) {
-            return ("[AD;{0};{1};*]" -f $parts[0], $parts[1])
+            return ("[AD:{0}:{1}:*]" -f $parts[0], $parts[1])
         }
     }
 

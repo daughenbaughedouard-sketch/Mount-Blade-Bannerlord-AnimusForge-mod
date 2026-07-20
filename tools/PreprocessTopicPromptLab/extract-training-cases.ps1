@@ -140,7 +140,7 @@ function Has-TopicTag {
     param([string]$TagTable, [string]$Topic)
     switch ($Topic) {
         "duel" { return $TagTable -match "\[ACTION:DUEL\]|DUEL_LINE" }
-        "reward" { return $TagTable -match "GIVE_ASSET|\[AD;|\[ADP;" }
+        "reward" { return $TagTable -match "GIVE_ASSET|\[AD:|\[ADP:" }
         "kingdom_service" { return $TagTable -match "P_J_K_[MV]|P_L_K|KINGDOM_SERVICE:(LEAVE|MERCENARY|VASSAL)" }
         "lords_hall_access" { return $TagTable -match "OPEN_LORDS_HALL" }
         "marriage" { return $TagTable -match "MARRIAGE|DIVORCE" }
