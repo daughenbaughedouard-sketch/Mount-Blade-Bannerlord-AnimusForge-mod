@@ -103,7 +103,6 @@ public sealed class TopicRuleInfo
         ["party_transfer"] = "NPC 部队/俘虏转交给玩家；名人志愿兵招募",
         ["vanilla_issue"] = "原版任务",
         ["npc_major_actions"] = "NPC 重大背景/历史",
-        ["npc_recent_actions"] = "NPC 近期行动",
         ["encounter_release_player"] = "遭遇时释放玩家",
         ["hero_join_party"] = "招募 NPC 加入玩家队伍",
         ["noble_deference"] = "贵族身份压迫/头衔威慑",

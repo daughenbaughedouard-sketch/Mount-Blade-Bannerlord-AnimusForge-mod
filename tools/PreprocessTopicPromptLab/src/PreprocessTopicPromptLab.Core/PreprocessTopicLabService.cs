@@ -2056,7 +2056,6 @@ public sealed class PreprocessTopicLabService
                 "party_transfer" => "PARTY_TRANSFER",
                 "vanilla_issue" => "ISSUE",
                 "npc_major_actions" => "NPC_MAJOR",
-                "npc_recent_actions" => "NPC_RECENT",
                 "encounter_release_player" => "MEETING_RELEASE",
                 "hero_join_party" => "HERO_JOIN",
                 "noble_deference" => "NOBLE_PRESSURE",

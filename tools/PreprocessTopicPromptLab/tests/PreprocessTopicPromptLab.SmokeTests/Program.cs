@@ -68,7 +68,7 @@ var labCase = new PreprocessLabCase
     },
     RuntimeContext = "目标是有名NPC，允许决斗。",
     ExpectedTopics = new List<string> { "duel" },
-    AllowedExtraTopics = new List<string> { "reward", "npc_recent_actions", "noble_deference" },
+    AllowedExtraTopics = new List<string> { "reward", "npc_major_actions", "noble_deference" },
     ForbiddenTopics = new List<string> { "marriage" }
 };
 
@@ -197,7 +197,7 @@ foreach (var promptPresetFile in promptPresetFiles)
     }
 }
 
-var validPreprocessResponse = "{\"rule_codes\":[\"DUEL\",\"ASSET_TRANSFER\",\"NPC_RECENT\",\"NOBLE_PRESSURE\"],\"mentioned_entities\":{\"entities\":[]}}";
+var validPreprocessResponse = "{\"rule_codes\":[\"DUEL\",\"ASSET_TRANSFER\",\"NPC_MAJOR\",\"NOBLE_PRESSURE\"],\"mentioned_entities\":{\"entities\":[]}}";
 if (!service.TryParseTopics(validPreprocessResponse, catalog.Rules, out var parsedTopics, out var validParseError))
 {
     throw new InvalidOperationException("Valid preprocessing response was rejected: " + validParseError);
@@ -244,7 +244,7 @@ foreach (var invalidPreprocessResponse in invalidPreprocessResponses)
 
 var labRoot = service.GetLabRoot(repoRoot);
 var runDir = service.CreateRunDirectory(labRoot);
-var artifact = service.WriteOfflineArtifacts(runDir, 1, catalog, labCase, settings, promptConfig, "{\"rule_codes\":[\"DUEL\",\"ASSET_TRANSFER\",\"NPC_RECENT\",\"NOBLE_PRESSURE\"],\"mentioned_entities\":{\"entities\":[]}}");
+var artifact = service.WriteOfflineArtifacts(runDir, 1, catalog, labCase, settings, promptConfig, "{\"rule_codes\":[\"DUEL\",\"ASSET_TRANSFER\",\"NPC_MAJOR\",\"NOBLE_PRESSURE\"],\"mentioned_entities\":{\"entities\":[]}}");
 Console.WriteLine("smoke-run: " + runDir);
 
 var siegeCase = new PreprocessLabCase
