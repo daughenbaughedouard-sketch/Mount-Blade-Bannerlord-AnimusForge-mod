@@ -385,7 +385,7 @@ function Get-ExpectedTagsAndRules {
 
     foreach ($tag in $Tags) {
         $rule = Infer-RuleId $tag
-        if ($hasDuelTag -and $tag -match "^\[AD;") {
+        if ($hasDuelTag -and $tag -match "^\[AD:") {
             $rule = "duel"
         }
 

@@ -58,6 +58,8 @@ public sealed class PostprocessRuleEntry
     public string Tag { get; set; } = "";
 
     public string Description { get; set; } = "";
+
+    public string SingleFramedNpcDescription { get; set; } = "";
 }
 
 public sealed class PreprocessPromptConfig
@@ -101,11 +103,11 @@ public sealed class TopicRuleInfo
         ["party_transfer"] = "NPC 部队/俘虏转交给玩家；名人志愿兵招募",
         ["vanilla_issue"] = "原版任务",
         ["npc_major_actions"] = "NPC 重大背景/历史",
-        ["npc_recent_actions"] = "NPC 近期行动",
         ["encounter_release_player"] = "遭遇时释放玩家",
         ["hero_join_party"] = "招募 NPC 加入玩家队伍",
         ["noble_deference"] = "贵族身份压迫/头衔威慑",
         ["kingdom_agenda"] = "王国议程投票与提案",
+        ["ruler_policy_proposal"] = "向统治者建议新的自定义政策",
         ["worldmap_party_command"] = "大地图移动与攻击命令",
         ["diplomacy"] = "王室外交 / 国王谈判",
         ["kingdom_vassalage"] = "王国附庸与臣服",
