@@ -107,7 +107,6 @@ public sealed class TopicRuleInfo
         ["hero_join_party"] = "招募 NPC 加入玩家队伍",
         ["noble_deference"] = "贵族身份压迫/头衔威慑",
         ["kingdom_agenda"] = "王国议程投票与提案",
-        ["ruler_policy_proposal"] = "向统治者建议新的自定义政策",
         ["worldmap_party_command"] = "大地图移动与攻击命令",
         ["diplomacy"] = "王室外交 / 国王谈判",
         ["kingdom_vassalage"] = "王国附庸与臣服",
