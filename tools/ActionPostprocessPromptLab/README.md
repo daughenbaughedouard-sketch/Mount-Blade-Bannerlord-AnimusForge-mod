@@ -129,11 +129,11 @@ dotnet run --project tools\ActionPostprocessPromptLab\tools\ActionPostprocessPro
 powershell -NoProfile -ExecutionPolicy Bypass -File tools\ActionPostprocessPromptLab\summarize-run-results.ps1 -RunDirs "20260705_130916,20260705_131022" -OutputPath tools\ActionPostprocessPromptLab\runs\material_low.index.jsonl
 ```
 
-索引里的 `exactTagMatch` 只是 expectedTags 和 actualTags 的机械对比，不代表最终质量评分。评分会忽略 `[ACTION:DUEL_LINE_WIN:...]`、`[ACTION:DUEL_LINE_LOSE:...]` 的台词正文，以及 `[AD;金额;天数;备注]`、`[AD;金额;天数;N/P;备注]` 的备注正文；金额、天数、N/P 等结构字段仍然参与比对。动态金额、标签顺序或可接受的等价标签仍需要人工判断。
+索引里的 `exactTagMatch` 只是 expectedTags 和 actualTags 的机械对比，不代表最终质量评分。评分会忽略 `[ACTION:DUEL_LINE_WIN:...]`、`[ACTION:DUEL_LINE_LOSE:...]` 的台词正文，以及 `[AD:金额:天数:备注]`、`[AD:金额:天数:N/P:备注]` 的备注正文；金额、天数、N/P 等结构字段仍然参与比对。动态金额、标签顺序或可接受的等价标签仍需要人工判断。
 
 ## 修改标签提示词
 
-在“标签提示词”页可以修改每个后处理标签的说明、触发条件和禁止条件。标签本身是只读的，例如 `[ACTION:DUEL]`、`[AD;金额;天数;备注内容]` 不允许在工具里修改。
+在“标签提示词”页可以修改每个后处理标签的说明、触发条件和禁止条件。标签本身是只读的，例如 `[ACTION:DUEL]`、`[AD:金额:天数:备注内容]` 不允许在工具里修改。
 
 标签提示词是全局提示词版本的一部分，不属于某个案例。左侧“本案例命中规则”只决定当前案例注入哪些规则；“标签提示词”页里的“全局标签规则”才是编辑同一套全局标签说明。保存“全局提示词版本”时，工具只保存标签说明覆盖，不会把标签格式替换掉。加载该版本后，所有案例和批量运行都会用同一组编辑后的 `{tag_rules}`。
 

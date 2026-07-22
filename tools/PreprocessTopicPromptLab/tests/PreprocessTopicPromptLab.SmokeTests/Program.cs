@@ -12,12 +12,26 @@ if (catalog.Rules.Count == 0 || string.IsNullOrWhiteSpace(catalog.PreprocessProm
 {
     throw new InvalidOperationException("Topics or PreprocessPrompts.json were not loaded.");
 }
+var memorySelectionPrompt = string.Join("\n", new[]
+{
+    catalog.PreprocessPrompts.MemorySelection.ParallelModeInstruction,
+    catalog.PreprocessPrompts.MemorySelection.UnifiedModeInstruction,
+    catalog.PreprocessPrompts.MemorySelection.UserPromptTemplate
+});
+if (!memorySelectionPrompt.Contains("\"memory_ids\"", StringComparison.Ordinal) ||
+    memorySelectionPrompt.Contains("mentioned_entities", StringComparison.OrdinalIgnoreCase) ||
+    memorySelectionPrompt.Contains("noun", StringComparison.OrdinalIgnoreCase) ||
+    memorySelectionPrompt.Contains("名词", StringComparison.Ordinal))
+{
+    throw new InvalidOperationException("Memory preprocessing must select only memory IDs and must not extract nouns.");
+}
 
 var duel = catalog.Rules.FirstOrDefault(x => x.Id == "duel");
 var reward = catalog.Rules.FirstOrDefault(x => x.Id == "reward");
 var sceneMove = catalog.Rules.FirstOrDefault(x => x.Id == "scene_mechanism_actions");
 var sceneRelay = catalog.Rules.FirstOrDefault(x => x.Id == "scene_auto_group_relay");
 var kingdomAgenda = catalog.Rules.FirstOrDefault(x => x.Id == "kingdom_agenda");
+var rulerPolicyProposal = catalog.Rules.FirstOrDefault(x => x.Id == "ruler_policy_proposal");
 if (duel == null || reward == null)
 {
     throw new InvalidOperationException("Expected duel and reward topics.");
@@ -37,6 +51,28 @@ if (kingdomAgenda == null || !kingdomAgenda.IsEnabled ||
 {
     throw new InvalidOperationException("Preprocess catalog should expose only the unified kingdom agenda topic.");
 }
+if (rulerPolicyProposal == null || !rulerPolicyProposal.IsEnabled ||
+    rulerPolicyProposal.TopicNumber != 23 ||
+    !string.Equals(rulerPolicyProposal.Code, "RULER_POLICY_PROPOSAL", StringComparison.Ordinal) ||
+    rulerPolicyProposal.Instruction.Contains("[ACTION:", StringComparison.OrdinalIgnoreCase) ||
+    rulerPolicyProposal.PostprocessRules.Count != 1 ||
+    rulerPolicyProposal.PostprocessRules[0].Tag != "[ACTION:RULER_POLICY_PROPOSAL]")
+{
+    throw new InvalidOperationException("Ruler policy proposal should be an independent topic whose action tag exists only in postprocess rules.");
+}
+
+var sampleCasesPath = Path.Combine(service.GetLabRoot(repoRoot), "cases", "sample_cases.jsonl");
+var sampleCases = service.LoadCases(sampleCasesPath);
+var rulerProposalSample = sampleCases.FirstOrDefault(x => x.CaseId == "ruler_policy_proposal_001");
+var existingAgendaSample = sampleCases.FirstOrDefault(x => x.CaseId == "kingdom_agenda_existing_vote_001");
+if (rulerProposalSample == null ||
+    !rulerProposalSample.ExpectedTopics.Contains("ruler_policy_proposal", StringComparer.OrdinalIgnoreCase) ||
+    existingAgendaSample == null ||
+    !existingAgendaSample.ExpectedTopics.Contains("kingdom_agenda", StringComparer.OrdinalIgnoreCase) ||
+    !existingAgendaSample.ForbiddenTopics.Contains("ruler_policy_proposal", StringComparer.OrdinalIgnoreCase))
+{
+    throw new InvalidOperationException("Ruler policy proposal preprocessing samples are missing or do not preserve existing agenda routing.");
+}
 
 var labCase = new PreprocessLabCase
 {
@@ -55,7 +91,7 @@ var labCase = new PreprocessLabCase
     },
     RuntimeContext = "目标是有名NPC，允许决斗。",
     ExpectedTopics = new List<string> { "duel" },
-    AllowedExtraTopics = new List<string> { "reward", "npc_recent_actions", "noble_deference" },
+    AllowedExtraTopics = new List<string> { "reward", "npc_major_actions", "noble_deference" },
     ForbiddenTopics = new List<string> { "marriage" }
 };
 
@@ -97,6 +133,7 @@ if (!string.Equals(rendered.SystemPrompt, PreprocessTopicLabService.DefaultSyste
     !string.Equals(renderedUserMessage, rendered.UserPrompt, StringComparison.Ordinal) ||
     !rendered.UserPrompt.Contains("DUEL: Duel", StringComparison.Ordinal) ||
     !rendered.UserPrompt.Contains("KINGDOM_AGENDA:", StringComparison.Ordinal) ||
+    !rendered.UserPrompt.Contains("RULER_POLICY_PROPOSAL:", StringComparison.Ordinal) ||
     !rendered.UserPrompt.Contains("SCENE_MOVE:", StringComparison.Ordinal) ||
     rendered.UserPrompt.Contains("SCENE_RELAY:", StringComparison.Ordinal))
 {
@@ -184,7 +221,7 @@ foreach (var promptPresetFile in promptPresetFiles)
     }
 }
 
-var validPreprocessResponse = "{\"rule_codes\":[\"DUEL\",\"ASSET_TRANSFER\",\"NPC_RECENT\",\"NOBLE_PRESSURE\"],\"mentioned_entities\":{\"entities\":[]}}";
+var validPreprocessResponse = "{\"rule_codes\":[\"DUEL\",\"ASSET_TRANSFER\",\"NPC_MAJOR\",\"NOBLE_PRESSURE\"],\"mentioned_entities\":{\"entities\":[]}}";
 if (!service.TryParseTopics(validPreprocessResponse, catalog.Rules, out var parsedTopics, out var validParseError))
 {
     throw new InvalidOperationException("Valid preprocessing response was rejected: " + validParseError);
@@ -201,6 +238,12 @@ if (parsedSceneTopics.Contains("scene_auto_group_relay", StringComparer.OrdinalI
     !parsedSceneTopics.Contains("scene_mechanism_actions", StringComparer.OrdinalIgnoreCase))
 {
     throw new InvalidOperationException("Scene relay should be ignored by preprocess parsing while scene movement remains injectable.");
+}
+
+var parsedProposalTopics = service.ParseTopics("{\"rule_codes\":[\"RULER_POLICY_PROPOSAL\",\"KINGDOM_AGENDA\",\"NPC_RECENT\",\"NOBLE_PRESSURE\"],\"mentioned_entities\":{\"entities\":[]}}", catalog.Rules);
+if (!parsedProposalTopics.Contains("ruler_policy_proposal", StringComparer.OrdinalIgnoreCase))
+{
+    throw new InvalidOperationException("RULER_POLICY_PROPOSAL did not map back to the ruler policy proposal topic.");
 }
 
 var invalidPreprocessResponses = new[]
@@ -231,7 +274,7 @@ foreach (var invalidPreprocessResponse in invalidPreprocessResponses)
 
 var labRoot = service.GetLabRoot(repoRoot);
 var runDir = service.CreateRunDirectory(labRoot);
-var artifact = service.WriteOfflineArtifacts(runDir, 1, catalog, labCase, settings, promptConfig, "{\"rule_codes\":[\"DUEL\",\"ASSET_TRANSFER\",\"NPC_RECENT\",\"NOBLE_PRESSURE\"],\"mentioned_entities\":{\"entities\":[]}}");
+var artifact = service.WriteOfflineArtifacts(runDir, 1, catalog, labCase, settings, promptConfig, "{\"rule_codes\":[\"DUEL\",\"ASSET_TRANSFER\",\"NPC_MAJOR\",\"NOBLE_PRESSURE\"],\"mentioned_entities\":{\"entities\":[]}}");
 Console.WriteLine("smoke-run: " + runDir);
 
 var siegeCase = new PreprocessLabCase

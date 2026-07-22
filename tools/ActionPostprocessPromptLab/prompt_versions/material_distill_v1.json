@@ -42,8 +42,8 @@
                                                 "reward":  {
                                                                "[ACTION:GIVE_GOLD:金额]":  "当\u003clatest_reply\u003e中NPC明确把第纳尔、钱、赎金、财物或等值金币立即交给玩家、归玩家、留下给玩家时输出。不要因为本轮没有AFEF就改成AD；AFEF只用于判断history里的既成事实。金额不明时按上下文合理估算。仅承诺将来给、赊欠或仍待后续交割时才用AD。",
                                                                "[ACTION:GIVE_ITEM:物品名称:数量]":  "当\u003clatest_reply\u003e中NPC明确把物品、装备、武器、马匹、货物、俘获物立即交给玩家、归玩家、留下给玩家时输出。优先使用NPC物品清单或玩家说出的物品名；数量不明填1；多个物品可重复输出。不要用AD替代本轮明确即时交付。",
-                                                               "[AD;金额;天数;N/P;备注内容]":  "只在双方形成未来承诺、赊欠、延期付款、未结清交换或一方已交付另一方仍未履行时输出。若\u003clatest_reply\u003e中NPC已经明确说钱/物/装备/领地立即归玩家，应优先输出GIVE_GOLD、GIVE_ITEM或SETTLEMENT_TRANSFER，不要把即时交付降级成AD。",
-                                                               "[ADP;债务ID]":  "当\u003clatest_reply\u003e中NPC明确承认收到既有债务付款、确认债务已还清、勾销、免除或核销时输出。债务ID必须来自债务提示或AFEF历史，不要编造。"
+                                                               "[AD:金额:天数:N/P:备注内容]":  "只在双方形成未来承诺、赊欠、延期付款、未结清交换或一方已交付另一方仍未履行时输出。若\u003clatest_reply\u003e中NPC已经明确说钱/物/装备/领地立即归玩家，应优先输出GIVE_GOLD、GIVE_ITEM或SETTLEMENT_TRANSFER，不要把即时交付降级成AD。",
+                                                               "[ADP:债务ID]":  "当\u003clatest_reply\u003e中NPC明确承认收到既有债务付款、确认债务已还清、勾销、免除或核销时输出。债务ID必须来自债务提示或AFEF历史，不要编造。"
                                                            },
                                                 "settlement_transfer":  {
                                                                             "[ACTION:SETTLEMENT_TRANSFER:TO_PLAYER:固定资产ID或编号]":  "当\u003clatest_reply\u003e中NPC明确把当前可转移清单里的城市、城堡、工坊、商队或其他固定资产交给玩家、割让给玩家、归玩家、移交给玩家时输出。必须使用运行时清单中的ID。若同一句还同意和平、贸易、债务核销，应同时输出对应DIPLOMACY或ADP标签，不要只输出情绪。"

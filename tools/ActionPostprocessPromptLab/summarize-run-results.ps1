@@ -46,14 +46,14 @@ function Normalize-ScoredTag {
         return "[ACTION:DUEL_LINE_LOSE:*]"
     }
 
-    if ($text -match '^\[AD;(.+)\]$') {
-        $parts = @($Matches[1].Split([char]';') | ForEach-Object { ([string]$_).Trim() })
+    if ($text -match '^\[AD:(.+)\]$') {
+        $parts = @($Matches[1].Split([char]':') | ForEach-Object { ([string]$_).Trim() })
         if ($parts.Count -ge 4 -and ($parts[2].Equals("N", [System.StringComparison]::OrdinalIgnoreCase) -or $parts[2].Equals("P", [System.StringComparison]::OrdinalIgnoreCase))) {
-            return ("[AD;{0};{1};{2};*]" -f $parts[0], $parts[1], $parts[2].ToUpperInvariant())
+            return ("[AD:{0}:{1}:{2}:*]" -f $parts[0], $parts[1], $parts[2].ToUpperInvariant())
         }
 
         if ($parts.Count -ge 3) {
-            return ("[AD;{0};{1};*]" -f $parts[0], $parts[1])
+            return ("[AD:{0}:{1}:*]" -f $parts[0], $parts[1])
         }
     }
 

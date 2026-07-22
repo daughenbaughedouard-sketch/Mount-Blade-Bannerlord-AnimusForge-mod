@@ -117,7 +117,7 @@ public sealed class PreprocessTopicLabService
         RequirePreprocessValue(config?.MemorySelection?.ParallelModeInstruction, "MemorySelection.ParallelModeInstruction");
         RequirePreprocessValue(config?.MemorySelection?.UnifiedModeInstruction, "MemorySelection.UnifiedModeInstruction");
         RequirePreprocessValue(config?.MemorySelection?.EmptyValue, "MemorySelection.EmptyValue");
-        ValidateTemplateVariables(config?.MemorySelection?.UserPromptTemplate, "MemorySelection.UserPromptTemplate", "mode_instruction", "mentioned_entities_schema", "final_count", "latest_player_input", "latest_npc_input", "current_scene", "memory_candidates");
+        ValidateTemplateVariables(config?.MemorySelection?.UserPromptTemplate, "MemorySelection.UserPromptTemplate", "mode_instruction", "final_count", "latest_player_input", "latest_npc_input", "current_scene", "memory_candidates");
         ValidateTemplateVariables(config?.MemorySelection?.CandidateLineTemplate, "MemorySelection.CandidateLineTemplate", "memory_id", "game_date", "age_suffix", "hour_range", "rich_title");
         ValidateTemplateVariables(config?.MemorySelection?.FallbackGameDateTemplate, "MemorySelection.FallbackGameDateTemplate", "game_day");
         RequirePreprocessValue(config?.ConnectionTest?.ExpectedRuleCode, "ConnectionTest.ExpectedRuleCode");
@@ -246,7 +246,12 @@ public sealed class PreprocessTopicLabService
             NonHeroInstruction = source.NonHeroInstruction,
             TriggerKeywords = source.TriggerKeywords.ToList(),
             PostprocessRules = source.PostprocessRules
-                .Select(x => new PostprocessRuleEntry { Tag = x.Tag, Description = x.Description })
+                .Select(x => new PostprocessRuleEntry
+                {
+                    Tag = x.Tag,
+                    Description = x.Description,
+                    SingleFramedNpcDescription = x.SingleFramedNpcDescription
+                })
                 .ToList()
         };
     }
@@ -2051,7 +2056,6 @@ public sealed class PreprocessTopicLabService
                 "party_transfer" => "PARTY_TRANSFER",
                 "vanilla_issue" => "ISSUE",
                 "npc_major_actions" => "NPC_MAJOR",
-                "npc_recent_actions" => "NPC_RECENT",
                 "encounter_release_player" => "MEETING_RELEASE",
                 "hero_join_party" => "HERO_JOIN",
                 "noble_deference" => "NOBLE_PRESSURE",
