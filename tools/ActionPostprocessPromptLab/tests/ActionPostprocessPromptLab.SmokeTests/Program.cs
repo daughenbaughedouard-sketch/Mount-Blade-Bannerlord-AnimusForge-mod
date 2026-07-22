@@ -40,29 +40,16 @@ if (marriageRule == null || !marriageRule.DisplayName.Contains("婚姻", StringC
 }
 
 var agendaRule = catalog.Rules.FirstOrDefault(x => x.Id == "kingdom_agenda");
-var agendaTag = agendaRule?.PostprocessRules.SingleOrDefault()?.Tag;
+var agendaTags = agendaRule?.PostprocessRules.Select(x => x.Tag ?? "").ToList() ?? new List<string>();
 if (agendaRule == null ||
-    agendaTag != "[ACTION:AGENDA:议程ID:选项ID:权重]" ||
+    !agendaTags.Contains("[ACTION:AGENDA:议程ID:选项ID:权重]", StringComparer.Ordinal) ||
+    !agendaTags.Contains("[ACTION:AGENDA:CUSTOM_POLICY]", StringComparer.Ordinal) ||
     catalog.Rules.Any(x => x.Id is "vote_deal" or "propose_agenda") ||
     catalog.Rules.SelectMany(x => x.PostprocessRules).Any(x =>
         x.Tag.Contains("ACTION:VOTE_DEAL", StringComparison.Ordinal) ||
         x.Tag.Contains("ACTION:PROPOSE", StringComparison.Ordinal)))
 {
-    Console.Error.WriteLine("Kingdom agenda postprocess rule was not migrated to the unified three-field tag.");
-    return 1;
-}
-
-var rulerPolicyProposalRule = catalog.Rules.FirstOrDefault(x => x.Id == "ruler_policy_proposal");
-var rulerPolicyProposalEntry = rulerPolicyProposalRule?.PostprocessRules.SingleOrDefault();
-if (rulerPolicyProposalRule == null || !rulerPolicyProposalRule.IsEnabled ||
-    rulerPolicyProposalRule.TopicNumber != 23 ||
-    rulerPolicyProposalRule.Code != "RULER_POLICY_PROPOSAL" ||
-    rulerPolicyProposalEntry?.Tag != "[ACTION:RULER_POLICY_PROPOSAL]" ||
-    !rulerPolicyProposalEntry.Description.Contains("无条件", StringComparison.Ordinal) ||
-    !rulerPolicyProposalEntry.Description.Contains("现任统治者", StringComparison.Ordinal) ||
-    !rulerPolicyProposalEntry.Description.Contains("禁止输出", StringComparison.Ordinal))
-{
-    Console.Error.WriteLine("Ruler policy proposal postprocess rule is missing or insufficiently gated.");
+    Console.Error.WriteLine("Kingdom agenda postprocess rules are missing the unified vote or custom-policy tag.");
     return 1;
 }
 
@@ -89,15 +76,15 @@ if (cases.Count == 0)
     return 1;
 }
 
-var rulerProposalCases = cases.Where(x => x.CaseId.StartsWith("ruler_policy_proposal_", StringComparison.Ordinal)).ToList();
-var rulerProposalAcceptCase = rulerProposalCases.FirstOrDefault(x => x.CaseId == "ruler_policy_proposal_accept_001");
-if (rulerProposalCases.Count < 5 ||
-    rulerProposalAcceptCase == null ||
-    !rulerProposalAcceptCase.ExpectedTags.Contains("[ACTION:RULER_POLICY_PROPOSAL]", StringComparer.Ordinal) ||
-    rulerProposalCases.Where(x => x.CaseId != "ruler_policy_proposal_accept_001")
-        .Any(x => x.ExpectedTags.Contains("[ACTION:RULER_POLICY_PROPOSAL]", StringComparer.Ordinal)))
+var customPolicyAgendaCases = cases.Where(x => x.CaseId.StartsWith("kingdom_agenda_custom_policy_", StringComparison.Ordinal)).ToList();
+var customPolicyAgendaAcceptCase = customPolicyAgendaCases.FirstOrDefault(x => x.CaseId == "kingdom_agenda_custom_policy_accept_001");
+if (customPolicyAgendaCases.Count < 5 ||
+    customPolicyAgendaAcceptCase == null ||
+    !customPolicyAgendaAcceptCase.ExpectedTags.Contains("[ACTION:AGENDA:CUSTOM_POLICY]", StringComparer.Ordinal) ||
+    customPolicyAgendaCases.Where(x => x.CaseId != "kingdom_agenda_custom_policy_accept_001")
+        .Any(x => x.ExpectedTags.Contains("[ACTION:AGENDA:CUSTOM_POLICY]", StringComparer.Ordinal)))
 {
-    Console.Error.WriteLine("Ruler policy proposal accept/refuse/negotiate/consider/non-ruler samples are missing or incorrectly labeled.");
+    Console.Error.WriteLine("Custom-policy agenda accept/refuse/negotiate/consider/non-ruler samples are missing or incorrectly labeled.");
     return 1;
 }
 
