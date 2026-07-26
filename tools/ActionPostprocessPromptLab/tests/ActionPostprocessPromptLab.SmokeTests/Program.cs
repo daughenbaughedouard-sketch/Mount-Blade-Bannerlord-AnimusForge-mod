@@ -137,6 +137,28 @@ if (!rendered.TagRules.Contains(overrideDescription, StringComparison.Ordinal))
     return 1;
 }
 
+var actionEvidenceCase = new PromptLabCase
+{
+    CaseId = "action_text_preservation",
+    PreprocessHits = new List<string> { "reward" },
+    PlayerText = "（将家传剑递到对方掌中）这把剑归你。",
+    NpcReplyText = "*郑重收下长剑* 我同意，交易已成。",
+    HistoryLines = new List<string>
+    {
+        "玩家: （从桌上取出银币袋）我已经准备好报酬。",
+        "NPC: *将契约推到你面前* 只要签字即可。"
+    }
+};
+var actionEvidenceRendered = service.RenderPrompt(catalog, actionEvidenceCase, settings);
+if (!actionEvidenceRendered.HistoryText.Contains("（从桌上取出银币袋）", StringComparison.Ordinal) ||
+    !actionEvidenceRendered.HistoryText.Contains("*将契约推到你面前*", StringComparison.Ordinal) ||
+    !actionEvidenceRendered.LatestReplyBlock.Contains("（将家传剑递到对方掌中）", StringComparison.Ordinal) ||
+    !actionEvidenceRendered.LatestReplyBlock.Contains("*郑重收下长剑*", StringComparison.Ordinal))
+{
+    Console.Error.WriteLine("Postprocess history or latest reply removed role-play action text.");
+    return 1;
+}
+
 if (cases.Count > 1)
 {
     var secondRendered = service.RenderPrompt(versionCatalog, cases[1], settings);
