@@ -760,7 +760,7 @@ public sealed class PromptLabService
 
     private static string NormalizeHistoryLine(string line)
     {
-        var text = StripInnerThoughts((line ?? "").Trim());
+        var text = NormalizeHistoryContent((line ?? "").Trim());
         text = Regex.Replace(text, "^【[^】]*对(?:你|NPC|[^】]+)说】\\s*", "玩家: ", RegexOptions.CultureInvariant);
         text = Regex.Replace(text, "\\s+", " ", RegexOptions.CultureInvariant).Trim();
         if (text.StartsWith("【AFEF玩家行为补充】", StringComparison.Ordinal))
@@ -776,7 +776,7 @@ public sealed class PromptLabService
         return text;
     }
 
-    private static string StripInnerThoughts(string line)
+    private static string NormalizeHistoryContent(string line)
     {
         var text = line ?? "";
         if (text.StartsWith("【", StringComparison.Ordinal) && text.EndsWith("】", StringComparison.Ordinal))
@@ -784,8 +784,8 @@ public sealed class PromptLabService
             return text;
         }
 
-        text = Regex.Replace(text, "（[^（）]*）", "", RegexOptions.CultureInvariant);
-        text = Regex.Replace(text, "\\([^()]*\\)", "", RegexOptions.CultureInvariant);
+        // Role-play action prose is evidence for postprocess tag selection.
+        // Preserve it in both history and latest-reply rendering.
         return text.Trim().TrimStart('，', '。', '、', '；', '：', ',', ';', ':').Trim();
     }
 
