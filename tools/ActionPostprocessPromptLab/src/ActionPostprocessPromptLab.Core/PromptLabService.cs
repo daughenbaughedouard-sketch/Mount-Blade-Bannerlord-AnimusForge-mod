@@ -631,7 +631,6 @@ public sealed class PromptLabService
         text = ReplaceOptionalSection(text, "{npc_name}的物品清单：", "shared_item_list", null);
         text = ReplaceOptionalSection(text, "玩家家族可婚配未婚成员（事实清单）：", "marriage_player_candidates", null);
         text = ReplaceOptionalSection(text, "对方家族可婚配未婚成员（事实清单）：", "marriage_target_candidates", null);
-        text = ReplaceOptionalSection(text, "当前可直接成立的正规婚配组合与现有婚姻（事实清单）：", "marriage_fact_hint", null);
         text = ReplaceOptionalSection(text, "债务提示：", "debt_hint", null);
         text = ReplaceOptionalSection(text, "运行时补充事实：", "runtime_context", runtimeContext);
         text = text.Replace("{tag_rules}", string.IsNullOrWhiteSpace(tagRules) ? "（无）" : tagRules.Trim())
