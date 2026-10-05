@@ -375,6 +375,14 @@ public class SubModule : MBSubModuleBase
 			}
 			try
 			{
+				MainPartyRosterRunawayGuard.EnsurePatched(harmony);
+			}
+			catch (Exception ex8ag2)
+			{
+				Logger.LogTrace("SubModule", ">>> MainPartyRosterRunawayGuard init failed: " + ex8ag2.Message);
+			}
+			try
+			{
 				Patch_Conversation_Start_Intercept.ManualPatch(harmony);
 			}
 			catch (Exception ex8b)
@@ -802,6 +810,7 @@ public class SubModule : MBSubModuleBase
 		ProcessPendingInitialApiGuideNotice();
 		Logger.OnApplicationTick();
 		BannerlordExceptionSentinel.OnApplicationTick();
+		MainPartyRosterRunawayGuard.OnApplicationTick();
 		McmDropdownRuntimeRefresh.OnApplicationTick();
 		EncyclopediaHeroPersonaPatch.OnApplicationTick();
 		EncyclopediaTownRuleMemoryPatch.OnApplicationTick();
@@ -843,6 +852,7 @@ public class SubModule : MBSubModuleBase
 			RunWatchedTickPhase("SubModule.ProcessPendingInitialApiGuideNotice", () => ProcessPendingInitialApiGuideNotice());
 			RunWatchedTickPhase("SubModule.Logger.OnApplicationTick", () => Logger.OnApplicationTick());
 			RunWatchedTickPhase("SubModule.BannerlordExceptionSentinel.OnApplicationTick", () => BannerlordExceptionSentinel.OnApplicationTick());
+			RunWatchedTickPhase("SubModule.MainPartyRosterRunawayGuard.OnApplicationTick", () => MainPartyRosterRunawayGuard.OnApplicationTick());
 			RunWatchedTickPhase("SubModule.McmDropdownRuntimeRefresh.OnApplicationTick", () => McmDropdownRuntimeRefresh.OnApplicationTick());
 			RunWatchedTickPhase("SubModule.EncyclopediaHeroPersonaPatch.OnApplicationTick", () => EncyclopediaHeroPersonaPatch.OnApplicationTick());
 			RunWatchedTickPhase("SubModule.EncyclopediaTownRuleMemoryPatch.OnApplicationTick", () => EncyclopediaTownRuleMemoryPatch.OnApplicationTick());
