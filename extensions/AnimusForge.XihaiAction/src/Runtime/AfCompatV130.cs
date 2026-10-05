@@ -421,16 +421,8 @@ namespace AnimusForge.XihaiAction
                 _harmony.Patch(
                     _strictSceneMessagesSystemPromptMethod,
                     prefix: new HarmonyMethod(strictPromptPrefix));
-                if (!AfV130ConfiguredGatewayTransport.TryCreate(out IAfClassifierTransport configuredTransport))
-                {
-                    _classifierProvider =
-                        new AfV130AuxiliaryTextClassifier(_classifierApiMethod);
-                }
-                else
-                {
-                    _classifierProvider =
-                        new AfV130AuxiliaryTextClassifier(configuredTransport);
-                }
+                _classifierProvider =
+                    new AfV130AuxiliaryTextClassifier(_classifierApiMethod);
                 _classifierRegistration = SceneActionsRuntimeHost.RegisterClassifier(
                     ClassifierProviderId,
                     _classifierProvider);

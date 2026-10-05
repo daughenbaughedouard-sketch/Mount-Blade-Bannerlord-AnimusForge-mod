@@ -5206,18 +5206,6 @@ public partial class RewardSystemBehavior : CampaignBehaviorBase
 
 	private bool TryApplySettlementTransferEntryAction(Hero giver, Hero receiver, string directionToken, MyBehavior.SettlementTransferPromptEntry entry, bool allowDirectFixedAssetIdOverride, out string statusText)
 	{
-		return TryApplySettlementTransferEntryAction(
-			giver,
-			receiver,
-			directionToken,
-			entry,
-			allowDirectFixedAssetIdOverride,
-			out statusText,
-			mutationObservation: null);
-	}
-
-	private bool TryApplySettlementTransferEntryAction(Hero giver, Hero receiver, string directionToken, MyBehavior.SettlementTransferPromptEntry entry, bool allowDirectFixedAssetIdOverride, out string statusText, EconomyMutationObservation mutationObservation)
-	{
 		statusText = "";
 		try
 		{
@@ -5259,7 +5247,6 @@ public partial class RewardSystemBehavior : CampaignBehaviorBase
 		}
 		catch (Exception ex)
 		{
-			mutationObservation?.MarkUnknown("economy.settlement_transfer_entry_exception");
 			statusText = "执行失败（异常）：" + ex.Message;
 			return false;
 		}
@@ -8344,20 +8331,6 @@ public partial class RewardSystemBehavior : CampaignBehaviorBase
 
 	private bool TryApplySettlementTransferAction(Hero giver, Hero receiver, string directionToken, string settlementToken, IDictionary<string, FixedAssetTokenResolution> fixedAssetResolutionCache, ISet<string> unresolvedFixedAssetTokens, out MyBehavior.SettlementTransferPromptEntry authorizedEntry, out string statusText)
 	{
-		return TryApplySettlementTransferAction(
-			giver,
-			receiver,
-			directionToken,
-			settlementToken,
-			fixedAssetResolutionCache,
-			unresolvedFixedAssetTokens,
-			out authorizedEntry,
-			out statusText,
-			mutationObservation: null);
-	}
-
-	private bool TryApplySettlementTransferAction(Hero giver, Hero receiver, string directionToken, string settlementToken, IDictionary<string, FixedAssetTokenResolution> fixedAssetResolutionCache, ISet<string> unresolvedFixedAssetTokens, out MyBehavior.SettlementTransferPromptEntry authorizedEntry, out string statusText, EconomyMutationObservation mutationObservation)
-	{
 		authorizedEntry = null;
 		statusText = "";
 		try
@@ -8382,18 +8355,10 @@ public partial class RewardSystemBehavior : CampaignBehaviorBase
 			{
 				Logger.Log("Logic", "[Reward] GIVE_ASSET fixed_asset_direct_id_execute giver=" + (giver.StringId ?? "") + " asset=" + (settlementToken ?? "").Trim());
 			}
-			return TryApplySettlementTransferEntryAction(
-				giver,
-				receiver,
-				text,
-				authorizedEntry,
-				allowDirectFixedAssetIdOverride: !isPromptAuthorized,
-				statusText: out statusText,
-				mutationObservation: mutationObservation);
+			return TryApplySettlementTransferEntryAction(giver, receiver, text, authorizedEntry, allowDirectFixedAssetIdOverride: !isPromptAuthorized, out statusText);
 		}
 		catch (Exception ex)
 		{
-			mutationObservation?.MarkUnknown("economy.settlement_transfer_exception");
 			statusText = "执行失败（异常）：" + ex.Message;
 			return false;
 		}
@@ -11482,20 +11447,6 @@ public partial class RewardSystemBehavior : CampaignBehaviorBase
 
 	public static int GenerateNamedInventoryItemToRosterForExternal(ItemRoster targetRoster, string requestedName, int amount, out string generatedStringId, out string itemName, string logSource = null, string identityKey = null, string preferredTemplateItemId = null)
 	{
-		return GenerateNamedInventoryItemToRosterForExternal(
-			targetRoster,
-			requestedName,
-			amount,
-			out generatedStringId,
-			out itemName,
-			logSource,
-			identityKey,
-			preferredTemplateItemId,
-			mutationObservation: null);
-	}
-
-	private static int GenerateNamedInventoryItemToRosterForExternal(ItemRoster targetRoster, string requestedName, int amount, out string generatedStringId, out string itemName, string logSource, string identityKey, string preferredTemplateItemId, EconomyMutationObservation mutationObservation)
-	{
 		generatedStringId = null;
 		itemName = null;
 		try
@@ -11593,12 +11544,7 @@ public partial class RewardSystemBehavior : CampaignBehaviorBase
 				return 0;
 			}
 			generatedStringId = resolution.MatchedStringId;
-			int generated = GenerateResolvedItemsToRoster(
-				targetRoster,
-				resolution,
-				amount,
-				out itemName,
-				mutationObservation);
+			int generated = GenerateResolvedItemsToRoster(targetRoster, resolution, amount, out itemName);
 			if (generated > 0)
 			{
 				TryPrimeGeneratedInventoryItemForExternal(generatedStringId, requestedName, resolution.TemplateItem?.StringId, resolution.Item?.Id.InternalValue ?? 0u, out _, out _, out _, (logSource ?? "external_generate_named") + "_prime");
@@ -11607,7 +11553,6 @@ public partial class RewardSystemBehavior : CampaignBehaviorBase
 		}
 		catch (Exception ex)
 		{
-			mutationObservation?.MarkUnknown("economy.generated_item_exception");
 			try
 			{
 				Logger.Log("Logic", "[RewardItemResolve] generate_named_inventory_failed source=" + (logSource ?? "") + " error=" + ex.GetType().Name + ":" + ex.Message);
@@ -16439,7 +16384,7 @@ public partial class RewardSystemBehavior : CampaignBehaviorBase
 		return item != null && !string.IsNullOrWhiteSpace(itemId);
 	}
 
-	private static int GenerateResolvedItemsToRoster(ItemRoster targetRoster, RewardItemResolution resolution, int amount, out string itemName, EconomyMutationObservation mutationObservation = null)
+	private static int GenerateResolvedItemsToRoster(ItemRoster targetRoster, RewardItemResolution resolution, int amount, out string itemName)
 	{
 		itemName = null;
 		if (targetRoster == null || resolution?.Item == null || amount <= 0)
@@ -16448,12 +16393,7 @@ public partial class RewardSystemBehavior : CampaignBehaviorBase
 		}
 		EquipmentElement equipmentElement = resolution.EquipmentElement.Item != null ? resolution.EquipmentElement : new EquipmentElement(resolution.Item, null, null, false);
 		TryEnsureGeneratedRewardItemCategory(equipmentElement.Item, resolution.TemplateItem, "generate_to_roster");
-		int generated = AddEquipmentElementToRosterAndCountDelta(
-			targetRoster,
-			equipmentElement,
-			amount,
-			"generate_to_roster:" + (resolution.MatchedStringId ?? resolution.MatchedName ?? ""),
-			mutationObservation);
+		int generated = AddEquipmentElementToRosterAndCountDelta(targetRoster, equipmentElement, amount, "generate_to_roster:" + (resolution.MatchedStringId ?? resolution.MatchedName ?? ""));
 		itemName = IsGeneratedRewardItemStringId(equipmentElement.Item?.StringId) ? (resolution.MatchedName ?? resolution.Item.Name?.ToString() ?? resolution.MatchedStringId) : (equipmentElement.GetModifiedItemName()?.ToString() ?? resolution.MatchedName ?? resolution.Item.Name?.ToString() ?? resolution.MatchedStringId);
 		return generated;
 	}
@@ -19663,7 +19603,7 @@ public partial class RewardSystemBehavior : CampaignBehaviorBase
 		return true;
 	}
 
-	private int GenerateRpAssetToPlayer(string assetName, int amount, string giverName, BasicCharacterObject giverCharacter, out string itemName, out ItemObject item, string logSource, RpItemIntroductionContext rpItemIntroductionContext = null, EconomyMutationObservation mutationObservation = null)
+	private int GenerateRpAssetToPlayer(string assetName, int amount, string giverName, BasicCharacterObject giverCharacter, out string itemName, out ItemObject item, string logSource, RpItemIntroductionContext rpItemIntroductionContext = null)
 	{
 		itemName = null;
 		item = null;
@@ -19703,16 +19643,7 @@ public partial class RewardSystemBehavior : CampaignBehaviorBase
 				Logger.Log("Logic", "[RewardItemResolve] rp_food_template_missing source=" + (logSource ?? "") + " asset=" + requestedName + " suffix=" + foodMatchedSuffix + " kind=" + foodKind + " candidates=" + foodCandidateCount.ToString(CultureInfo.InvariantCulture) + " fallback=blocked");
 			}
 		}
-		int generated = GenerateNamedInventoryItemToRosterForExternal(
-			targetRoster,
-			requestedName,
-			amount,
-			out var generatedStringId,
-			out itemName,
-			logSource,
-			identityKey: null,
-			preferredTemplateItemId: preferredTemplateItemId,
-			mutationObservation: mutationObservation);
+		int generated = GenerateNamedInventoryItemToRosterForExternal(targetRoster, requestedName, amount, out var generatedStringId, out itemName, logSource, preferredTemplateItemId: preferredTemplateItemId);
 		Logger.Log("Logic", "[RewardRpLiteral] generated source=" + (logSource ?? "") + " asset=" + requestedName + " requested=" + amount + " actual=" + generated + " generatedId=" + (generatedStringId ?? ""));
 		if (generated > 0 && !string.IsNullOrWhiteSpace(generatedStringId))
 		{
@@ -21551,7 +21482,7 @@ public partial class RewardSystemBehavior : CampaignBehaviorBase
 		return num;
 	}
 
-	private static int MoveMatchingItemsByStringId(ItemRoster sourceRoster, ItemRoster targetRoster, string itemStringId, int amount, out EquipmentElement firstTransferredElement, EconomyMutationObservation mutationObservation = null)
+	private static int MoveMatchingItemsByStringId(ItemRoster sourceRoster, ItemRoster targetRoster, string itemStringId, int amount, out EquipmentElement firstTransferredElement)
 	{
 		firstTransferredElement = EquipmentElement.Invalid;
 		if (sourceRoster == null || targetRoster == null || string.IsNullOrWhiteSpace(itemStringId) || amount <= 0)
@@ -21582,16 +21513,7 @@ public partial class RewardSystemBehavior : CampaignBehaviorBase
 				{
 					firstTransferredElement = equipmentElement;
 				}
-				int added = AddEquipmentElementToRosterAndCountDelta(
-					targetRoster,
-					equipmentElement,
-					num3,
-					"move_matching:" + text,
-					mutationObservation);
-				if (mutationObservation?.UnknownAfterStart == true)
-				{
-					return num2;
-				}
+				int added = AddEquipmentElementToRosterAndCountDelta(targetRoster, equipmentElement, num3, "move_matching:" + text);
 				if (added <= 0)
 				{
 					LogRewardTransferRosterAdd("move_roster_add_failed", "move_matching:" + text, targetRoster, equipmentElement, num3, 0, 0, -1);
@@ -21732,7 +21654,7 @@ public partial class RewardSystemBehavior : CampaignBehaviorBase
 		return count;
 	}
 
-	private static int AddEquipmentElementToRosterAndCountDelta(ItemRoster targetRoster, EquipmentElement equipmentElement, int amount, string logSource, EconomyMutationObservation mutationObservation = null)
+	private static int AddEquipmentElementToRosterAndCountDelta(ItemRoster targetRoster, EquipmentElement equipmentElement, int amount, string logSource)
 	{
 		if (targetRoster == null || equipmentElement.Item == null || amount <= 0)
 		{
@@ -21746,7 +21668,6 @@ public partial class RewardSystemBehavior : CampaignBehaviorBase
 		}
 		catch (Exception ex)
 		{
-			mutationObservation?.MarkUnknown("economy.roster_add_exception");
 			try
 			{
 				Logger.Log("Logic", "[RewardTransfer] roster_add_exception source=" + (logSource ?? "") + " requested=" + amount.ToString(CultureInfo.InvariantCulture) + " item=" + (equipmentElement.Item.StringId ?? "") + " error=" + ex.GetType().Name + ":" + ex.Message);
@@ -21798,7 +21719,7 @@ public partial class RewardSystemBehavior : CampaignBehaviorBase
 		return instance != null && instance.TryQueueNpcBattleEquipmentRestore(hero, slot, equipmentElement, source);
 	}
 
-	private bool TryQueueNpcBattleEquipmentRestore(Hero hero, EquipmentIndex slot, EquipmentElement equipmentElement, string source, EconomyMutationObservation mutationObservation = null)
+	private bool TryQueueNpcBattleEquipmentRestore(Hero hero, EquipmentIndex slot, EquipmentElement equipmentElement, string source)
 	{
 		try
 		{
@@ -21857,7 +21778,6 @@ public partial class RewardSystemBehavior : CampaignBehaviorBase
 		}
 		catch (Exception ex)
 		{
-			mutationObservation?.MarkUnknown("economy.equipment_restore_queue_exception");
 			Logger.Log("RewardSystem", "[NpcEquipmentRestore] queue failed hero=" + (hero?.StringId ?? "") + " slot=" + ((int)slot).ToString(CultureInfo.InvariantCulture) + " error=" + ex.Message);
 			return false;
 		}
@@ -21869,30 +21789,6 @@ public partial class RewardSystemBehavior : CampaignBehaviorBase
 	}
 
 	internal int TransferItemById(Hero giver, Hero receiver, string itemStringId, int amount, out string itemName, bool forceComplete)
-	{
-		return TransferItemByIdCore(
-			giver,
-			receiver,
-			itemStringId,
-			amount,
-			out itemName,
-			forceComplete,
-			mutationObservation: null);
-	}
-
-	private int TransferItemByIdForEconomyReplay(Hero giver, Hero receiver, string itemStringId, int amount, out string itemName, bool forceComplete, EconomyMutationObservation mutationObservation)
-	{
-		return TransferItemByIdCore(
-			giver,
-			receiver,
-			itemStringId,
-			amount,
-			out itemName,
-			forceComplete,
-			mutationObservation);
-	}
-
-	private int TransferItemByIdCore(Hero giver, Hero receiver, string itemStringId, int amount, out string itemName, bool forceComplete, EconomyMutationObservation mutationObservation)
 	{
 		itemName = null;
 		if (string.IsNullOrEmpty(itemStringId) || amount <= 0)
@@ -21991,19 +21887,9 @@ public partial class RewardSystemBehavior : CampaignBehaviorBase
 		EquipmentElement firstTransferredElement = EquipmentElement.Invalid;
 		if (itemRoster != null)
 		{
-			int movedFromRoster = MoveMatchingItemsByStringId(
-				itemRoster,
-				itemRoster2,
-				lookup,
-				num3,
-				out var equipmentElement,
-				mutationObservation);
+			int movedFromRoster = MoveMatchingItemsByStringId(itemRoster, itemRoster2, lookup, num3, out var equipmentElement);
 			num3 -= movedFromRoster;
 			num4 += movedFromRoster;
-			if (mutationObservation?.UnknownAfterStart == true)
-			{
-				return num4;
-			}
 			if (firstTransferredElement.Item == null && equipmentElement.Item != null)
 			{
 				firstTransferredElement = equipmentElement;
@@ -22029,52 +21915,22 @@ public partial class RewardSystemBehavior : CampaignBehaviorBase
 			ItemObject item4 = equipmentElement2.Item;
 			if (CanTransferNpcBattleEquipment(index, equipmentElement2) && item4 != null && MatchesItemLookupToken(equipmentElement2, lookup))
 			{
-				int addedFromEquipment = AddEquipmentElementToRosterAndCountDelta(
-					itemRoster2,
-					equipmentElement2,
-					1,
-					"hero_equipment:" + lookup,
-					mutationObservation);
-				if (mutationObservation?.UnknownAfterStart == true)
-				{
-					return num4;
-				}
+				int addedFromEquipment = AddEquipmentElementToRosterAndCountDelta(itemRoster2, equipmentElement2, 1, "hero_equipment:" + lookup);
 				if (addedFromEquipment <= 0)
 				{
 					continue;
 				}
-				if (queueNpcBattleEquipmentRestore && !TryQueueNpcBattleEquipmentRestore(
-					giver,
-					index,
-					equipmentElement2,
-					"hero_item_transfer",
-					mutationObservation))
+				if (queueNpcBattleEquipmentRestore && !TryQueueNpcBattleEquipmentRestore(giver, index, equipmentElement2, "hero_item_transfer"))
 				{
-					int beforeRollback = mutationObservation != null
-						? CountEquipmentElementInRoster(itemRoster2, equipmentElement2)
-						: 0;
 					try
 					{
 						itemRoster2.AddToCounts(equipmentElement2, -addedFromEquipment);
 					}
 					catch (Exception ex)
 					{
-						mutationObservation?.MarkUnknown("economy.equipment_restore_rollback_exception");
 						Logger.Log("RewardSystem", "[NpcEquipmentRestore] rollback failed hero=" + (giver.StringId ?? "") + " slot=" + ((int)index).ToString(CultureInfo.InvariantCulture) + " error=" + ex.Message);
 					}
-					if (mutationObservation != null && !mutationObservation.UnknownAfterStart)
-					{
-						int afterRollback = CountEquipmentElementInRoster(itemRoster2, equipmentElement2);
-						if (Math.Max(0, beforeRollback - afterRollback) < addedFromEquipment)
-						{
-							mutationObservation.MarkUnknown("economy.equipment_restore_rollback_unverified");
-						}
-					}
 					Logger.Log("RewardSystem", "[NpcEquipmentRestore] transfer kept source equipped because queue failed hero=" + (giver.StringId ?? "") + " slot=" + ((int)index).ToString(CultureInfo.InvariantCulture));
-					if (mutationObservation?.UnknownAfterStart == true)
-					{
-						return num4;
-					}
 					continue;
 				}
 				giver.BattleEquipment[index] = EquipmentElement.Invalid;
@@ -22118,12 +21974,7 @@ public partial class RewardSystemBehavior : CampaignBehaviorBase
 			}
 			if (resolution?.Item != null)
 			{
-				generated = GenerateResolvedItemsToRoster(
-					itemRoster2,
-					resolution,
-					amount - num4,
-					out var generatedItemName,
-					mutationObservation);
+				generated = GenerateResolvedItemsToRoster(itemRoster2, resolution, amount - num4, out var generatedItemName);
 				if (generated > 0)
 				{
 					itemObject = resolution.Item;
@@ -22165,34 +22016,6 @@ public partial class RewardSystemBehavior : CampaignBehaviorBase
 
 	internal int TransferItemFromParty(PartyBase giverParty, Hero receiver, string itemStringId, int amount, string giverName, out string itemName, BasicCharacterObject giverCharacter, bool forceComplete)
 	{
-		return TransferItemFromPartyCore(
-			giverParty,
-			receiver,
-			itemStringId,
-			amount,
-			giverName,
-			out itemName,
-			giverCharacter,
-			forceComplete,
-			mutationObservation: null);
-	}
-
-	private int TransferItemFromPartyForEconomyReplay(PartyBase giverParty, Hero receiver, string itemStringId, int amount, string giverName, out string itemName, BasicCharacterObject giverCharacter, bool forceComplete, EconomyMutationObservation mutationObservation)
-	{
-		return TransferItemFromPartyCore(
-			giverParty,
-			receiver,
-			itemStringId,
-			amount,
-			giverName,
-			out itemName,
-			giverCharacter,
-			forceComplete,
-			mutationObservation);
-	}
-
-	private int TransferItemFromPartyCore(PartyBase giverParty, Hero receiver, string itemStringId, int amount, string giverName, out string itemName, BasicCharacterObject giverCharacter, bool forceComplete, EconomyMutationObservation mutationObservation)
-	{
 		itemName = null;
 		if (giverParty == null || receiver == null || string.IsNullOrWhiteSpace(itemStringId) || amount <= 0)
 		{
@@ -22216,17 +22039,7 @@ public partial class RewardSystemBehavior : CampaignBehaviorBase
 				lookup = resolvedLookup;
 			}
 		}
-		int num = MoveMatchingItemsByStringId(
-			itemRoster,
-			itemRoster2,
-			lookup,
-			amount,
-			out var equipmentElement,
-			mutationObservation);
-		if (mutationObservation?.UnknownAfterStart == true)
-		{
-			return num;
-		}
+		int num = MoveMatchingItemsByStringId(itemRoster, itemRoster2, lookup, amount, out var equipmentElement);
 		ItemObject itemObject = equipmentElement.Item ?? ResolveItemById((itemStringId ?? "").Split('@')[0]);
 		if (allowForceComplete && num < amount)
 		{
@@ -22251,12 +22064,7 @@ public partial class RewardSystemBehavior : CampaignBehaviorBase
 			}
 			if (resolution?.Item != null)
 			{
-				int generated = GenerateResolvedItemsToRoster(
-					itemRoster2,
-					resolution,
-					amount - num,
-					out var generatedItemName,
-					mutationObservation);
+				int generated = GenerateResolvedItemsToRoster(itemRoster2, resolution, amount - num, out var generatedItemName);
 				if (generated > 0)
 				{
 					num += generated;
@@ -22325,34 +22133,6 @@ public partial class RewardSystemBehavior : CampaignBehaviorBase
 	}
 
 	internal int TransferItemFromSettlement(Settlement settlement, Hero receiver, string itemStringId, int amount, string giverName, out string itemName, BasicCharacterObject giverCharacter, bool forceComplete)
-	{
-		return TransferItemFromSettlementCore(
-			settlement,
-			receiver,
-			itemStringId,
-			amount,
-			giverName,
-			out itemName,
-			giverCharacter,
-			forceComplete,
-			mutationObservation: null);
-	}
-
-	private int TransferItemFromSettlementForEconomyReplay(Settlement settlement, Hero receiver, string itemStringId, int amount, string giverName, out string itemName, BasicCharacterObject giverCharacter, bool forceComplete, EconomyMutationObservation mutationObservation)
-	{
-		return TransferItemFromSettlementCore(
-			settlement,
-			receiver,
-			itemStringId,
-			amount,
-			giverName,
-			out itemName,
-			giverCharacter,
-			forceComplete,
-			mutationObservation);
-	}
-
-	private int TransferItemFromSettlementCore(Settlement settlement, Hero receiver, string itemStringId, int amount, string giverName, out string itemName, BasicCharacterObject giverCharacter, bool forceComplete, EconomyMutationObservation mutationObservation)
 	{
 		itemName = null;
 		if (settlement == null || receiver == null || string.IsNullOrWhiteSpace(itemStringId) || amount <= 0)
@@ -22439,16 +22219,7 @@ public partial class RewardSystemBehavior : CampaignBehaviorBase
 		int num2 = Math.Min(amount, Math.Max(0, num));
 		if (num2 > 0 && equipmentElement.Item != null)
 		{
-			int movedFromSettlement = AddEquipmentElementToRosterAndCountDelta(
-				itemRoster2,
-				equipmentElement,
-				num2,
-				"fixed_asset_transfer:" + lookup,
-				mutationObservation);
-			if (mutationObservation?.UnknownAfterStart == true)
-			{
-				return 0;
-			}
+			int movedFromSettlement = AddEquipmentElementToRosterAndCountDelta(itemRoster2, equipmentElement, num2, "fixed_asset_transfer:" + lookup);
 			if (movedFromSettlement > 0)
 			{
 				itemRoster.AddToCounts(equipmentElement, -movedFromSettlement);
@@ -22479,12 +22250,7 @@ public partial class RewardSystemBehavior : CampaignBehaviorBase
 			}
 			if (resolution?.Item != null)
 			{
-				int generated = GenerateResolvedItemsToRoster(
-					itemRoster2,
-					resolution,
-					amount - num2,
-					out var generatedItemName,
-					mutationObservation);
+				int generated = GenerateResolvedItemsToRoster(itemRoster2, resolution, amount - num2, out var generatedItemName);
 				if (generated > 0)
 				{
 					num2 += generated;

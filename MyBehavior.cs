@@ -16,8 +16,6 @@ using System.Text;
 using System.Text.RegularExpressions;
 using System.Threading;
 using System.Threading.Tasks;
-using AnimusForge.Refactor.Adapters;
-using AnimusForge.Refactor.Contracts;
 using AnimusForge.SiegeAftermathIntervention;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
@@ -53,7 +51,7 @@ using TaleWorlds.SaveSystem;
 
 namespace AnimusForge;
 
-public partial class MyBehavior : CampaignBehaviorBase
+public class MyBehavior : CampaignBehaviorBase
 {
 	public static MyBehavior Instance { get; private set; }
 
@@ -210,10 +208,6 @@ public partial class MyBehavior : CampaignBehaviorBase
 		public string GameDate;
 
 		public List<string> Lines = new List<string>();
-
-		// Non-visible idempotency markers for memory-only recovery. They are
-		// additive JSON fields; legacy saves deserialize with an empty map.
-		public Dictionary<string, string> MemoryCommitMarkers = new Dictionary<string, string>(StringComparer.Ordinal);
 	}
 
 	private sealed class DailyMemoryLine
@@ -243,16 +237,6 @@ public partial class MyBehavior : CampaignBehaviorBase
 		public bool IsAfef;
 
 		public bool IsLlmDialogue;
-
-		public string MemoryCommitId = "";
-
-		public string MemoryCommitPart = "";
-
-		public string MemoryCommitHash = "";
-
-		public int MemoryCommitOriginGameDay = -1;
-
-		public string MemoryCommitOriginGameDate = "";
 	}
 
 	private sealed class DailyMemoryDraft
@@ -342,19 +326,6 @@ public partial class MyBehavior : CampaignBehaviorBase
 		public string TriggerReason = "";
 
 		public string StableKey = "";
-
-		// LOCAL-7-K additive provenance for outcome-confirmed detached material.
-		// Legacy triggers leave these empty. They are data-only digests and must
-		// never be used to reconstruct or replay an ActionPlan.
-		public string OutcomeReceiptId = "";
-
-		public string OutcomeCandidateHash = "";
-
-		public string OutcomePayloadHash = "";
-
-		public string OutcomeActionFingerprint = "";
-
-		public string OutcomeTurnFingerprint = "";
 
 		public long CreatedUtcTicks;
 	}
@@ -2034,15 +2005,6 @@ public partial class MyBehavior : CampaignBehaviorBase
 
 	private readonly ConcurrentQueue<Action> _weekZeroShortSummaryMainThreadActions = new ConcurrentQueue<Action>();
 
-	private readonly Queue<WeeklyFullReportCompletion> _weeklyFullReportCompletions = new Queue<WeeklyFullReportCompletion>();
-
-	private sealed class WeeklyFullReportCompletion
-	{
-		internal long RuntimeGeneration;
-		internal Func<bool> Apply;
-		internal readonly TaskCompletionSource<bool> Completion = new TaskCompletionSource<bool>(TaskCreationOptions.RunContinuationsAsynchronously);
-	}
-
 	private bool _weekZeroShortSummaryQueueProcessing;
 
 	private long _weekZeroShortSummaryLastRequestUtcTicks;
@@ -2413,8 +2375,6 @@ public partial class MyBehavior : CampaignBehaviorBase
 	{
 		try
 		{
-			CancelWeeklyFullReportCompletions();
-			ResetTailPersistenceTransientState(reason);
 			List<PendingWeeklyReportCommitContext> abandonedWeeklyReportCommits;
 			ClearRuleStickyCarry();
 			_playerDefeatedHeroBattleFactKeys.Clear();
@@ -4486,12 +4446,7 @@ public partial class MyBehavior : CampaignBehaviorBase
 
 	private void OnMemoryConversationEnded(IEnumerable<CharacterObject> characters)
 	{
-		string memorySessionKey = _activeNativeConversationMemorySessionId >= 0
-			? BuildCurrentMemorySessionKey(-1, _activeNativeConversationMemorySessionId)
-			: string.Empty;
-		PlayerNotorietyBehavior.FinalizeConversationForExternal(
-			characters,
-			memorySessionKey);
+		PlayerNotorietyBehavior.FinalizeConversationForExternal(characters);
 		_activeNativeConversationMemorySessionId = -1;
 	}
 
@@ -5243,7 +5198,7 @@ public partial class MyBehavior : CampaignBehaviorBase
 					result.IsObsolete = true;
 					return result;
 				}
-				ApiCallResult apiCallResult = await CallAuxiliaryGatewayDetailed(BuildMemorySummarySystemPrompt(draft), BuildMemorySummaryUserPrompt(hero, draft), "CompressedMemory", 0, forceThinkingDisabled: true);
+				ApiCallResult apiCallResult = await CallUniversalApiDetailed(BuildMemorySummarySystemPrompt(draft), BuildMemorySummaryUserPrompt(hero, draft), logToEventLogs: false, eventLogSource: "CompressedMemory", route: UniversalApiRoute.Auxiliary, streamResponse: false, forceThinkingDisabled: true);
 				if (apiCallResult.Success)
 				{
 					if (TryParseMemorySummaryResponse(apiCallResult.Content, hero, draft, out var block, out var error))
@@ -5317,7 +5272,7 @@ public partial class MyBehavior : CampaignBehaviorBase
 					result.IsObsolete = true;
 					return result;
 				}
-				ApiCallResult apiCallResult = await CallAuxiliaryGatewayDetailed(BuildMajorActionSummarySystemPrompt(targetChars), BuildMajorActionSummaryUserPrompt(hero, existingState, sourceActions, targetChars), "NpcMajorSummary", 0, forceThinkingDisabled: true);
+				ApiCallResult apiCallResult = await CallUniversalApiDetailed(BuildMajorActionSummarySystemPrompt(targetChars), BuildMajorActionSummaryUserPrompt(hero, existingState, sourceActions, targetChars), logToEventLogs: false, eventLogSource: "NpcMajorSummary", route: UniversalApiRoute.Auxiliary, streamResponse: false, forceThinkingDisabled: true);
 				if (apiCallResult.Success)
 				{
 					if (TryParseMajorActionSummaryResponse(apiCallResult.Content, hero, job, allActions, out var state, out var error))
@@ -5399,7 +5354,7 @@ public partial class MyBehavior : CampaignBehaviorBase
 					result.IsObsolete = true;
 					return result;
 				}
-				ApiCallResult apiCallResult = await CallAuxiliaryGatewayDetailed(BuildMemoryOverviewSummarySystemPrompt(targetChars), BuildMemoryOverviewSummaryUserPrompt(hero, promptExistingState, sourceBlocks, targetChars), "MemoryOverview", 0, forceThinkingDisabled: true);
+				ApiCallResult apiCallResult = await CallUniversalApiDetailed(BuildMemoryOverviewSummarySystemPrompt(targetChars), BuildMemoryOverviewSummaryUserPrompt(hero, promptExistingState, sourceBlocks, targetChars), logToEventLogs: false, eventLogSource: "MemoryOverview", route: UniversalApiRoute.Auxiliary, streamResponse: false, forceThinkingDisabled: true);
 				if (apiCallResult.Success)
 				{
 					if (TryParseMemoryOverviewResponse(apiCallResult.Content, hero, job, promptExistingState, sourceBlocks, out var state, out var error))
@@ -7063,7 +7018,7 @@ public partial class MyBehavior : CampaignBehaviorBase
 		for (int i = 1; i <= 3; i++)
 		{
 			await WaitForWeekZeroShortSummaryRequestSlotAsync();
-			ApiCallResult apiCallResult = await CallWeeklyReportApiDetailed(BuildWeekZeroShortSummarySystemPrompt(request.EventKind, request.KingdomId, request.Title), BuildWeekZeroShortSummaryUserPrompt(request.Summary));
+			ApiCallResult apiCallResult = await CallUniversalApiDetailed(BuildWeekZeroShortSummarySystemPrompt(request.EventKind, request.KingdomId, request.Title), BuildWeekZeroShortSummaryUserPrompt(request.Summary), logToEventLogs: true, eventLogSource: "EventWeeklyReport", route: UniversalApiRoute.EventAndRebellion);
 			if (apiCallResult.Success)
 			{
 				string text = NormalizeWeekZeroShortSummaryResponse(apiCallResult.Content, request.Summary);
@@ -12460,7 +12415,7 @@ public partial class MyBehavior : CampaignBehaviorBase
 			ApiCallResult apiCallResult = null;
 			try
 			{
-				Task<ApiCallResult> task = CallRebelKingdomNamingGatewayDetailed(systemPrompt, userPrompt);
+				Task<ApiCallResult> task = CallUniversalApiDetailed(systemPrompt, userPrompt, route: UniversalApiRoute.EventAndRebellion);
 				Task task2 = Task.WhenAny(task, Task.Delay(RebelKingdomNamingTimeoutMs)).GetAwaiter().GetResult();
 				if (task2 == task)
 				{
@@ -15069,26 +15024,6 @@ public partial class MyBehavior : CampaignBehaviorBase
 	private static string BuildWeeklyMemoryMaterialTagLabel(string tag)
 	{
 		string text = (tag ?? "").Trim();
-		if (string.Equals(text, "[WEEKLY:ECONOMY_GIVE_GOLD]", StringComparison.OrdinalIgnoreCase))
-		{
-			return "已确认的金币给付";
-		}
-		if (string.Equals(text, "[WEEKLY:ECONOMY_GIVE_ASSET]", StringComparison.OrdinalIgnoreCase))
-		{
-			return "已确认的资产给付";
-		}
-		if (string.Equals(text, "[WEEKLY:ECONOMY_DEBT_CREATE]", StringComparison.OrdinalIgnoreCase))
-		{
-			return "已确认的债务建立";
-		}
-		if (string.Equals(text, "[WEEKLY:ECONOMY_DEBT_RESOLVE]", StringComparison.OrdinalIgnoreCase))
-		{
-			return "已确认的债务清偿";
-		}
-		if (string.Equals(text, "[WEEKLY:ECONOMY_SETTLEMENT_TRANSFER]", StringComparison.OrdinalIgnoreCase))
-		{
-			return "已确认的定居点资产转移";
-		}
 		if (string.Equals(text, "[ACTION:DUEL]", StringComparison.OrdinalIgnoreCase))
 		{
 			return "决斗";
@@ -17916,10 +17851,9 @@ public partial class MyBehavior : CampaignBehaviorBase
 	{
 		using (PerfProbe.Scope("MyBehavior.OnCampaignTick"))
 		{
-			try
-			{
-				ProcessOneTailPersistenceRecoveryOnTick();
-				bool processedWeeklyReportCommits = false;
+		try
+		{
+			bool processedWeeklyReportCommits = false;
 			if (Volatile.Read(ref _hasPendingWeeklyReportCommits) != 0)
 			{
 				using (PerfProbe.Scope("MyBehavior.OnCampaignTick.ProcessPendingWeeklyReportCommits"))
@@ -18600,7 +18534,7 @@ public partial class MyBehavior : CampaignBehaviorBase
 					Logger.Log("UnnamedPersona", "[ERROR] Serialize unnamed persona for save failed: " + ex8.Message);
 				}
 				CampaignSaveChunkHelper.SaveChunkedString(dataStore, "_unnamed_persona_v1", _unnamedPersonaJsonStorage, "UnnamedPersona");
-				SyncTailPersistenceData(dataStore);
+				SyncPatienceData(dataStore);
 				return;
 			}
 			dataStore.SyncData<Dictionary<MobileParty, string>>("_af_wildernessNonHeroPartyMemoryIds_v1", ref _wildernessNonHeroPartyMemoryIds);
@@ -19064,7 +18998,7 @@ public partial class MyBehavior : CampaignBehaviorBase
 			{
 				Logger.Log("UnnamedPersona", "[ERROR] Restore unnamed persona from save failed: " + ex9.Message);
 			}
-			SyncTailPersistenceData(dataStore);
+			SyncPatienceData(dataStore);
 		}
 		catch (Exception ex10)
 		{
@@ -20313,7 +20247,6 @@ public partial class MyBehavior : CampaignBehaviorBase
 			ProcessWeeklyReportUiResume();
 			TryPublishUnreadWeeklyReportMapNotifications();
 			ProcessWeekZeroShortSummaryMainThreadActions();
-			ProcessWeeklyFullReportCompletions();
 			ProcessKingdomRebellionApiRepairResume();
 			ProcessKingdomRebellionNamingMainThreadActions();
 			ProcessPendingDevForcedKingdomRebellionResult();
@@ -20362,7 +20295,6 @@ public partial class MyBehavior : CampaignBehaviorBase
 	{
 		QueueMissingOnnxGateCheck(TimeSpan.Zero);
 		RebuildRuntimeDerivedIndexes();
-		ActivateTailPersistenceAfterLoad();
 		SyncModCreatedRebelKingdomBannersOnGameLoad();
 		// The campaign Hero registry is complete at this lifecycle point, so stale saved compression work can be
 		// cancelled before load-finished maintenance queues any LLM request.
@@ -22527,7 +22459,7 @@ public partial class MyBehavior : CampaignBehaviorBase
 					+ "\n旧个性（仅用于避重）：" + (string.IsNullOrWhiteSpace(oldPersonality) ? "无" : oldPersonality)
 					+ "\n旧背景（仅用于避重）：" + (string.IsNullOrWhiteSpace(oldBackground) ? "无" : oldBackground);
 			}
-			ApiCallResult apiCallResult = await CallAuxiliaryGatewayDetailed(sys, user, "NpcPersona", 0, forceThinkingDisabled: false);
+			ApiCallResult apiCallResult = await CallUniversalApiDetailed(sys, user, route: UniversalApiRoute.Auxiliary);
 			if (SaveRuntimeGuard.IsStale(runtimeGeneration, "npc_persona_autogen"))
 			{
 				return "";
@@ -22655,7 +22587,7 @@ public partial class MyBehavior : CampaignBehaviorBase
 			userSb.AppendLine(BuildPromotedNonHeroCompanionFactsForPersonaGeneration(hero, name, fullName, troopName, troopId, culture, scene, joinFact, equipment));
 			userSb.AppendLine("加入前该 NPC 与玩家的全部可用对话历史:");
 			userSb.AppendLine(history);
-			ApiCallResult apiCallResult = await CallAuxiliaryGatewayDetailed(sys, userSb.ToString().Trim(), "PromotedCompanionPersona", 0, forceThinkingDisabled: false);
+			ApiCallResult apiCallResult = await CallUniversalApiDetailed(sys, userSb.ToString().Trim(), route: UniversalApiRoute.Auxiliary);
 			if (SaveRuntimeGuard.IsStale(runtimeGeneration, "promoted_companion_persona"))
 			{
 				return;
@@ -22738,7 +22670,7 @@ public partial class MyBehavior : CampaignBehaviorBase
 			userSb.AppendLine("装备: " + equipmentSummary);
 			userSb.AppendLine("当前基础技能(来自原兵种模板，生成失败时保留这些值): " + BuildPromotedHeroSkillSummary(hero));
 			userSb.AppendLine("人设摘要: " + TrimToMaxChars((personality + " " + background).Trim(), 700));
-			ApiCallResult apiCallResult = await CallAuxiliaryGatewayDetailed(sys, userSb.ToString().Trim(), "PromotedCompanionSkills", 0, forceThinkingDisabled: false);
+			ApiCallResult apiCallResult = await CallUniversalApiDetailed(sys, userSb.ToString().Trim(), route: UniversalApiRoute.Auxiliary);
 			if (SaveRuntimeGuard.IsStale(runtimeGeneration, "promoted_companion_skills"))
 			{
 				return;
@@ -26004,7 +25936,6 @@ public partial class MyBehavior : CampaignBehaviorBase
 		MergeNpcActionStorageById(_npcMajorActions, source, target, keepOnlyRecentWindow: false);
 		MergeNpcActionStorageById(_npcRecentActions, source, target, keepOnlyRecentWindow: true);
 		RetargetMemoryOverviewCandidateScanIds(source, target);
-		RetargetInteractionMemoryRecoveryProjection(source, target);
 		RemoveMemoryEntityDataById(source);
 	}
 
@@ -26026,8 +25957,7 @@ public partial class MyBehavior : CampaignBehaviorBase
 					{
 						GameDayIndex = dayIndex,
 						GameDate = (day.GameDate ?? "").Trim(),
-						Lines = new List<string>(),
-						MemoryCommitMarkers = new Dictionary<string, string>(StringComparer.Ordinal)
+						Lines = new List<string>()
 					};
 					byDay[dayIndex] = merged;
 				}
@@ -26043,16 +25973,11 @@ public partial class MyBehavior : CampaignBehaviorBase
 						merged.Lines.Add(text);
 					}
 				}
-				foreach (KeyValuePair<string, string> marker in SanitizeMemoryCommitMarkers(day.MemoryCommitMarkers))
-				{
-					merged.MemoryCommitMarkers[marker.Key] = marker.Value;
-				}
 			}
 		}
 		AddDays(targetDays);
 		AddDays(sourceDays);
-		return byDay.Values.Where((DialogueDay x) => (x.Lines != null && x.Lines.Count > 0)
-			|| (x.MemoryCommitMarkers != null && x.MemoryCommitMarkers.Count > 0)).OrderBy((DialogueDay x) => x.GameDayIndex).ToList();
+		return byDay.Values.Where((DialogueDay x) => x.Lines != null && x.Lines.Count > 0).OrderBy((DialogueDay x) => x.GameDayIndex).ToList();
 	}
 
 	private static List<DailyMemoryDraft> RetargetDailyMemoryDrafts(IEnumerable<DailyMemoryDraft> drafts, string targetMemoryId)
@@ -26595,7 +26520,6 @@ public partial class MyBehavior : CampaignBehaviorBase
 		{
 			return;
 		}
-		QuarantineInteractionMemoryRecoveryProjection(text, "memory_recovery_subject_removed");
 		_dialogueHistory?.Remove(text);
 		_dialogueHistoryStorage?.Remove(text);
 		_dailyMemoryDrafts?.Remove(text);
@@ -26671,7 +26595,6 @@ public partial class MyBehavior : CampaignBehaviorBase
 			AddMatchingKeys((_memoryOverviewQueue ?? new List<MemoryOverviewJob>()).Select((MemoryOverviewJob x) => x?.HeroId));
 			AddMatchingKeys((_npcMajorActionSummaryQueue ?? new List<MajorActionSummaryJob>()).Select((MajorActionSummaryJob x) => x?.HeroId));
 			AddMatchingKeys((_pendingWeeklyMemoryMaterialTriggers ?? new List<WeeklyMemoryMaterialTrigger>()).Select((WeeklyMemoryMaterialTrigger x) => x?.MemoryId));
-			AddMatchingKeys(GetInteractionMemoryRecoveryProjectionSubjects());
 			foreach (string id in ids.ToList())
 			{
 				RemoveMemoryEntityDataById(id);
@@ -26787,47 +26710,6 @@ public partial class MyBehavior : CampaignBehaviorBase
 			trigger.EstimatedValueDenars = Math.Max(0L, trigger.EstimatedValueDenars);
 			trigger.TriggerReason = (trigger.TriggerReason ?? "").Replace("\r", " ").Replace("\n", " ").Trim();
 			trigger.StableKey = stableKey;
-			trigger.OutcomeReceiptId = (trigger.OutcomeReceiptId ?? "").Trim();
-			trigger.OutcomeCandidateHash = (trigger.OutcomeCandidateHash ?? "").Trim();
-			trigger.OutcomePayloadHash = (trigger.OutcomePayloadHash ?? "").Trim();
-			trigger.OutcomeActionFingerprint = (trigger.OutcomeActionFingerprint ?? "").Trim();
-			trigger.OutcomeTurnFingerprint = (trigger.OutcomeTurnFingerprint ?? "").Trim();
-			bool hasOutcomeProvenance = !string.IsNullOrWhiteSpace(trigger.OutcomeReceiptId)
-				|| !string.IsNullOrWhiteSpace(trigger.OutcomeCandidateHash)
-				|| !string.IsNullOrWhiteSpace(trigger.OutcomePayloadHash)
-				|| !string.IsNullOrWhiteSpace(trigger.OutcomeActionFingerprint)
-				|| !string.IsNullOrWhiteSpace(trigger.OutcomeTurnFingerprint);
-			bool hasOutcomeSemanticTag = trigger.Tags.Any(tag =>
-				(tag ?? "").StartsWith("[WEEKLY:ECONOMY_", StringComparison.OrdinalIgnoreCase));
-			bool hasOutcomeStableKey = stableKey.StartsWith(
-				"weekly_outcome:", StringComparison.Ordinal);
-			bool validOutcomeProvenance = hasOutcomeProvenance
-				&& IsMemoryRecoveryHexDigest(trigger.OutcomeReceiptId)
-				&& IsMemoryRecoveryHexDigest(trigger.OutcomeCandidateHash)
-				&& IsMemoryRecoveryHexDigest(trigger.OutcomePayloadHash)
-				&& IsMemoryRecoveryHexDigest(trigger.OutcomeActionFingerprint)
-				&& IsMemoryRecoveryHexDigest(trigger.OutcomeTurnFingerprint)
-				&& string.Equals(
-					stableKey,
-					"weekly_outcome:" + trigger.OutcomeReceiptId + ":" + trigger.OutcomePayloadHash,
-					StringComparison.Ordinal);
-			if ((hasOutcomeSemanticTag || hasOutcomeStableKey)
-				&& (!hasOutcomeSemanticTag || !validOutcomeProvenance))
-			{
-				// Outcome-only semantic material has no legitimate legacy form.
-				// Never downgrade a malformed exact receipt into a broad trigger.
-				continue;
-			}
-			if (hasOutcomeProvenance && !validOutcomeProvenance)
-			{
-				// Legacy action-tag material may survive, but malformed additive
-				// provenance cannot authorize exact readback.
-				trigger.OutcomeReceiptId = "";
-				trigger.OutcomeCandidateHash = "";
-				trigger.OutcomePayloadHash = "";
-				trigger.OutcomeActionFingerprint = "";
-				trigger.OutcomeTurnFingerprint = "";
-			}
 			if (trigger.CreatedUtcTicks <= 0L)
 			{
 				trigger.CreatedUtcTicks = DateTime.UtcNow.Ticks;
@@ -26885,19 +26767,6 @@ public partial class MyBehavior : CampaignBehaviorBase
 				x.TargetAgentIndex = Math.Max(-1, x.TargetAgentIndex);
 				x.TargetName = (x.TargetName ?? "").Trim();
 				x.MemorySessionKey = (x.MemorySessionKey ?? "").Trim();
-				x.MemoryCommitId = (x.MemoryCommitId ?? "").Trim();
-				x.MemoryCommitPart = (x.MemoryCommitPart ?? "").Trim();
-				x.MemoryCommitHash = (x.MemoryCommitHash ?? "").Trim();
-				x.MemoryCommitOriginGameDay = Math.Max(-1, x.MemoryCommitOriginGameDay);
-				x.MemoryCommitOriginGameDate = (x.MemoryCommitOriginGameDate ?? "").Trim();
-				if (!IsValidMemoryCommitMarker(x.MemoryCommitId, x.MemoryCommitPart, x.MemoryCommitHash))
-				{
-					x.MemoryCommitId = "";
-					x.MemoryCommitPart = "";
-					x.MemoryCommitHash = "";
-					x.MemoryCommitOriginGameDay = -1;
-					x.MemoryCommitOriginGameDate = "";
-				}
 				if (x.SceneSessionId < -1)
 				{
 					x.SceneSessionId = -1;
@@ -27481,17 +27350,17 @@ public partial class MyBehavior : CampaignBehaviorBase
 		AppendDailyMemoryLineById(GetMemoryHeroId(hero), string.IsNullOrWhiteSpace(heroName) ? "NPC" : heroName, speaker, text, isAfef, isLlmDialogue, sceneSessionId, targetAgentIndex, targetName);
 	}
 
-	private bool AppendDailyMemoryLineById(string memoryId, string memoryName, string speaker, string text, bool isAfef, bool isLlmDialogue, int sceneSessionId = -1, int targetAgentIndex = -1, string targetName = null)
+	private void AppendDailyMemoryLineById(string memoryId, string memoryName, string speaker, string text, bool isAfef, bool isLlmDialogue, int sceneSessionId = -1, int targetAgentIndex = -1, string targetName = null)
 	{
 		string normalizedMemoryId = NormalizeMemoryHeroId(memoryId);
 		if (!IsMemoryEntityEligibleForCompressedMemory(normalizedMemoryId))
 		{
-			return false;
+			return;
 		}
 		string text2 = (text ?? "").Trim();
 		if (string.IsNullOrWhiteSpace(text2))
 		{
-			return false;
+			return;
 		}
 		int dayIndex = (int)CampaignTime.Now.ToDays;
 		string gameDate = CampaignTime.Now.ToString();
@@ -27538,12 +27407,7 @@ public partial class MyBehavior : CampaignBehaviorBase
 		}
 		AttachPendingWeeklyMemoryMaterialTriggers(dailyMemoryDraft, dailyMemoryLine);
 		SaveDailyMemoryDraftsById(heroId, list);
-		bool dailyPublished = IsDailyMemoryLinePublished(
-			heroId,
-			dayIndex,
-			dailyMemoryDraft,
-			dailyMemoryLine);
-		if (dailyPublished && dailyMemoryLine.IsLlmDialogue)
+		if (dailyMemoryLine.IsLlmDialogue)
 		{
 			PlayerNotorietyBehavior.NoteConversationLineForExternal(heroId);
 		}
@@ -27551,26 +27415,6 @@ public partial class MyBehavior : CampaignBehaviorBase
 		{
 			LogNonHeroMemoryTrace("stage=daily_append memoryId=" + heroId + " memoryName=" + (dailyMemoryDraft.HeroName ?? "") + " day=" + dayIndex + " drafts=" + list.Count + " lines=" + CountDailyMemoryDraftLines(list) + " speaker=" + (dailyMemoryLine.Speaker ?? "") + " isAfef=" + dailyMemoryLine.IsAfef + " isLlm=" + dailyMemoryLine.IsLlmDialogue + " sceneSession=" + sceneSessionId + " dialogueSession=" + dialogueSessionId);
 		}
-		return dailyPublished;
-	}
-
-	// Read raw owner state, not prompt-filtered history. Sanitization retains object
-	// references; an older identical line cannot acknowledge this append.
-	private bool IsDailyMemoryLinePublished(string normalizedMemoryId, int gameDayIndex, DailyMemoryDraft draft, DailyMemoryLine line)
-	{
-		return draft != null && line != null && gameDayIndex >= 0
-			&& string.Equals(NormalizeMemoryHeroId(draft.HeroId), normalizedMemoryId, StringComparison.Ordinal)
-			&& draft.GameDayIndex == gameDayIndex && line.GameDayIndex == gameDayIndex
-			&& _dailyMemoryDrafts != null && _dailyMemoryDrafts.TryGetValue(normalizedMemoryId, out var published)
-			&& published != null && published.Contains(draft)
-			&& draft.Lines != null && draft.Lines.Contains(line);
-	}
-
-	private bool IsDialogueHistoryPublished(string normalizedMemoryId, List<DialogueDay> records)
-	{
-		return records != null && _dialogueHistory != null
-			&& _dialogueHistory.TryGetValue(normalizedMemoryId, out var published)
-			&& ReferenceEquals(published, records);
 	}
 
 	private List<DialogueDay> LoadDialogueHistory(Hero hero)
@@ -27790,51 +27634,6 @@ public partial class MyBehavior : CampaignBehaviorBase
 		}
 	}
 
-	/// <summary>
-	/// Strict batch boundary for detached commits. Applied confirms runtime daily
-	/// and recent-history acceptance only, not SyncData/disk persistence. Failure
-	/// may follow partial writes; callers must not replay actions or assume rollback.
-	/// </summary>
-	public static MemoryCommitResult CommitExternalDialogueHistory(string memoryId, bool isNonHero, string npcName, string playerText, string aiText, string extraFact)
-	{
-		try
-		{
-			if (!TWParallel.IsMainThread())
-			{
-				return new MemoryCommitResult(MemoryCommitStatus.Rejected, "memory_not_main_thread");
-			}
-			MyBehavior owner = Campaign.Current?.GetCampaignBehavior<MyBehavior>();
-			if (owner == null)
-			{
-				return new MemoryCommitResult(MemoryCommitStatus.Failed, "memory_owner_missing");
-			}
-			string normalizedMemoryId = NormalizeMemoryHeroId(memoryId);
-			if (string.IsNullOrEmpty(normalizedMemoryId) || isNonHero != IsNonHeroMemoryId(normalizedMemoryId))
-			{
-				return new MemoryCommitResult(MemoryCommitStatus.Rejected, "memory_identity_invalid");
-			}
-			if (string.IsNullOrWhiteSpace(playerText) && string.IsNullOrWhiteSpace(aiText) && string.IsNullOrWhiteSpace(extraFact))
-			{
-				return new MemoryCommitResult(MemoryCommitStatus.Rejected, "memory_empty_commit");
-			}
-			Hero hero = isNonHero ? null : (Hero.Find(memoryId.Trim()) ?? FindHeroById(normalizedMemoryId));
-			if (!isNonHero && !IsHeroNpcEligibleForCompressedMemory(hero))
-			{
-				return new MemoryCommitResult(MemoryCommitStatus.Rejected, "memory_target_ineligible");
-			}
-			bool accepted = isNonHero
-				? owner.AppendDialogueHistoryById(normalizedMemoryId, npcName, playerText, aiText, extraFact)
-				: owner.AppendDialogueHistory(hero, playerText, aiText, extraFact);
-			return accepted
-				? new MemoryCommitResult(MemoryCommitStatus.Applied)
-				: new MemoryCommitResult(MemoryCommitStatus.Failed, "memory_owner_write_unconfirmed");
-		}
-		catch
-		{
-			return new MemoryCommitResult(MemoryCommitStatus.Failed, "memory_owner_append_failed");
-		}
-	}
-
 	public static void AppendExternalSceneDialogueHistory(Hero hero, string playerText, string aiText, string extraFact, int sceneSessionId, int playerTargetAgentIndex = -1, string playerTargetName = null)
 	{
 		try
@@ -27868,11 +27667,11 @@ public partial class MyBehavior : CampaignBehaviorBase
 		}
 	}
 
-	private bool AppendDialogueHistory(Hero hero, string playerText, string aiText, string extraFact, int sceneSessionId = -1, int playerTargetAgentIndex = -1, string playerTargetName = null)
+	private void AppendDialogueHistory(Hero hero, string playerText, string aiText, string extraFact, int sceneSessionId = -1, int playerTargetAgentIndex = -1, string playerTargetName = null)
 	{
 		if (hero == null || (string.IsNullOrWhiteSpace(playerText) && string.IsNullOrWhiteSpace(aiText) && string.IsNullOrWhiteSpace(extraFact)))
 		{
-			return false;
+			return;
 		}
 		try
 		{
@@ -27881,16 +27680,15 @@ public partial class MyBehavior : CampaignBehaviorBase
 			{
 				npcNameForMemory = "NPC";
 			}
-			return AppendDialogueHistoryById(GetMemoryHeroId(hero), npcNameForMemory, playerText, aiText, extraFact, sceneSessionId, playerTargetAgentIndex, playerTargetName);
+			AppendDialogueHistoryById(GetMemoryHeroId(hero), npcNameForMemory, playerText, aiText, extraFact, sceneSessionId, playerTargetAgentIndex, playerTargetName);
 		}
 		catch (Exception ex)
 		{
 			Logger.Log("DialogueHistory", "[错误] 追加失败: " + ex.Message);
-			return false;
 		}
 	}
 
-	private bool AppendDialogueHistoryById(string memoryId, string npcNameForMemory, string playerText, string aiText, string extraFact, int sceneSessionId = -1, int playerTargetAgentIndex = -1, string playerTargetName = null)
+	private void AppendDialogueHistoryById(string memoryId, string npcNameForMemory, string playerText, string aiText, string extraFact, int sceneSessionId = -1, int playerTargetAgentIndex = -1, string playerTargetName = null)
 	{
 		string normalizedMemoryId = NormalizeMemoryHeroId(memoryId);
 		if (!IsMemoryEntityEligibleForCompressedMemory(normalizedMemoryId) || (string.IsNullOrWhiteSpace(playerText) && string.IsNullOrWhiteSpace(aiText) && string.IsNullOrWhiteSpace(extraFact)))
@@ -27899,7 +27697,7 @@ public partial class MyBehavior : CampaignBehaviorBase
 			{
 				LogNonHeroMemoryTrace("stage=append_skip memoryId=" + normalizedMemoryId + " eligible=" + IsMemoryEntityEligibleForCompressedMemory(normalizedMemoryId) + " playerLen=" + ((playerText ?? "").Length) + " aiLen=" + ((aiText ?? "").Length) + " factLen=" + ((extraFact ?? "").Length));
 			}
-			return false;
+			return;
 		}
 		try
 		{
@@ -27908,11 +27706,10 @@ public partial class MyBehavior : CampaignBehaviorBase
 			{
 				npcNameForMemory = "NPC";
 			}
-			bool dailyAccepted = true;
 			if (!string.IsNullOrWhiteSpace(playerText))
 			{
 				Hero memoryHero = FindHeroById(normalizedMemoryId);
-				dailyAccepted &= AppendDailyMemoryLineById(normalizedMemoryId, npcNameForMemory, BuildPlayerPublicDisplayNameForPrompt(memoryHero), BuildPlayerAddressedInputForName(npcNameForMemory, playerText, memoryHero, playerTargetName), isAfef: false, isLlmDialogue: true, sceneSessionId: sceneSessionId, targetAgentIndex: playerTargetAgentIndex, targetName: playerTargetName);
+				AppendDailyMemoryLineById(normalizedMemoryId, npcNameForMemory, BuildPlayerPublicDisplayNameForPrompt(memoryHero), BuildPlayerAddressedInputForName(npcNameForMemory, playerText, memoryHero, playerTargetName), isAfef: false, isLlmDialogue: true, sceneSessionId: sceneSessionId, targetAgentIndex: playerTargetAgentIndex, targetName: playerTargetName);
 			}
 			if (!string.IsNullOrWhiteSpace(extraFact))
 			{
@@ -27921,7 +27718,7 @@ public partial class MyBehavior : CampaignBehaviorBase
 				{
 					memoryFact = "[AFEF玩家行为补充] " + memoryFact;
 				}
-				dailyAccepted &= AppendDailyMemoryLineById(normalizedMemoryId, npcNameForMemory, "AFEF", memoryFact, isAfef: true, isLlmDialogue: false, sceneSessionId: sceneSessionId);
+				AppendDailyMemoryLineById(normalizedMemoryId, npcNameForMemory, "AFEF", memoryFact, isAfef: true, isLlmDialogue: false, sceneSessionId: sceneSessionId);
 			}
 			if (!string.IsNullOrWhiteSpace(aiText))
 			{
@@ -27930,7 +27727,7 @@ public partial class MyBehavior : CampaignBehaviorBase
 				{
 					memoryAiText = npcNameForMemory + ": " + memoryAiText;
 				}
-				dailyAccepted &= AppendDailyMemoryLineById(normalizedMemoryId, npcNameForMemory, npcNameForMemory, memoryAiText, isAfef: false, isLlmDialogue: true, sceneSessionId: sceneSessionId);
+				AppendDailyMemoryLineById(normalizedMemoryId, npcNameForMemory, npcNameForMemory, memoryAiText, isAfef: false, isLlmDialogue: true, sceneSessionId: sceneSessionId);
 			}
 			List<DialogueDay> list = LoadDialogueHistoryById(normalizedMemoryId);
 			int beforeLines = CountDialogueHistoryLines(list);
@@ -28016,18 +27813,15 @@ public partial class MyBehavior : CampaignBehaviorBase
 				}
 				dialogueDay2.Lines.Add(entry.Item3);
 			}
-			CopyMemoryCommitMarkers(list, list3);
 			SaveDialogueHistoryById(normalizedMemoryId, list3);
 			if (IsNonHeroMemoryId(normalizedMemoryId))
 			{
 				LogNonHeroMemoryTrace("stage=append_commit memoryId=" + normalizedMemoryId + " memoryName=" + npcNameForMemory + " beforeLines=" + beforeLines + " afterLines=" + CountDialogueHistoryLines(list3) + " days=" + list3.Count + " playerLen=" + ((playerText ?? "").Length) + " aiLen=" + ((aiText ?? "").Length) + " factLen=" + ((extraFact ?? "").Length) + " sceneSession=" + sceneSessionId);
 			}
-			return dailyAccepted && IsDialogueHistoryPublished(normalizedMemoryId, list3);
 		}
 		catch (Exception ex)
 		{
 			Logger.Log("DialogueHistory", "[错误] 追加失败: " + ex.Message);
-			return false;
 		}
 	}
 
@@ -32093,8 +31887,7 @@ public partial class MyBehavior : CampaignBehaviorBase
 				}
 				dialogueDay2.Lines.RemoveAt(0);
 				num--;
-				if (dialogueDay2.Lines.Count == 0 && dialogueDay2.GameDayIndex != dayIndex
-					&& (dialogueDay2.MemoryCommitMarkers == null || dialogueDay2.MemoryCommitMarkers.Count == 0))
+				if (dialogueDay2.Lines.Count == 0 && dialogueDay2.GameDayIndex != dayIndex)
 				{
 					list.Remove(dialogueDay2);
 				}
@@ -32238,7 +32031,6 @@ public partial class MyBehavior : CampaignBehaviorBase
 			return false;
 		}
 		list2.Reverse();
-		List<DialogueDay> memoryCommitMarkerSource = records.ToList();
 		records.Clear();
 		foreach (var item2 in list2)
 		{
@@ -32254,7 +32046,6 @@ public partial class MyBehavior : CampaignBehaviorBase
 			}
 			dialogueDay.Lines.Add(item2.Line);
 		}
-		CopyMemoryCommitMarkers(memoryCommitMarkerSource, records);
 		return true;
 	}
 
@@ -34601,235 +34392,11 @@ public partial class MyBehavior : CampaignBehaviorBase
 		return LlmApiCompat.ExtractAssistantText(json);
 	}
 
-	private async Task<ApiCallResult> CallWeeklyReportApiDetailed(string systemPrompt, string userPrompt)
-	{
-		ApiCallResult legacyResult = new ApiCallResult();
-		try
-		{
-			DuelSettings settings = DuelSettings.GetSettings();
-			if (!TryResolveUniversalApiConfig(settings, UniversalApiRoute.EventAndRebellion, out string apiUrl, out string apiKey, out string modelName, out string resolvedRoute, out string errorMessage))
-			{
-				legacyResult.ErrorMessage = errorMessage;
-				return legacyResult;
-			}
-			int maxTokens = ResolveUniversalMaxTokens(settings, resolvedRoute);
-			float temperature = ResolveUniversalApiTemperature(settings, resolvedRoute);
-			ResolveUniversalThinkingSettings(settings, resolvedRoute, out bool thinkingEnabled, out string reasoningEffort);
-			long runtimeGeneration = SaveRuntimeGuard.CaptureGeneration();
-			PromptPackage prompt = new PromptPackage(
-				new[]
-				{
-					new PromptMessage("system", systemPrompt ?? string.Empty),
-					new PromptMessage("user", userPrompt ?? string.Empty)
-				},
-				maxTokens,
-				modelName);
-			LlmProviderSnapshot provider = new LlmProviderSnapshot(
-				resolvedRoute,
-				apiUrl,
-				modelName,
-				DuelSettings.LlmRequestTimeoutMilliseconds,
-				maxTokens);
-			TraceContext trace = new TraceContext(
-				"af-weekly-report-" + DateTime.UtcNow.Ticks.ToString(CultureInfo.InvariantCulture),
-				runtimeGeneration,
-				runtimeGeneration,
-				"weekly-report",
-				#if BANNERLORD_1_4_OR_GREATER
-				"1.4"
-				#else
-				"1.3"
-				#endif
-			);
-			LegacyConfiguredChatGateway gateway = new LegacyConfiguredChatGateway(
-				_ => apiKey,
-				temperature: temperature,
-				disableThinking: false,
-				retryWithoutThinkingOnBadRequest: true,
-				thinkingEnabled: thinkingEnabled,
-				reasoningEffort: reasoningEffort);
-			LlmGenerateResult generated = await gateway.GenerateAsync(
-				new LlmGenerateRequest(trace, provider, prompt, InteractionStage.MainReply),
-				CancellationToken.None).ConfigureAwait(false);
-			if (SaveRuntimeGuard.IsStale(runtimeGeneration, "weekly_report_gateway_response"))
-			{
-				legacyResult.ErrorMessage = SaveRuntimeGuard.BuildStaleRequestErrorText();
-				return legacyResult;
-			}
-			LlmGenerateMetadata metadata = generated?.Metadata ?? LlmGenerateMetadata.Empty;
-			legacyResult.Success = generated?.Status == LlmResultStatus.Succeeded;
-			legacyResult.Content = CleanAIResponse(generated?.RawText ?? string.Empty);
-			legacyResult.ErrorMessage = generated?.ErrorCode ?? string.Empty;
-			legacyResult.StatusCode = metadata.StatusCode;
-			legacyResult.IsRateLimit = metadata.IsRateLimit;
-			legacyResult.IsRequestsPerMinuteLimit = metadata.IsRequestsPerMinuteLimit;
-			legacyResult.IsQuotaLimit = metadata.IsQuotaLimit;
-			legacyResult.RetryAfterSeconds = metadata.RetryAfterSeconds;
-			Logger.Log("EventWeeklyReport", "[Gateway] route=" + resolvedRoute + " status=" + (metadata.StatusCode?.ToString(CultureInfo.InvariantCulture) ?? "unknown") + " success=" + legacyResult.Success + " error=" + (legacyResult.ErrorMessage ?? ""));
-			return legacyResult;
-		}
-		catch (Exception ex)
-		{
-			legacyResult.ErrorMessage = LlmRetryPrompt.BuildFailureDetail(ex.Message, legacyResult.Content, "");
-			return legacyResult;
-		}
-	}
-
-	private async Task<ApiCallResult> CallRebelKingdomNamingGatewayDetailed(string systemPrompt, string userPrompt)
-	{
-		ApiCallResult legacyResult = new ApiCallResult();
-		long runtimeGeneration = SaveRuntimeGuard.CaptureGeneration();
-		try
-		{
-			DuelSettings settings = DuelSettings.GetSettings();
-			if (!TryResolveUniversalApiConfig(settings, UniversalApiRoute.EventAndRebellion, out string apiUrl, out string apiKey, out string modelName, out string resolvedRoute, out string errorMessage))
-			{
-				legacyResult.ErrorMessage = errorMessage;
-				return legacyResult;
-			}
-			int maxTokens = ResolveUniversalMaxTokens(settings, resolvedRoute);
-			ResolveUniversalThinkingSettings(settings, resolvedRoute, out bool thinkingEnabled, out string reasoningEffort);
-			PromptPackage prompt = new PromptPackage(
-				new[]
-				{
-					new PromptMessage("system", systemPrompt ?? string.Empty),
-					new PromptMessage("user", userPrompt ?? string.Empty)
-				},
-				maxTokens,
-				modelName);
-			string apiLine;
-#if BANNERLORD_1_4_OR_GREATER
-			apiLine = "1.4";
-#else
-			apiLine = "1.3";
-#endif
-			TraceContext trace = new TraceContext(
-				"af-rebel-naming-" + runtimeGeneration.ToString(CultureInfo.InvariantCulture) + "-" + DateTime.UtcNow.Ticks.ToString(CultureInfo.InvariantCulture),
-				runtimeGeneration,
-				runtimeGeneration,
-				"kingdom-rebellion",
-				apiLine);
-			LlmProviderSnapshot provider = new LlmProviderSnapshot(
-				resolvedRoute,
-				apiUrl,
-				modelName,
-				RebelKingdomNamingTimeoutMs,
-				maxTokens);
-			LegacyConfiguredChatGateway gateway = new LegacyConfiguredChatGateway(
-				_ => apiKey,
-				temperature: ResolveUniversalApiTemperature(settings, resolvedRoute),
-				disableThinking: false,
-				retryWithoutThinkingOnBadRequest: true,
-				thinkingEnabled: thinkingEnabled,
-				reasoningEffort: reasoningEffort);
-			LlmGenerateResult generated = await gateway.GenerateAsync(
-				new LlmGenerateRequest(trace, provider, prompt, InteractionStage.MainReply),
-				CancellationToken.None).ConfigureAwait(false);
-			if (SaveRuntimeGuard.IsStale(runtimeGeneration, "rebel_naming_gateway_response"))
-			{
-				legacyResult.ErrorMessage = SaveRuntimeGuard.BuildStaleRequestErrorText();
-				return legacyResult;
-			}
-			LlmGenerateMetadata metadata = generated?.Metadata ?? LlmGenerateMetadata.Empty;
-			legacyResult.Success = generated?.Status == LlmResultStatus.Succeeded;
-			legacyResult.Content = CleanAIResponse(generated?.RawText ?? string.Empty);
-			legacyResult.ErrorMessage = generated?.ErrorCode == "cancelled"
-				? "叛乱命名请求超时（60 秒）。"
-				: (generated?.ErrorCode ?? string.Empty);
-			legacyResult.StatusCode = metadata.StatusCode;
-			legacyResult.IsRateLimit = metadata.IsRateLimit;
-			legacyResult.IsRequestsPerMinuteLimit = metadata.IsRequestsPerMinuteLimit;
-			legacyResult.IsQuotaLimit = metadata.IsQuotaLimit;
-			legacyResult.RetryAfterSeconds = metadata.RetryAfterSeconds;
-			Logger.Log("KingdomRebellion", "[Gateway] route=" + resolvedRoute + " status=" + (metadata.StatusCode?.ToString(CultureInfo.InvariantCulture) ?? "unknown") + " success=" + legacyResult.Success + " error=" + (legacyResult.ErrorMessage ?? ""));
-			return legacyResult;
-		}
-		catch (Exception ex)
-		{
-			legacyResult.ErrorMessage = LlmRetryPrompt.BuildFailureDetail(ex.Message, legacyResult.Content, "");
-			return legacyResult;
-		}
-	}
-
-	private async Task<ApiCallResult> CallAuxiliaryGatewayDetailed(string systemPrompt, string userPrompt, string source, int maxTokens, bool forceThinkingDisabled)
-	{
-		ApiCallResult legacyResult = new ApiCallResult();
-		long runtimeGeneration = SaveRuntimeGuard.CaptureGeneration();
-		try
-		{
-			DuelSettings settings = DuelSettings.GetSettings();
-			if (!TryResolveUniversalApiConfig(settings, UniversalApiRoute.Auxiliary, out string apiUrl, out string apiKey, out string modelName, out string resolvedRoute, out string errorMessage))
-			{
-				legacyResult.ErrorMessage = errorMessage;
-				return legacyResult;
-			}
-			int effectiveMaxTokens = maxTokens > 0
-				? maxTokens
-				: ResolveUniversalMaxTokens(settings, resolvedRoute);
-			PromptPackage prompt = new PromptPackage(
-				new[]
-				{
-					new PromptMessage("system", systemPrompt ?? string.Empty),
-					new PromptMessage("user", userPrompt ?? string.Empty)
-				},
-				Math.Max(1, effectiveMaxTokens),
-				modelName);
-			LlmProviderSnapshot provider = new LlmProviderSnapshot(
-				resolvedRoute,
-				apiUrl,
-				modelName,
-				DuelSettings.LlmRequestTimeoutMilliseconds,
-				Math.Max(1, effectiveMaxTokens));
-			string apiLine;
-#if BANNERLORD_1_4_OR_GREATER
-			apiLine = "1.4";
-#else
-			apiLine = "1.3";
-#endif
-			TraceContext trace = new TraceContext(
-				"af-auxiliary-" + (source ?? "summary") + "-" + runtimeGeneration.ToString(CultureInfo.InvariantCulture) + "-" + DateTime.UtcNow.Ticks.ToString(CultureInfo.InvariantCulture),
-				runtimeGeneration,
-				runtimeGeneration,
-				"auxiliary",
-				apiLine);
-			ResolveUniversalThinkingSettings(settings, resolvedRoute, out bool thinkingEnabled, out string reasoningEffort);
-			LegacyConfiguredChatGateway gateway = new LegacyConfiguredChatGateway(
-				_ => apiKey,
-				temperature: ResolveUniversalApiTemperature(settings, resolvedRoute),
-				disableThinking: forceThinkingDisabled,
-				retryWithoutThinkingOnBadRequest: !forceThinkingDisabled,
-				thinkingEnabled: thinkingEnabled,
-				reasoningEffort: reasoningEffort);
-			LlmGenerateResult generated = await gateway.GenerateAsync(
-				new LlmGenerateRequest(trace, provider, prompt, InteractionStage.MainReply),
-				CancellationToken.None).ConfigureAwait(false);
-			if (SaveRuntimeGuard.IsStale(runtimeGeneration, "auxiliary_gateway_response:" + (source ?? "summary")))
-			{
-				legacyResult.ErrorMessage = SaveRuntimeGuard.BuildStaleRequestErrorText();
-				return legacyResult;
-			}
-			LlmGenerateMetadata metadata = generated?.Metadata ?? LlmGenerateMetadata.Empty;
-			legacyResult.Success = generated?.Status == LlmResultStatus.Succeeded;
-			legacyResult.Content = CleanAIResponse(generated?.RawText ?? string.Empty);
-			legacyResult.ErrorMessage = generated?.ErrorCode ?? string.Empty;
-			legacyResult.StatusCode = metadata.StatusCode;
-			legacyResult.IsRateLimit = metadata.IsRateLimit;
-			legacyResult.IsRequestsPerMinuteLimit = metadata.IsRequestsPerMinuteLimit;
-			legacyResult.IsQuotaLimit = metadata.IsQuotaLimit;
-			legacyResult.RetryAfterSeconds = metadata.RetryAfterSeconds;
-			Logger.Log("Logic", "[AuxiliaryGateway] source=" + (source ?? "summary") + " route=" + resolvedRoute + " status=" + (metadata.StatusCode?.ToString(CultureInfo.InvariantCulture) ?? "unknown") + " success=" + legacyResult.Success + " error=" + (legacyResult.ErrorMessage ?? ""));
-			return legacyResult;
-		}
-		catch (Exception ex)
-		{
-			legacyResult.ErrorMessage = LlmRetryPrompt.BuildFailureDetail(ex.Message, legacyResult.Content, "");
-			return legacyResult;
-		}
-	}
-
 	private async Task<ApiCallResult> CallUniversalApiDetailed(string sys, string user, bool logToEventLogs = false, string eventLogSource = "EventWeeklyReport", UniversalApiRoute route = UniversalApiRoute.Main, bool streamResponse = true, bool forceThinkingDisabled = false)
 	{
+		const int streamIdleTimeoutMilliseconds = 300000;
 		long runtimeGeneration = SaveRuntimeGuard.CaptureGeneration();
+		Stopwatch requestLifetime = Stopwatch.StartNew();
 		ApiCallResult apiCallResult = new ApiCallResult();
 		Action<string> apiLog = delegate(string message)
 		{
@@ -34845,155 +34412,315 @@ public partial class MyBehavior : CampaignBehaviorBase
 		try
 		{
 			DuelSettings settings = DuelSettings.GetSettings();
-			if (!TryResolveUniversalApiConfig(settings, route, out string effectiveApiUrl, out string apiKey, out string modelName, out string resolvedRoute, out string errorMessage))
+			if (!TryResolveUniversalApiConfig(settings, route, out var effectiveApiUrl, out var apiKey, out var modelName, out var resolvedRoute, out var errorMessage))
 			{
 				apiCallResult.ErrorMessage = errorMessage;
 				return apiCallResult;
 			}
-
 			int maxTokens = ResolveUniversalMaxTokens(settings, resolvedRoute);
-			float temperature = ResolveUniversalApiTemperature(settings, resolvedRoute);
-			ResolveUniversalThinkingSettings(settings, resolvedRoute, out bool thinkingEnabled, out string reasoningEffort);
-			PromptPackage prompt = new PromptPackage(
-				new[]
+			JObject body = new JObject
+			{
+				["model"] = modelName,
+				["messages"] = new JArray
 				{
-					new PromptMessage("system", sys ?? string.Empty),
-					new PromptMessage("user", user ?? string.Empty)
+					new JObject
+					{
+						["role"] = "system",
+						["content"] = sys
+					},
+					new JObject
+					{
+						["role"] = "user",
+						["content"] = user
+					}
 				},
-				maxTokens,
-				modelName);
-#if BANNERLORD_1_4_OR_GREATER
-			string apiLine = "1.4";
-#else
-			string apiLine = "1.3";
-#endif
-			TraceContext trace = new TraceContext(
-				"af-universal-" + runtimeGeneration.ToString(CultureInfo.InvariantCulture) + "-" + DateTime.UtcNow.Ticks.ToString(CultureInfo.InvariantCulture),
-				runtimeGeneration,
-				runtimeGeneration,
-				"universal-" + (resolvedRoute ?? "main"),
-				apiLine);
-			LlmProviderSnapshot provider = new LlmProviderSnapshot(
-				resolvedRoute,
-				effectiveApiUrl,
-				modelName,
-				DuelSettings.LlmRequestTimeoutMilliseconds,
-				maxTokens);
-			LegacyConfiguredChatGateway gateway = new LegacyConfiguredChatGateway(
-				_ => apiKey,
-				temperature: temperature,
-				disableThinking: forceThinkingDisabled,
-				retryWithoutThinkingOnBadRequest: true,
-				thinkingEnabled: thinkingEnabled,
-				reasoningEffort: reasoningEffort);
-
-			apiLog("[Gateway] route=" + resolvedRoute
-				+ " model=" + modelName
-				+ " stream=" + streamResponse
-				+ " temperature=" + temperature.ToString("0.00", CultureInfo.InvariantCulture)
-				+ " thinking=" + (forceThinkingDisabled ? "disabled" : (thinkingEnabled ? reasoningEffort : "disabled"))
-				+ " systemChars=" + (sys ?? string.Empty).Length.ToString(CultureInfo.InvariantCulture)
-				+ " userChars=" + (user ?? string.Empty).Length.ToString(CultureInfo.InvariantCulture));
-
-			ConfiguredChatGenerationExchange exchange = await gateway.GenerateExchangeAsync(
-				new LlmGenerateRequest(trace, provider, prompt, InteractionStage.MainReply),
-				streamResponse,
-				onDelta: null,
-				CancellationToken.None).ConfigureAwait(false);
-			if (SaveRuntimeGuard.IsStale(runtimeGeneration, "universal_api_gateway_response:" + (eventLogSource ?? resolvedRoute)))
+				["max_tokens"] = maxTokens,
+				["stream"] = streamResponse,
+				["temperature"] = ResolveUniversalApiTemperature(settings, resolvedRoute)
+			};
+			ResolveUniversalThinkingSettings(settings, resolvedRoute, out var thinkingEnabled, out var effort);
+			if (forceThinkingDisabled)
 			{
-				apiCallResult.ErrorMessage = SaveRuntimeGuard.BuildStaleRequestErrorText();
-				return apiCallResult;
+				thinkingEnabled = false;
 			}
-
-			LlmGenerateResult generated = exchange?.Result;
-			LlmGenerateMetadata metadata = generated?.Metadata ?? LlmGenerateMetadata.Empty;
-			string responseBody = exchange?.ResponseBody ?? string.Empty;
-			if (string.IsNullOrWhiteSpace(responseBody))
+			DuelSettings.ApplyThinkingControls(body, effectiveApiUrl, modelName, thinkingEnabled, effort, out var thinkingMode);
+			string jsonBody = LlmApiCompat.PrepareChatRequestJson(effectiveApiUrl, body);
+			string requestBodyForTokenStats = jsonBody;
+			JArray tokenStatsMessages = body["messages"] as JArray;
+			bool skipTokenStatsLog = logToEventLogs && string.Equals((eventLogSource ?? "").Trim(), "EventWeeklyReport", StringComparison.OrdinalIgnoreCase);
+			StringBuilder httpLog = new StringBuilder();
+			httpLog.AppendLine("[HTTP] 请求发送到:");
+			httpLog.AppendLine("  Url: " + effectiveApiUrl);
+			string rawConfiguredApiUrl = ((resolvedRoute == "event_rebellion_dedicated") ? (settings.EventAndRebellionApiUrl ?? "") : (settings.ApiUrl ?? ""));
+			if (!string.Equals(effectiveApiUrl, (rawConfiguredApiUrl ?? "").Trim(), StringComparison.Ordinal))
 			{
-				responseBody = exchange?.RawStreamSample ?? string.Empty;
+				httpLog.AppendLine("  Note: 已自动补全 /v1/chat/completions 尾缀");
 			}
-			apiCallResult.StatusCode = exchange != null && exchange.StatusCode > 0
-				? exchange.StatusCode
-				: metadata.StatusCode;
-			apiCallResult.ResponseBody = responseBody;
-			apiCallResult.RetryAfterSeconds = metadata.RetryAfterSeconds;
-			apiCallResult.IsQuotaLimit = apiCallResult.StatusCode == 429 && IsQuotaLimitResponseBody(responseBody);
-			apiCallResult.IsRequestsPerMinuteLimit = apiCallResult.StatusCode == 429
-				&& !apiCallResult.IsQuotaLimit
-				&& IsRequestsPerMinuteLimitResponseBody(responseBody);
-			apiCallResult.IsRateLimit = metadata.IsRateLimit
-				|| apiCallResult.IsRequestsPerMinuteLimit
-				|| (!apiCallResult.IsQuotaLimit && IsGenericRateLimitResponseBody(responseBody));
-			apiCallResult.Success = generated?.Status == LlmResultStatus.Succeeded;
-			apiCallResult.Content = CleanAIResponse(generated?.RawText ?? string.Empty);
-			if (!apiCallResult.Success)
-			{
-				if (apiCallResult.StatusCode.HasValue)
-				{
-					apiCallResult.ErrorMessage = BuildApiCallFailureMessage(
-						(HttpStatusCode)apiCallResult.StatusCode.Value,
-						responseBody,
-						apiCallResult.RetryAfterSeconds,
-						apiCallResult.IsRateLimit,
-						apiCallResult.IsRequestsPerMinuteLimit,
-						apiCallResult.IsQuotaLimit);
-				}
-				else
-				{
-					apiCallResult.ErrorMessage = generated?.ErrorCode ?? "configured_gateway_failure";
-				}
-			}
-			else if (string.IsNullOrWhiteSpace(apiCallResult.Content))
-			{
-				apiCallResult.Success = false;
-				apiCallResult.ErrorMessage = LlmRetryPrompt.BuildFailureDetail(
-					"API 已响应，但没有解析出模型回复。",
-					apiCallResult.Content,
-					responseBody);
-			}
-
-			JArray tokenStatsMessages = null;
+			httpLog.AppendLine("  Route: " + resolvedRoute);
+			httpLog.AppendLine("  Model: " + modelName);
+			httpLog.AppendLine("  MaxTokens: " + maxTokens + ", Stream: " + streamResponse + ", Temperature: " + ((float)body["temperature"]).ToString("0.00") + ", Thinking: " + thinkingMode);
+			httpLog.AppendLine("  SystemPrompt:");
+			httpLog.AppendLine(sys);
+			httpLog.AppendLine("  UserInput:");
+			httpLog.AppendLine(user);
+			apiLog(httpLog.ToString());
+			HttpRequestMessage request = new HttpRequestMessage(HttpMethod.Post, effectiveApiUrl);
 			try
 			{
-				tokenStatsMessages = JObject.Parse(exchange?.RequestBody ?? string.Empty)["messages"] as JArray;
-			}
-			catch
-			{
-				tokenStatsMessages = new JArray
+				LlmApiCompat.ApplyAuthenticationHeaders(request, effectiveApiUrl, apiKey);
+				request.Content = (HttpContent)new StringContent(jsonBody, Encoding.UTF8, "application/json");
+				HttpResponseMessage response = await DuelSettings.GlobalClient.SendAsync(request, (HttpCompletionOption)1);
+				if (SaveRuntimeGuard.IsStale(runtimeGeneration, "universal_api_response:" + eventLogSource))
 				{
-					new JObject { ["role"] = "system", ["content"] = sys ?? string.Empty },
-					new JObject { ["role"] = "user", ["content"] = user ?? string.Empty }
-				};
-			}
-			if (apiCallResult.Success && tokenStatsMessages != null)
-			{
-				bool skipTokenStatsLog = logToEventLogs
-					&& string.Equals((eventLogSource ?? string.Empty).Trim(), "EventWeeklyReport", StringComparison.OrdinalIgnoreCase);
-				if (!skipTokenStatsLog)
+					apiCallResult.ErrorMessage = SaveRuntimeGuard.BuildStaleRequestErrorText();
+					response.Dispose();
+					return apiCallResult;
+				}
+				try
 				{
-					Logger.RecordTokenStats(
-						Logger.EstimateTokensFromMessages(tokenStatsMessages),
-						Logger.EstimateTokens(apiCallResult.Content),
-						tokenStatsMessages,
-						"[UNIVERSAL API GATEWAY]\nroute=" + resolvedRoute + "\nmodel=" + modelName + "\ncontrol_mode=" + (exchange?.ControlMode ?? string.Empty) + "\nai_response=\n" + apiCallResult.Content + "\nraw_response_sample=\n" + TrimUniversalApiRawForLog(responseBody),
-						"universal_api",
-						exchange?.RequestBody ?? string.Empty);
+					string statusLine = (int)response.StatusCode + " " + response.ReasonPhrase;
+					apiLog("[HTTP] 响应状态: " + statusLine);
+					if (!response.IsSuccessStatusCode)
+					{
+						string text = await response.Content.ReadAsStringAsync();
+						if (SaveRuntimeGuard.IsStale(runtimeGeneration, "universal_api_error_body:" + eventLogSource))
+						{
+							apiCallResult.ErrorMessage = SaveRuntimeGuard.BuildStaleRequestErrorText();
+							return apiCallResult;
+						}
+						if (response.StatusCode == HttpStatusCode.BadRequest && thinkingMode != "plain" && LooksLikeUniversalThinkingControlError(text))
+						{
+							apiLog("[HTTP] 思维链参数被接口拒绝，改用无思维链控制参数重试。");
+							response.Dispose();
+							JObject retryBody = JObject.Parse(jsonBody);
+							DuelSettings.RemoveThinkingControls(retryBody);
+							string retryJsonBody = retryBody.ToString(Formatting.None);
+							requestBodyForTokenStats = retryJsonBody;
+							using HttpRequestMessage retryRequest = new HttpRequestMessage(HttpMethod.Post, effectiveApiUrl);
+							LlmApiCompat.ApplyAuthenticationHeaders(retryRequest, effectiveApiUrl, apiKey);
+							retryRequest.Content = (HttpContent)new StringContent(retryJsonBody, Encoding.UTF8, "application/json");
+							response = await DuelSettings.GlobalClient.SendAsync(retryRequest, (HttpCompletionOption)1);
+							if (SaveRuntimeGuard.IsStale(runtimeGeneration, "universal_api_retry_response:" + eventLogSource))
+							{
+								apiCallResult.ErrorMessage = SaveRuntimeGuard.BuildStaleRequestErrorText();
+								response.Dispose();
+								return apiCallResult;
+							}
+							thinkingMode += "_retry_plain";
+							apiLog("[HTTP] 重试响应状态: " + (int)response.StatusCode + " " + response.ReasonPhrase);
+							text = response.IsSuccessStatusCode ? "" : await response.Content.ReadAsStringAsync();
+							if (SaveRuntimeGuard.IsStale(runtimeGeneration, "universal_api_retry_body:" + eventLogSource))
+							{
+								apiCallResult.ErrorMessage = SaveRuntimeGuard.BuildStaleRequestErrorText();
+								return apiCallResult;
+							}
+						}
+						if (!response.IsSuccessStatusCode)
+						{
+							apiCallResult.StatusCode = (int)response.StatusCode;
+							apiCallResult.ResponseBody = text ?? "";
+							apiCallResult.RetryAfterSeconds = TryGetRetryAfterSeconds(response);
+							apiCallResult.IsQuotaLimit = response.StatusCode == (HttpStatusCode)429 && IsQuotaLimitResponseBody(text);
+							apiCallResult.IsRequestsPerMinuteLimit = response.StatusCode == (HttpStatusCode)429 && !apiCallResult.IsQuotaLimit && (IsRequestsPerMinuteLimitResponseBody(text) || HasRequestsPerMinuteRateLimitHeaders(response));
+							apiCallResult.IsRateLimit = response.StatusCode == (HttpStatusCode)429 || apiCallResult.IsRequestsPerMinuteLimit || (!apiCallResult.IsQuotaLimit && IsGenericRateLimitResponseBody(text));
+							apiCallResult.ErrorMessage = BuildApiCallFailureMessage(response.StatusCode, text, apiCallResult.RetryAfterSeconds, apiCallResult.IsRateLimit, apiCallResult.IsRequestsPerMinuteLimit, apiCallResult.IsQuotaLimit);
+							if (!skipTokenStatsLog)
+							{
+								Logger.RecordTokenStats(Logger.EstimateTokensFromMessages(tokenStatsMessages), 0, tokenStatsMessages, "[UNIVERSAL API HTTP ERROR]\nroute=" + resolvedRoute + "\nmodel=" + modelName + "\nstatus=" + (int)response.StatusCode + " " + (response.ReasonPhrase ?? "") + "\nresponse_body=\n" + (text ?? ""), "universal_api_http_error", requestBodyForTokenStats);
+							}
+							return apiCallResult;
+						}
+					}
+					if (!streamResponse)
+					{
+						string responseBody = await response.Content.ReadAsStringAsync();
+						apiCallResult.ResponseBody = responseBody ?? "";
+						if (SaveRuntimeGuard.IsStale(runtimeGeneration, "universal_api_non_stream_body:" + eventLogSource))
+						{
+							apiCallResult.ErrorMessage = SaveRuntimeGuard.BuildStaleRequestErrorText();
+							return apiCallResult;
+						}
+						string nonStreamRaw = "";
+						Exception responseParseException = null;
+						try
+						{
+							nonStreamRaw = ExtractUniversalNonStreamContent(JObject.Parse(responseBody));
+						}
+						catch (Exception parseEx)
+						{
+							responseParseException = parseEx;
+							apiLog("[HTTP] 非流式响应解析异常: " + parseEx + "\n原始响应=\n" + TrimUniversalApiRawForLog(responseBody));
+						}
+						apiLog("[HTTP] 非流式解析内容=\n" + nonStreamRaw);
+						if (string.IsNullOrWhiteSpace(nonStreamRaw))
+						{
+							apiLog("[HTTP] 非流式解析为空，原始响应=\n" + TrimUniversalApiRawForLog(responseBody));
+						}
+						if (SaveRuntimeGuard.IsStale(runtimeGeneration, "universal_api_non_stream_complete:" + eventLogSource))
+						{
+							apiCallResult.ErrorMessage = SaveRuntimeGuard.BuildStaleRequestErrorText();
+							return apiCallResult;
+						}
+						apiCallResult.Content = CleanAIResponse(nonStreamRaw);
+						if (responseParseException != null || string.IsNullOrWhiteSpace(apiCallResult.Content))
+						{
+							string reason = responseParseException == null ? "API响应解析失败：未解析出模型回复。" : ("API响应解析失败：" + responseParseException.Message);
+							apiCallResult.ErrorMessage = LlmRetryPrompt.BuildFailureDetail(reason, apiCallResult.Content, apiCallResult.ResponseBody);
+							return apiCallResult;
+						}
+						apiCallResult.Success = true;
+						if (!skipTokenStatsLog)
+						{
+							Logger.RecordTokenStats(Logger.EstimateTokensFromMessages(tokenStatsMessages), Logger.EstimateTokens(apiCallResult.Content), tokenStatsMessages, "[UNIVERSAL API HTTP]\nroute=" + resolvedRoute + "\nmodel=" + modelName + "\ncontrol_mode=" + thinkingMode + "\nai_response=\n" + (apiCallResult.Content ?? "") + "\nraw_response_sample=\n" + TrimUniversalApiRawForLog(responseBody), "universal_api", requestBodyForTokenStats);
+						}
+						return apiCallResult;
+					}
+					using Stream stream = await response.Content.ReadAsStreamAsync();
+					if (stream == null)
+					{
+						apiLog("[HTTP] 响应流为空。");
+						apiCallResult.ErrorMessage = LlmRetryPrompt.BuildFailureDetail("响应流为空", "");
+						return apiCallResult;
+					}
+					using StreamReader reader = new StreamReader(stream);
+					int streamReadTimeoutTriggered = 0;
+					int scheduledStreamTimeoutKind = 0;
+					using System.Threading.Timer streamReadTimer = new System.Threading.Timer(delegate
+					{
+						Interlocked.Exchange(ref streamReadTimeoutTriggered, 1);
+						try
+						{
+							stream.Dispose();
+						}
+						catch
+						{
+						}
+						try
+						{
+							response.Dispose();
+						}
+						catch
+						{
+						}
+					}, null, Timeout.Infinite, Timeout.Infinite);
+					StringBuilder fullContent = new StringBuilder();
+					StringBuilder rawStreamSample = new StringBuilder();
+					Exception streamParseException = null;
+					while (true)
+					{
+						long remainingTotalMilliseconds = (long)DuelSettings.LlmRequestTimeoutMilliseconds - (long)requestLifetime.Elapsed.TotalMilliseconds;
+						if (remainingTotalMilliseconds <= 0L)
+						{
+							throw new TimeoutException("API流式响应读取超过总时限 " + DuelSettings.LlmRequestTimeoutMilliseconds + "ms。");
+						}
+						int readTimeoutMilliseconds = (int)Math.Max(1L, Math.Min(streamIdleTimeoutMilliseconds, remainingTotalMilliseconds));
+						Interlocked.Exchange(ref scheduledStreamTimeoutKind, (remainingTotalMilliseconds <= streamIdleTimeoutMilliseconds) ? 2 : 1);
+						streamReadTimer.Change(readTimeoutMilliseconds, Timeout.Infinite);
+						string line;
+						try
+						{
+							line = await reader.ReadLineAsync();
+						}
+						catch (Exception ex)
+						{
+							if (Volatile.Read(ref streamReadTimeoutTriggered) != 0)
+							{
+								string timeoutDescription = (Volatile.Read(ref scheduledStreamTimeoutKind) == 2) ? ("总时限 " + DuelSettings.LlmRequestTimeoutMilliseconds + "ms") : ("连续 " + streamIdleTimeoutMilliseconds + "ms 未收到新数据");
+								throw new TimeoutException("API流式响应读取超时：" + timeoutDescription + "。", ex);
+							}
+							throw;
+						}
+						streamReadTimer.Change(Timeout.Infinite, Timeout.Infinite);
+						if (Volatile.Read(ref streamReadTimeoutTriggered) != 0)
+						{
+							string timeoutDescription2 = (Volatile.Read(ref scheduledStreamTimeoutKind) == 2) ? ("总时限 " + DuelSettings.LlmRequestTimeoutMilliseconds + "ms") : ("连续 " + streamIdleTimeoutMilliseconds + "ms 未收到新数据");
+							throw new TimeoutException("API流式响应读取超时：" + timeoutDescription2 + "。");
+						}
+						if (SaveRuntimeGuard.IsStale(runtimeGeneration, "universal_api_stream_read:" + eventLogSource))
+						{
+							apiCallResult.ErrorMessage = SaveRuntimeGuard.BuildStaleRequestErrorText();
+							return apiCallResult;
+						}
+						if (line == null)
+						{
+							break;
+						}
+						string trimmedLine = line.Trim();
+						if (!string.IsNullOrWhiteSpace(trimmedLine) && trimmedLine.StartsWith("data:", StringComparison.OrdinalIgnoreCase))
+						{
+							string data = trimmedLine.Substring(5).Trim();
+							if (string.Equals(data, "[DONE]", StringComparison.OrdinalIgnoreCase))
+							{
+								apiLog("[HTTP] 已收到流式结束标记 [DONE]。");
+								break;
+							}
+							if (string.IsNullOrWhiteSpace(data))
+							{
+								continue;
+							}
+							rawStreamSample.AppendLine("data: " + data);
+							try
+							{
+								JObject json = JObject.Parse(data);
+								string delta = ExtractUniversalStreamDelta(json);
+								if (!string.IsNullOrEmpty(delta))
+								{
+									fullContent.Append(delta);
+								}
+								else if (fullContent.Length == 0 && !IsUniversalStreamNonContentChunk(json))
+								{
+									apiLog("[HTTP] 流片段未解析出正文，原始片段=\n" + TrimUniversalApiRawForLog(data));
+								}
+							}
+							catch (Exception ex)
+							{
+								Exception parseEx = ex;
+								streamParseException = parseEx;
+								apiLog("[HTTP] 流解析异常: " + parseEx + "\n原始行=\n" + TrimUniversalApiRawForLog(line));
+							}
+						}
+					}
+					string raw = fullContent.ToString();
+					apiCallResult.ResponseBody = rawStreamSample.ToString().TrimEnd();
+					apiLog("[HTTP] 流式解析内容=\n" + raw);
+					if (string.IsNullOrWhiteSpace(raw))
+					{
+						apiLog("[HTTP] 流式解析为空，原始响应片段样本=\n" + TrimUniversalApiRawForLog(rawStreamSample.ToString()));
+					}
+					if (SaveRuntimeGuard.IsStale(runtimeGeneration, "universal_api_stream_complete:" + eventLogSource))
+					{
+						apiCallResult.ErrorMessage = SaveRuntimeGuard.BuildStaleRequestErrorText();
+						return apiCallResult;
+					}
+					apiCallResult.Content = CleanAIResponse(raw);
+					if (string.IsNullOrWhiteSpace(apiCallResult.Content))
+					{
+						string reason = streamParseException == null ? "API流式响应解析失败：未解析出模型回复。" : ("API流式响应解析失败：" + streamParseException.Message);
+						apiCallResult.ErrorMessage = LlmRetryPrompt.BuildFailureDetail(reason, apiCallResult.Content, apiCallResult.ResponseBody);
+						return apiCallResult;
+					}
+					apiCallResult.Success = true;
+					if (!skipTokenStatsLog)
+					{
+						Logger.RecordTokenStats(Logger.EstimateTokensFromMessages(tokenStatsMessages), Logger.EstimateTokens(apiCallResult.Content), tokenStatsMessages, "[UNIVERSAL API HTTP]\nroute=" + resolvedRoute + "\nmodel=" + modelName + "\ncontrol_mode=" + thinkingMode + "\nai_response=\n" + (apiCallResult.Content ?? "") + "\nraw_response_sample=\n" + TrimUniversalApiRawForLog(rawStreamSample.ToString()), "universal_api", requestBodyForTokenStats);
+					}
+					return apiCallResult;
+				}
+				finally
+				{
+					((IDisposable)response)?.Dispose();
 				}
 			}
-			apiLog("[Gateway] status=" + (apiCallResult.StatusCode?.ToString(CultureInfo.InvariantCulture) ?? "unknown")
-				+ " success=" + apiCallResult.Success
-				+ " error=" + (apiCallResult.ErrorMessage ?? string.Empty)
-				+ " contentChars=" + (apiCallResult.Content ?? string.Empty).Length.ToString(CultureInfo.InvariantCulture));
-			return apiCallResult;
+			finally
+			{
+				((IDisposable)request)?.Dispose();
+			}
 		}
-		catch (Exception exception)
+		catch (Exception ex)
 		{
-			apiLog("[ERROR] CallUniversalApi Gateway 异常: " + exception);
-			apiCallResult.ErrorMessage = LlmRetryPrompt.BuildFailureDetail(
-				exception.Message,
-				apiCallResult.Content,
-				apiCallResult.ResponseBody);
+			Exception ex2 = ex;
+			apiLog("[ERROR] CallUniversalApi 异常: " + ex2.ToString());
+			apiCallResult.ErrorMessage = LlmRetryPrompt.BuildFailureDetail(ex2.Message, apiCallResult.Content, apiCallResult.ResponseBody);
 			return apiCallResult;
 		}
 	}
@@ -35018,7 +34745,7 @@ public partial class MyBehavior : CampaignBehaviorBase
 				LlmRetryPrompt.ShowFailurePopup((source ?? "ExternalAuxiliary") + " 失败", LlmRetryPrompt.BuildFailureDetail("找不到 MyBehavior，无法调用辅助模型。", ""));
 				return "";
 			}
-			ApiCallResult apiCallResult = await behavior.CallAuxiliaryGatewayDetailed(sys, user, source, 0, forceThinkingDisabled: true);
+			ApiCallResult apiCallResult = await behavior.CallUniversalApiDetailed(sys, user, logToEventLogs: false, eventLogSource: source, route: UniversalApiRoute.Auxiliary, streamResponse: false, forceThinkingDisabled: true);
 			if (apiCallResult.Success)
 			{
 				return apiCallResult.Content ?? "";
@@ -35048,6 +34775,800 @@ public partial class MyBehavior : CampaignBehaviorBase
 		return text.Trim();
 	}
 
+	private static string StripDuelActionTags(string text)
+	{
+		string text2 = text ?? "";
+		text2 = Regex.Replace(text2, "\\[ACTION:DUEL\\]", "", RegexOptions.IgnoreCase);
+		text2 = Regex.Replace(text2, "\\[ACTION:DUEL_STAKE[^\\]]*\\]", "", RegexOptions.IgnoreCase);
+		text2 = Regex.Replace(text2, "\\[ACTION:DUEL_LINE_WIN:[^\\]]*\\]", "", RegexOptions.IgnoreCase);
+		text2 = Regex.Replace(text2, "\\[ACTION:DUEL_LINE_LOSE:[^\\]]*\\]", "", RegexOptions.IgnoreCase);
+		return text2.Trim();
+	}
+
+	private static string BuildPostprocessRuleText(IEnumerable<PostprocessRuleEntry> entries)
+	{
+		StringBuilder stringBuilder = new StringBuilder();
+		foreach (PostprocessRuleEntry entry in entries ?? new List<PostprocessRuleEntry>())
+		{
+			string text = (entry?.Tag ?? "").Trim();
+			string text2 = (entry?.Description ?? "").Trim();
+			if (!string.IsNullOrWhiteSpace(text))
+			{
+				stringBuilder.AppendLine(string.IsNullOrWhiteSpace(text2) ? text : (text + "：" + text2));
+			}
+		}
+		return stringBuilder.ToString().TrimEnd();
+	}
+
+	private static string BuildDuelPostprocessItemList(List<RewardSystemBehavior.DuelStakeOption> options)
+	{
+		if (options == null || options.Count <= 0)
+		{
+			return "（无）";
+		}
+		StringBuilder stringBuilder = new StringBuilder();
+		List<RewardSystemBehavior.DuelStakeOption> list = options.Where((RewardSystemBehavior.DuelStakeOption x) => x != null && !x.IsPrivateEquipment).ToList();
+		List<RewardSystemBehavior.DuelStakeOption> list2 = options.Where((RewardSystemBehavior.DuelStakeOption x) => x != null && x.IsPrivateEquipment).ToList();
+		if (list.Count > 0)
+		{
+			stringBuilder.AppendLine("库存物品：");
+			foreach (RewardSystemBehavior.DuelStakeOption duelStakeOption in list)
+			{
+				stringBuilder.Append(duelStakeOption.Name ?? "未知物品")
+					.Append(" x")
+					.Append(System.Math.Max(1, duelStakeOption.Count))
+					.Append(" | guidePrice=")
+					.Append(System.Math.Max(1, duelStakeOption.GuidePrice))
+					.AppendLine();
+			}
+		}
+		if (list2.Count > 0)
+		{
+			stringBuilder.AppendLine("私人装备：");
+			foreach (RewardSystemBehavior.DuelStakeOption duelStakeOption2 in list2)
+			{
+				stringBuilder.Append(duelStakeOption2.Name ?? "未知物品")
+					.Append(" x")
+					.Append(System.Math.Max(1, duelStakeOption2.Count))
+					.Append(" | guidePrice=")
+					.Append(System.Math.Max(1, duelStakeOption2.GuidePrice))
+					.AppendLine();
+			}
+		}
+		return stringBuilder.ToString().TrimEnd();
+	}
+
+	private static RewardSystemBehavior.DuelStakeOption FindDuelStakeOptionByToken(List<RewardSystemBehavior.DuelStakeOption> options, string token)
+	{
+		if (options == null || options.Count == 0 || string.IsNullOrWhiteSpace(token))
+		{
+			return null;
+		}
+		string text = token.Trim();
+		RewardSystemBehavior.DuelStakeOption duelStakeOption = options.FirstOrDefault((RewardSystemBehavior.DuelStakeOption x) => x != null && string.Equals((x.Name ?? "").Trim(), text, StringComparison.OrdinalIgnoreCase));
+		if (duelStakeOption != null)
+		{
+			return duelStakeOption;
+		}
+		List<RewardSystemBehavior.DuelStakeOption> list3 = options.Where((RewardSystemBehavior.DuelStakeOption x) => x != null && !string.IsNullOrWhiteSpace(x.Name) && x.Name.IndexOf(text, StringComparison.OrdinalIgnoreCase) >= 0).ToList();
+		if (list3.Count == 1)
+		{
+			return list3[0];
+		}
+		list3 = options.Where((RewardSystemBehavior.DuelStakeOption x) => x != null && text.IndexOf(x.Name ?? "", StringComparison.OrdinalIgnoreCase) >= 0).ToList();
+		if (list3.Count == 1)
+		{
+			return list3[0];
+		}
+		return null;
+	}
+
+	private static string TranslateDuelStakeItemNames(string text, List<RewardSystemBehavior.DuelStakeOption> options)
+	{
+		if (string.IsNullOrWhiteSpace(text) || options == null || options.Count == 0)
+		{
+			return text ?? "";
+		}
+		return Regex.Replace(text, "\\[ACTION:(DUEL_STAKE(?:_(?:NPC|PLAYER))?_ITEM):([^\\]\\r\\n:]+):(\\d+)\\]", delegate(Match m)
+		{
+			string value = m.Groups[1].Value;
+			string token = m.Groups[2].Value;
+			if (!int.TryParse(m.Groups[3].Value, out var result3) || result3 <= 0)
+			{
+				return "";
+			}
+			RewardSystemBehavior.DuelStakeOption duelStakeOption2 = FindDuelStakeOptionByToken(options, token);
+			if (duelStakeOption2 == null || string.IsNullOrWhiteSpace(duelStakeOption2.Name))
+			{
+				return "[ACTION:" + value + ":" + token.Trim() + ":" + result3 + "]";
+			}
+			result3 = System.Math.Min(System.Math.Max(1, result3), System.Math.Max(1, duelStakeOption2.Count));
+			return "[ACTION:" + value + ":" + duelStakeOption2.Name.Trim() + ":" + result3 + "]";
+		}, RegexOptions.IgnoreCase);
+	}
+
+	private static string NormalizeDuelPostprocessTags(string raw, List<RewardSystemBehavior.DuelStakeOption> options, Hero targetHero = null)
+	{
+		List<string> list = new List<string>();
+		HashSet<string> hashSet = new HashSet<string>(System.StringComparer.OrdinalIgnoreCase);
+		string text = "";
+		foreach (Match item in Regex.Matches(raw ?? "", "\\[(?:ACTION:[^\\]\\r\\n]*|AD:[^\\]\\r\\n]*|ADP:[^\\]\\r\\n]*)\\]", RegexOptions.IgnoreCase))
+		{
+			string text2 = (item?.Value ?? "").Trim();
+			if (string.IsNullOrWhiteSpace(text2))
+			{
+				continue;
+			}
+			if (text2.StartsWith("[ACTION:MOOD:", System.StringComparison.OrdinalIgnoreCase))
+			{
+				text = text2;
+				continue;
+			}
+			if (hashSet.Add(text2))
+			{
+				list.Add(text2);
+			}
+		}
+		if (list.Any((string x) => string.Equals((x ?? "").Trim(), "[ACTION:DUEL]", StringComparison.OrdinalIgnoreCase)))
+		{
+			try
+			{
+				string deferredAdTag = list.LastOrDefault((string x) => (x ?? "").Trim().StartsWith("[AD:", StringComparison.OrdinalIgnoreCase));
+				if (!string.IsNullOrWhiteSpace(deferredAdTag))
+				{
+					Match match = Regex.Match(deferredAdTag, "\\[AD:(\\d+):(\\d+):P:([^\\]]*)\\]", RegexOptions.IgnoreCase);
+					if (match.Success && int.TryParse(match.Groups[1].Value, out var result) && int.TryParse(match.Groups[2].Value, out var result2) && result > 0)
+					{
+						DuelBehavior.CachePendingDuelDebtTag(targetHero, result, result2, (match.Groups[3].Value ?? "").Trim());
+					}
+				}
+			}
+			catch
+			{
+			}
+			list = list.Where((string x) => !((x ?? "").Trim().StartsWith("[AD:", StringComparison.OrdinalIgnoreCase) || (x ?? "").Trim().StartsWith("[ADP:", StringComparison.OrdinalIgnoreCase))).ToList();
+		}
+		if (string.IsNullOrWhiteSpace(text))
+		{
+			text = AIConfigHandler.ActionPostprocessFallbackMoodTag;
+		}
+		string text3 = string.Join("\n", list.Concat(new string[1] { text }).Where((string x) => !string.IsNullOrWhiteSpace(x))).Trim();
+		return TranslateDuelStakeItemNames(text3, options).Trim();
+	}
+
+	private static string StripRewardActionTags(string text)
+	{
+		string text2 = text ?? "";
+		text2 = GiveAssetTagCodec.StripTags(text2);
+		text2 = Regex.Replace(text2, "\\[AD:[^\\]]*\\]", "", RegexOptions.IgnoreCase);
+		text2 = Regex.Replace(text2, "\\[ADP:[^\\]]*\\]", "", RegexOptions.IgnoreCase);
+		return text2.Trim();
+	}
+
+	private static string StripKingdomServiceActionTags(string text)
+	{
+		string text2 = text ?? "";
+		text2 = Regex.Replace(text2, "\\[ACTION:KINGDOM_SERVICE:[^\\]]*\\]", "", RegexOptions.IgnoreCase);
+		text2 = Regex.Replace(text2, "\\[A:(?:P_J_K_[MV]|P_L_K)\\]", "", RegexOptions.IgnoreCase);
+		return text2.Trim();
+	}
+
+	private static string BuildRewardPostprocessItemList(List<RewardSystemBehavior.RewardItemInfo> options, int gold, List<RewardSystemBehavior.RewardItemInfo> allOptions = null)
+	{
+		StringBuilder stringBuilder = new StringBuilder();
+		stringBuilder.Append("第纳尔: ").Append(Math.Max(0, gold)).AppendLine();
+		if (options == null || options.Count <= 0)
+		{
+			stringBuilder.Append("全部可转物品总值: ").Append(RewardSystemBehavior.CalculateRewardItemsTotalValueForExternal(allOptions)).AppendLine(" 第纳尔（不含第纳尔）");
+			return stringBuilder.ToString().TrimEnd();
+		}
+		List<RewardSystemBehavior.RewardItemInfo> list = options.Where((RewardSystemBehavior.RewardItemInfo x) => x != null && !x.IsPrivateEquipment).ToList();
+		List<RewardSystemBehavior.RewardItemInfo> list2 = options.Where((RewardSystemBehavior.RewardItemInfo x) => x != null && x.IsPrivateEquipment).ToList();
+		if (list.Count > 0)
+		{
+			stringBuilder.AppendLine("库存物品：");
+			foreach (RewardSystemBehavior.RewardItemInfo item in list)
+			{
+				stringBuilder.Append(item.Name ?? item.PromptStringId ?? item.StringId ?? "未知物品")
+					.Append(string.IsNullOrWhiteSpace(item.PromptStringId) || string.Equals(item.PromptStringId, item.StringId, StringComparison.OrdinalIgnoreCase) ? "" : (" | id=" + item.PromptStringId))
+					.Append(" | type=")
+					.Append(RewardSystemBehavior.GetItemPromptTypeLabelForExternal(item.Item))
+					.Append(" x")
+					.Append(Math.Max(1, item.Count))
+					.Append(" | guidePrice=")
+					.Append(Math.Max(1, item.GuidePrice))
+					.AppendLine();
+			}
+		}
+		if (list2.Count > 0)
+		{
+			stringBuilder.AppendLine("私人战斗装备：");
+			foreach (RewardSystemBehavior.RewardItemInfo item2 in list2)
+			{
+				stringBuilder.Append(item2.Name ?? item2.PromptStringId ?? item2.StringId ?? "未知物品")
+					.Append(" | type=")
+					.Append(RewardSystemBehavior.GetItemPromptTypeLabelForExternal(item2.Item))
+					.Append(" x")
+					.Append(Math.Max(1, item2.Count))
+					.Append(" | guidePrice=")
+					.Append(Math.Max(1, item2.GuidePrice))
+					.AppendLine();
+			}
+		}
+		stringBuilder.Append("全部可转物品总值: ").Append(RewardSystemBehavior.CalculateRewardItemsTotalValueForExternal(allOptions ?? options)).AppendLine(" 第纳尔（不含第纳尔）");
+		return stringBuilder.ToString().TrimEnd();
+	}
+
+	private static RewardSystemBehavior.RewardItemInfo FindRewardItemByToken(List<RewardSystemBehavior.RewardItemInfo> options, string token)
+	{
+		if (options == null || options.Count == 0 || string.IsNullOrWhiteSpace(token))
+		{
+			return null;
+		}
+		string text = token.Trim();
+		static string normalizeLooseName(string value)
+		{
+			if (string.IsNullOrWhiteSpace(value))
+			{
+				return "";
+			}
+			return Regex.Replace(value.Trim(), "[\\s\\u3000]+", "").Replace("的", "");
+		}
+		RewardSystemBehavior.RewardItemInfo rewardItemInfo = options.FirstOrDefault((RewardSystemBehavior.RewardItemInfo x) => x != null && string.Equals((x.Name ?? "").Trim(), text, StringComparison.OrdinalIgnoreCase));
+		if (rewardItemInfo != null)
+		{
+			return rewardItemInfo;
+		}
+		rewardItemInfo = options.FirstOrDefault((RewardSystemBehavior.RewardItemInfo x) => x != null && string.Equals((x.PromptStringId ?? "").Trim(), text, StringComparison.OrdinalIgnoreCase));
+		if (rewardItemInfo != null)
+		{
+			return rewardItemInfo;
+		}
+		rewardItemInfo = options.FirstOrDefault((RewardSystemBehavior.RewardItemInfo x) => x != null && string.Equals((x.StringId ?? "").Trim(), text, StringComparison.OrdinalIgnoreCase));
+		if (rewardItemInfo != null)
+		{
+			return rewardItemInfo;
+		}
+		string looseText = normalizeLooseName(text);
+		if (!string.IsNullOrWhiteSpace(looseText))
+		{
+			List<RewardSystemBehavior.RewardItemInfo> looseMatches = options.Where((RewardSystemBehavior.RewardItemInfo x) => x != null && string.Equals(normalizeLooseName(x.Name ?? ""), looseText, StringComparison.OrdinalIgnoreCase)).ToList();
+			if (looseMatches.Count == 1)
+			{
+				return looseMatches[0];
+			}
+		}
+		List<RewardSystemBehavior.RewardItemInfo> list = options.Where((RewardSystemBehavior.RewardItemInfo x) => x != null && !string.IsNullOrWhiteSpace(x.Name) && x.Name.IndexOf(text, StringComparison.OrdinalIgnoreCase) >= 0).ToList();
+		if (list.Count == 1)
+		{
+			return list[0];
+		}
+		list = options.Where((RewardSystemBehavior.RewardItemInfo x) => x != null && !string.IsNullOrWhiteSpace(text) && text.IndexOf(x.Name ?? "", StringComparison.OrdinalIgnoreCase) >= 0).ToList();
+		if (list.Count == 1)
+		{
+			return list[0];
+		}
+		return null;
+	}
+
+	private static string TranslateRewardItemIndexes(string text, List<RewardSystemBehavior.RewardItemInfo> options)
+	{
+		if (string.IsNullOrWhiteSpace(text))
+		{
+			return text ?? "";
+		}
+		static string getItemDisplayName(RewardSystemBehavior.RewardItemInfo item)
+		{
+			string text4 = item?.Name;
+			if (string.IsNullOrWhiteSpace(text4))
+			{
+				text4 = item?.Item?.Name?.ToString();
+			}
+			return text4 ?? "";
+		}
+		static void logRewardItemTranslation(string source, string token, RewardSystemBehavior.RewardItemInfo item, string actionKey)
+		{
+			try
+			{
+				Logger.Log("Logic", "[RewardPostprocess] item_translate source=" + (source ?? "") + " token=" + (token ?? "") + " matchedName=" + (item?.Name ?? "") + " stringId=" + (item?.StringId ?? "") + " promptId=" + (item?.PromptStringId ?? "") + " modifierId=" + (item?.ModifierStringId ?? "") + " actionKey=" + (actionKey ?? ""));
+			}
+			catch
+			{
+			}
+		}
+		return GiveAssetTagCodec.ReplaceTags(text, delegate(GiveAssetTag tag)
+		{
+			string token = (tag.AssetToken ?? "").Trim();
+			bool isAll = TransferQuantitySpec.IsAllValue(tag.QuantityToken);
+			int result3 = 0;
+			if (TransferQuantitySpec.IsAllValue(token) && !isAll)
+			{
+				return "";
+			}
+			if (!isAll && (!int.TryParse(tag.QuantityToken, out result3) || result3 <= 0))
+			{
+				return "";
+			}
+			if (options != null && int.TryParse(token, out var itemIndex) && itemIndex > 0 && itemIndex <= options.Count)
+			{
+				RewardSystemBehavior.RewardItemInfo rewardItemInfo = options[itemIndex - 1];
+				string text3 = getItemDisplayName(rewardItemInfo);
+				logRewardItemTranslation("index", token, rewardItemInfo, text3);
+				if (string.IsNullOrWhiteSpace(text3))
+				{
+					return "";
+				}
+				token = text3.Trim();
+			}
+			return isAll ? ("[ACTION:GIVE_ASSET:" + token + ":ALL]") : ("[ACTION:GIVE_ASSET:" + token + ":" + result3 + "]");
+		});
+	}
+
+	private static string NormalizeRewardPostprocessTags(string raw, List<RewardSystemBehavior.RewardItemInfo> options, List<RewardSystemBehavior.RewardItemInfo> allOptions = null)
+	{
+		List<string> list = new List<string>();
+		HashSet<string> hashSet = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+		string text = "";
+		List<string> extractedTags = GiveAssetTagCodec.Extract(raw).Select((GiveAssetTag x) => x.RawTag).ToList();
+		string rawWithoutGiveAssetTags = GiveAssetTagCodec.StripTags(raw);
+		foreach (Match item in Regex.Matches(rawWithoutGiveAssetTags, "\\[(?:ACTION:[^\\]\\r\\n]*|AD:[^\\]\\r\\n]*|ADP:[^\\]\\r\\n]*)\\]", RegexOptions.IgnoreCase))
+		{
+			extractedTags.Add(item?.Value ?? "");
+		}
+		foreach (string extractedTag in extractedTags)
+		{
+			string text2 = (extractedTag ?? "").Trim();
+			if (string.IsNullOrWhiteSpace(text2))
+			{
+				continue;
+			}
+			if (text2.StartsWith("[ACTION:MOOD:", StringComparison.OrdinalIgnoreCase))
+			{
+				text = text2;
+				continue;
+			}
+			if (!text2.StartsWith("[ACTION:GIVE_ASSET:", StringComparison.OrdinalIgnoreCase) && !text2.StartsWith("[AD:", StringComparison.OrdinalIgnoreCase) && !text2.StartsWith("[ADP:", StringComparison.OrdinalIgnoreCase))
+			{
+				continue;
+			}
+			if ((text2.StartsWith("[AD:", StringComparison.OrdinalIgnoreCase) || text2.StartsWith("[ADP:", StringComparison.OrdinalIgnoreCase))
+				&& !RewardSystemBehavior.IsCanonicalDebtActionTagForExternal(text2))
+			{
+				continue;
+			}
+			if (GiveAssetTagCodec.TryParseWhole(text2, out GiveAssetTag giveAssetTag))
+			{
+				string assetToken = (giveAssetTag.AssetToken ?? "").Trim();
+				string quantityToken = (giveAssetTag.QuantityToken ?? "").Trim();
+				if (TransferQuantitySpec.IsAllValue(assetToken))
+				{
+					continue;
+				}
+				if (RewardSystemBehavior.IsGoldAssetTokenForExternal(assetToken))
+				{
+					if (!int.TryParse(quantityToken, out var goldAmount) || goldAmount <= 0)
+					{
+						continue;
+					}
+					text2 = "[ACTION:GIVE_ASSET:GOLD:" + goldAmount + "]";
+				}
+				else
+				{
+					RewardSystemBehavior.RewardItemInfo rewardItem = FindRewardItemByToken(options, assetToken);
+					if (rewardItem == null && !ReferenceEquals(allOptions, options))
+					{
+						rewardItem = FindRewardItemByToken(allOptions, assetToken);
+					}
+					bool isItemIndex = int.TryParse(assetToken, out var itemIndex) && itemIndex > 0 && itemIndex <= (options?.Count ?? 0);
+					if (TransferQuantitySpec.IsAllValue(quantityToken))
+					{
+						if (!isItemIndex && (rewardItem == null || rewardItem.Item == null || rewardItem.Count <= 0))
+						{
+							continue;
+						}
+						text2 = "[ACTION:GIVE_ASSET:" + assetToken + ":ALL]";
+					}
+			else if (int.TryParse(quantityToken, out var generatedItemAmount)
+				&& generatedItemAmount > 0
+				&& (isItemIndex || RewardSystemBehavior.IsValidGeneratedRpAssetNameForExternal(assetToken)))
+			{
+				text2 = "[ACTION:GIVE_ASSET:" + assetToken + ":" + generatedItemAmount + "]";
+				Logger.Log("Logic", "[RewardPostprocess] GIVE_ASSET literal accepted source=free asset=" + assetToken + " amount=" + generatedItemAmount + " indexed=" + isItemIndex);
+			}
+			else
+			{
+				Logger.Log("Logic", "[RewardPostprocess] GIVE_ASSET literal rejected source=free asset=" + assetToken + " quantity=" + quantityToken + " indexed=" + isItemIndex);
+				continue;
+			}
+				}
+			}
+			if (hashSet.Add(text2))
+			{
+				list.Add(text2);
+			}
+		}
+		if (string.IsNullOrWhiteSpace(text))
+		{
+			text = AIConfigHandler.ActionPostprocessFallbackMoodTag;
+		}
+		string text3 = string.Join("\n", list.Concat(new string[1] { text }).Where((string x) => !string.IsNullOrWhiteSpace(x))).Trim();
+		text3 = TranslateRewardItemIndexes(text3, options);
+		return text3.Trim();
+	}
+
+	private static List<PostprocessRuleEntry> MergePostprocessRules(params List<PostprocessRuleEntry>[] ruleSets)
+	{
+		List<PostprocessRuleEntry> list = new List<PostprocessRuleEntry>();
+		HashSet<string> hashSet = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+		if (ruleSets == null)
+		{
+			return list;
+		}
+		foreach (List<PostprocessRuleEntry> ruleSet in ruleSets)
+		{
+			if (ruleSet == null)
+			{
+				continue;
+			}
+			foreach (PostprocessRuleEntry item in ruleSet)
+			{
+				string text = item?.Tag ?? "";
+				if (!string.IsNullOrWhiteSpace(text) && hashSet.Add(text))
+				{
+					list.Add(item);
+				}
+			}
+		}
+		return list;
+	}
+
+	private static string NormalizeKingdomServicePostprocessTags(string raw, List<PostprocessRuleEntry> rules)
+	{
+		HashSet<string> hashSet = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+		foreach (PostprocessRuleEntry rule in rules ?? new List<PostprocessRuleEntry>())
+		{
+			string text2 = (rule?.Tag ?? "").Trim();
+			if (!string.IsNullOrWhiteSpace(text2))
+			{
+				hashSet.Add(text2);
+			}
+		}
+		List<string> list = new List<string>();
+		HashSet<string> hashSet2 = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+		string text = "";
+		foreach (Match item in Regex.Matches(raw ?? "", "\\[(?:ACTION:[^\\]\\r\\n]*|A:(?:P_J_K_[MV]|P_L_K))\\]", RegexOptions.IgnoreCase))
+		{
+			string text3 = (item?.Value ?? "").Trim();
+			if (string.IsNullOrWhiteSpace(text3))
+			{
+				continue;
+			}
+			if (text3.StartsWith("[ACTION:MOOD:", StringComparison.OrdinalIgnoreCase))
+			{
+				text = text3;
+				continue;
+			}
+			bool allowed = hashSet.Contains(text3);
+			if (!allowed)
+			{
+				Match legacyJoinMatch = Regex.Match(text3, "^\\[ACTION:KINGDOM_SERVICE:(MERCENARY|VASSAL|LEAVE):[^\\]]+\\]$", RegexOptions.IgnoreCase);
+				if (legacyJoinMatch.Success)
+				{
+					string serviceType = (legacyJoinMatch.Groups[1].Value ?? "").Trim();
+					allowed = (serviceType.Equals("MERCENARY", StringComparison.OrdinalIgnoreCase) && hashSet.Contains("[A:P_J_K_M]"))
+						|| (serviceType.Equals("VASSAL", StringComparison.OrdinalIgnoreCase) && hashSet.Contains("[A:P_J_K_V]"))
+						|| (serviceType.Equals("LEAVE", StringComparison.OrdinalIgnoreCase) && hashSet.Contains("[A:P_L_K]"));
+				}
+			}
+			if (!allowed)
+			{
+				continue;
+			}
+			if (hashSet2.Add(text3))
+			{
+				list.Add(text3);
+			}
+		}
+		if (string.IsNullOrWhiteSpace(text))
+		{
+			text = AIConfigHandler.ActionPostprocessFallbackMoodTag;
+		}
+		return string.Join("\n", list.Concat(new string[1] { text }).Where((string x) => !string.IsNullOrWhiteSpace(x))).Trim();
+	}
+
+	private static string MergeNormalizedPostprocessBlocks(params string[] blocks)
+	{
+		List<string> list = new List<string>();
+		HashSet<string> hashSet = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+		string text = "";
+		foreach (string block in blocks ?? Array.Empty<string>())
+		{
+			if (string.IsNullOrWhiteSpace(block))
+			{
+				continue;
+			}
+			string[] array = block.Split(new char[2] { '\r', '\n' }, StringSplitOptions.RemoveEmptyEntries);
+			foreach (string line in array)
+			{
+				string text2 = (line ?? "").Trim();
+				if (string.IsNullOrWhiteSpace(text2))
+				{
+					continue;
+				}
+				if (text2.StartsWith("[ACTION:MOOD:", StringComparison.OrdinalIgnoreCase))
+				{
+					if (string.IsNullOrWhiteSpace(text))
+					{
+						text = text2;
+					}
+					continue;
+				}
+				if (hashSet.Add(text2))
+				{
+					list.Add(text2);
+				}
+			}
+		}
+		if (string.IsNullOrWhiteSpace(text))
+		{
+			text = AIConfigHandler.ActionPostprocessFallbackMoodTag;
+		}
+		return string.Join("\n", list.Concat(new string[1] { text }).Where((string x) => !string.IsNullOrWhiteSpace(x))).Trim();
+	}
+
+	private string TryRunTransactionActionPostprocess(Hero targetHero, CharacterObject targetCharacter, string extraFact, string replyText, List<PostprocessRuleEntry> rules, string logPrefix)
+	{
+		string text = StripRewardActionTags(replyText);
+		if (string.Equals(logPrefix, "LoanPostprocess", StringComparison.OrdinalIgnoreCase) && AIConfigHandler.IsPlayerPartyTradeLimitedTarget(targetHero))
+		{
+			if (Regex.Matches(text ?? "", "\\[ACTION:MOOD:[^\\]]+\\]", RegexOptions.IgnoreCase).Count <= 0 && !string.IsNullOrWhiteSpace(AIConfigHandler.ActionPostprocessFallbackMoodTag))
+			{
+				text = (text + "\n" + AIConfigHandler.ActionPostprocessFallbackMoodTag).Trim();
+			}
+			return text.Trim();
+		}
+		if ((targetHero == null && targetCharacter == null) || !AIConfigHandler.CanUseAuxiliaryActionPostprocess())
+		{
+			if (Regex.Matches(text ?? "", "\\[ACTION:MOOD:[^\\]]+\\]", RegexOptions.IgnoreCase).Count <= 0 && !string.IsNullOrWhiteSpace(AIConfigHandler.ActionPostprocessFallbackMoodTag))
+			{
+				text = (text + "\n" + AIConfigHandler.ActionPostprocessFallbackMoodTag).Trim();
+			}
+			return text.Trim();
+		}
+		string actionPostprocessSystemPrompt = AIConfigHandler.ActionPostprocessSystemPrompt;
+		string actionPostprocessUserPromptTemplate = AIConfigHandler.ActionPostprocessUserPromptTemplate;
+		if (string.IsNullOrWhiteSpace(actionPostprocessSystemPrompt) || string.IsNullOrWhiteSpace(actionPostprocessUserPromptTemplate))
+		{
+			return (text + "\n" + AIConfigHandler.ActionPostprocessFallbackMoodTag).Trim();
+		}
+		List<PostprocessRuleEntry> royalRules = AIConfigHandler.BuildRuntimeRoyalPostprocessRulesForExternal(targetHero ?? targetCharacter?.HeroObject) ?? new List<PostprocessRuleEntry>();
+		List<PostprocessRuleEntry> actionRules = MergePostprocessRules(rules, royalRules);
+		if (actionRules == null || actionRules.Count == 0)
+		{
+			if (Regex.Matches(text ?? "", "\\[ACTION:MOOD:[^\\]]+\\]", RegexOptions.IgnoreCase).Count <= 0 && !string.IsNullOrWhiteSpace(AIConfigHandler.ActionPostprocessFallbackMoodTag))
+			{
+				text = (text + "\n" + AIConfigHandler.ActionPostprocessFallbackMoodTag).Trim();
+			}
+			return text.Trim();
+		}
+		string text7 = targetHero?.Name?.ToString() ?? targetCharacter?.Name?.ToString() ?? "NPC";
+		string text2 = NormalizePlayerNameForPostprocess(BuildGuardrailSemanticContext(targetHero, extraFact), text7);
+		if (string.IsNullOrWhiteSpace(text2))
+		{
+			text2 = string.IsNullOrWhiteSpace(extraFact) ? "（无）" : NormalizePlayerNameForPostprocess(extraFact.Trim(), text7);
+		}
+		string text3 = BuildPostprocessRuleText(actionRules);
+		string text4 = BuildPostprocessRuleText(AIConfigHandler.ActionPostprocessMoodRules);
+		string text5 = "（无）";
+		string text6 = "（无）";
+		string text12 = "（无）";
+		List<RewardSystemBehavior.RewardItemInfo> list = null;
+		List<RewardSystemBehavior.RewardItemInfo> allList = null;
+		MentionedWorldEntities promptListMentions = AIConfigHandler.GetLatestAuxiliaryMentionedEntitiesForExternal();
+		int promptListMax = PromptListRetrievalService.GetMaxCandidateCount();
+		if (RewardSystemBehavior.Instance != null)
+		{
+			try
+			{
+				text6 = RewardSystemBehavior.Instance.BuildVisibleEquipmentPostprocessListForAI(Hero.MainHero, promptListMentions, promptListMax);
+			}
+			catch
+			{
+				text6 = "赤身裸体";
+			}
+			try
+			{
+				if (targetHero != null)
+				{
+					if (!PromptListRetrievalService.TryGetRewardItemSnapshot(PromptListRetrievalService.NpcRewardItemsAllSnapshotScope, targetHero, targetCharacter, -1, out allList))
+					{
+						allList = RewardSystemBehavior.Instance.BuildHeroRewardPostprocessItems(targetHero);
+						PromptListRetrievalService.PublishRewardItemSnapshot(PromptListRetrievalService.NpcRewardItemsAllSnapshotScope, targetHero, targetCharacter, -1, allList);
+					}
+					if (!PromptListRetrievalService.TryGetRewardItemSnapshot(PromptListRetrievalService.NpcRewardItemsSnapshotScope, targetHero, targetCharacter, -1, out list))
+					{
+						list = PromptListRetrievalService.FilterNpcRewardItemsForAssetTransfer(allList, promptListMentions, promptListMax);
+					}
+					text5 = BuildRewardPostprocessItemList(list, RewardSystemBehavior.Instance.GetRewardPostprocessGoldForHero(targetHero), allList);
+					text12 = NormalizePlayerNameForPostprocess(RewardSystemBehavior.Instance.BuildDebtHintForAI(targetHero), text7);
+				}
+				else if (targetCharacter != null)
+				{
+					if (!PromptListRetrievalService.TryGetRewardItemSnapshot(PromptListRetrievalService.SettlementMerchantItemsAllSnapshotScope, null, targetCharacter, -1, out allList))
+					{
+						allList = RewardSystemBehavior.Instance.BuildSettlementMerchantPostprocessItems(targetCharacter);
+						PromptListRetrievalService.PublishRewardItemSnapshot(PromptListRetrievalService.SettlementMerchantItemsAllSnapshotScope, null, targetCharacter, -1, allList);
+					}
+					if (!PromptListRetrievalService.TryGetRewardItemSnapshot(PromptListRetrievalService.SettlementMerchantItemsSnapshotScope, null, targetCharacter, -1, out list))
+					{
+						list = PromptListRetrievalService.FilterRewardItems(allList, promptListMentions, promptListMax);
+					}
+					int num = RewardSystemBehavior.Instance.GetSettlementMarketTradeGold(Settlement.CurrentSettlement);
+					text5 = BuildRewardPostprocessItemList(list, num, allList);
+					text12 = NormalizePlayerNameForPostprocess(RewardSystemBehavior.Instance.BuildSettlementMerchantDebtHintForAI(targetCharacter), text7);
+				}
+			}
+			catch
+			{
+				text5 = "（无）";
+				text12 = "（无）";
+				list = null;
+				allList = null;
+			}
+		}
+		string text8 = AIConfigHandler.BuildActionPostprocessSystemPrompt(text3, text4, text7, text5, text6, text12);
+		string text9 = AIConfigHandler.BuildActionPostprocessUserPrompt(actionPostprocessUserPromptTemplate, text3, text7, text2, AIConfigHandler.BuildActionPostprocessLatestReplyBlock(null, text, text7, text2), text5, text6, text12);
+		if (!AIConfigHandler.TryCallAuxiliaryActionPostprocess(text8, text9, 5000, 0f, out var content, out var error))
+		{
+			Logger.Log("Logic", "[" + logPrefix + "] 调用失败: " + error);
+			return (text + "\n" + AIConfigHandler.ActionPostprocessFallbackMoodTag).Trim();
+		}
+		string rewardTags = NormalizeRewardPostprocessTags(content, list, allList);
+		string royalTags = royalRules.Count > 0 ? NormalizeKingdomServicePostprocessTags(content, royalRules) : "";
+		string text10 = MergeNormalizedPostprocessBlocks(rewardTags, royalTags);
+		if (string.IsNullOrWhiteSpace(text10))
+		{
+			text10 = AIConfigHandler.ActionPostprocessFallbackMoodTag;
+		}
+		try
+		{
+			MarkWeeklyMemoryMaterialTriggerInternal(targetHero ?? targetCharacter?.HeroObject, "", text7, text10, -1, -1, -1, allList ?? list, null, null, null);
+		}
+		catch (Exception ex)
+		{
+			Logger.Log("EventWeeklyReport", "[WeeklyMemoryMaterial][WARN] direct_transaction_mark_failed npc=" + (targetHero?.StringId ?? targetCharacter?.StringId ?? "") + " error=" + ex.Message);
+		}
+		string text11 = (text + "\n" + text10).Trim();
+		Logger.Log("Logic", "[" + logPrefix + "] RAW=\n" + content + "\nFINAL=\n" + text11 + "\n");
+		return text11;
+	}
+
+	private string TryRunRewardActionPostprocess(Hero targetHero, CharacterObject targetCharacter, string extraFact, string replyText)
+	{
+		return TryRunTransactionActionPostprocess(targetHero, targetCharacter, extraFact, replyText, AIConfigHandler.RewardPostprocessRules, "RewardPostprocess");
+	}
+
+	private string TryRunLoanActionPostprocess(Hero targetHero, CharacterObject targetCharacter, string extraFact, string replyText)
+	{
+		return TryRunTransactionActionPostprocess(targetHero, targetCharacter, extraFact, replyText, AIConfigHandler.LoanPostprocessRules, "LoanPostprocess");
+	}
+
+	private string TryRunKingdomServiceActionPostprocess(Hero targetHero, string extraFact, string replyText)
+	{
+		string text = StripKingdomServiceActionTags(replyText);
+		if (targetHero == null || !AIConfigHandler.CanUseAuxiliaryActionPostprocess())
+		{
+			Logger.Log("Logic", "[KingdomServicePostprocess] skipped reason=" + ((targetHero == null) ? "targetHero_null" : "api_unavailable"));
+			if (Regex.Matches(text ?? "", "\\[ACTION:MOOD:[^\\]]+\\]", RegexOptions.IgnoreCase).Count <= 0 && !string.IsNullOrWhiteSpace(AIConfigHandler.ActionPostprocessFallbackMoodTag))
+			{
+				text = (text + "\n" + AIConfigHandler.ActionPostprocessFallbackMoodTag).Trim();
+			}
+			return text.Trim();
+		}
+		string actionPostprocessSystemPrompt = AIConfigHandler.ActionPostprocessSystemPrompt;
+		string actionPostprocessUserPromptTemplate = AIConfigHandler.ActionPostprocessUserPromptTemplate;
+		if (string.IsNullOrWhiteSpace(actionPostprocessSystemPrompt) || string.IsNullOrWhiteSpace(actionPostprocessUserPromptTemplate))
+		{
+			Logger.Log("Logic", "[KingdomServicePostprocess] skipped reason=template_missing");
+			return (text + "\n" + AIConfigHandler.ActionPostprocessFallbackMoodTag).Trim();
+		}
+		string text9 = targetHero?.Name?.ToString() ?? "NPC";
+		string text2 = NormalizePlayerNameForPostprocess(BuildGuardrailSemanticContext(targetHero, extraFact), text9);
+		if (string.IsNullOrWhiteSpace(text2))
+		{
+			text2 = string.IsNullOrWhiteSpace(extraFact) ? "（无）" : NormalizePlayerNameForPostprocess(extraFact.Trim(), text9);
+		}
+		List<PostprocessRuleEntry> royalRules = AIConfigHandler.BuildRuntimeRoyalPostprocessRulesForExternal(targetHero) ?? new List<PostprocessRuleEntry>();
+		List<PostprocessRuleEntry> list = MergePostprocessRules(AIConfigHandler.BuildRuntimeKingdomServicePostprocessRules() ?? new List<PostprocessRuleEntry>(), royalRules);
+		if (list.Count == 0)
+		{
+			Logger.Log("Logic", "[KingdomServicePostprocess] mood_only npc=" + (targetHero?.StringId ?? ""));
+		}
+		else
+		{
+			Logger.Log("Logic", "[KingdomServicePostprocess] start npc=" + (targetHero?.StringId ?? "") + " rules=" + string.Join(",", list.Select((PostprocessRuleEntry x) => x?.Tag ?? "").Where((string x) => !string.IsNullOrWhiteSpace(x))));
+		}
+		string text3 = BuildPostprocessRuleText(list);
+		string text4 = BuildPostprocessRuleText(AIConfigHandler.ActionPostprocessMoodRules);
+		string text5 = AIConfigHandler.BuildActionPostprocessSystemPrompt(text3, text4, text9);
+		string text6 = AIConfigHandler.BuildActionPostprocessUserPrompt(actionPostprocessUserPromptTemplate, text3, text9, text2, AIConfigHandler.BuildActionPostprocessLatestReplyBlock(null, text, text9, text2));
+		if (!AIConfigHandler.TryCallAuxiliaryActionPostprocess(text5, text6, 5000, 0f, out var content, out var error))
+		{
+			Logger.Log("Logic", "[KingdomServicePostprocess] 调用失败: " + error);
+			return (text + "\n" + AIConfigHandler.ActionPostprocessFallbackMoodTag).Trim();
+		}
+		string text7 = NormalizeKingdomServicePostprocessTags(content, list);
+		if (string.IsNullOrWhiteSpace(text7))
+		{
+			text7 = AIConfigHandler.ActionPostprocessFallbackMoodTag;
+		}
+		string text8 = (text + "\n" + text7).Trim();
+		Logger.Log("Logic", "[KingdomServicePostprocess] RAW=\n" + content + "\nFINAL=\n" + text8 + "\n");
+		return text8;
+	}
+
+	private string TryRunDuelActionPostprocess(Hero targetHero, string extraFact, string replyText, List<RewardSystemBehavior.DuelStakeOption> duelStakeOptions)
+	{
+		string text = StripDuelActionTags(replyText);
+		if (targetHero == null || !AIConfigHandler.CanUseAuxiliaryActionPostprocess())
+		{
+			if (Regex.Matches(text ?? "", "\\[ACTION:MOOD:[^\\]]+\\]", RegexOptions.IgnoreCase).Count <= 0 && !string.IsNullOrWhiteSpace(AIConfigHandler.ActionPostprocessFallbackMoodTag))
+			{
+				text = (text + "\n" + AIConfigHandler.ActionPostprocessFallbackMoodTag).Trim();
+			}
+			return text.Trim();
+		}
+		string actionPostprocessSystemPrompt = AIConfigHandler.ActionPostprocessSystemPrompt;
+		string actionPostprocessUserPromptTemplate = AIConfigHandler.ActionPostprocessUserPromptTemplate;
+		if (string.IsNullOrWhiteSpace(actionPostprocessSystemPrompt) || string.IsNullOrWhiteSpace(actionPostprocessUserPromptTemplate))
+		{
+			return (text + "\n" + AIConfigHandler.ActionPostprocessFallbackMoodTag).Trim();
+		}
+		string text11 = targetHero?.Name?.ToString() ?? "NPC";
+		List<PostprocessRuleEntry> royalRules = AIConfigHandler.BuildRuntimeRoyalPostprocessRulesForExternal(targetHero) ?? new List<PostprocessRuleEntry>();
+		List<PostprocessRuleEntry> actionRules = MergePostprocessRules(AIConfigHandler.DuelPostprocessRules, royalRules);
+		string text2 = NormalizePlayerNameForPostprocess(BuildGuardrailSemanticContext(targetHero, extraFact), text11);
+		if (string.IsNullOrWhiteSpace(text2))
+		{
+			text2 = string.IsNullOrWhiteSpace(extraFact) ? "（无）" : NormalizePlayerNameForPostprocess(extraFact.Trim(), text11);
+		}
+		string text3 = BuildPostprocessRuleText(actionRules);
+		string text4 = BuildPostprocessRuleText(AIConfigHandler.ActionPostprocessMoodRules);
+		string text5 = BuildDuelPostprocessItemList(duelStakeOptions);
+		string text7 = "（无）";
+		try
+		{
+			if (RewardSystemBehavior.Instance != null && Hero.MainHero != null)
+			{
+				MentionedWorldEntities promptListMentions = AIConfigHandler.GetLatestAuxiliaryMentionedEntitiesForExternal();
+				int promptListMax = PromptListRetrievalService.GetMaxCandidateCount();
+				text7 = RewardSystemBehavior.Instance.BuildVisibleEquipmentPostprocessListForAI(Hero.MainHero, promptListMentions, promptListMax);
+			}
+		}
+		catch
+		{
+			text7 = "赤身裸体";
+		}
+		string text6 = AIConfigHandler.BuildActionPostprocessSystemPrompt(text3, text4, text11, text5, text7);
+		text6 = text6.Replace("请仔细分辨物品名称、物品序号和数量", "请仔细分辨物品名称和数量；决斗赌注物品标签必须填写物品清单中的完整物品名称，禁止填写序号，禁止填写物品ID");
+		string text8 = AIConfigHandler.BuildActionPostprocessUserPrompt(actionPostprocessUserPromptTemplate, text3, text11, text2, AIConfigHandler.BuildActionPostprocessLatestReplyBlock(null, text, text11, text2), text5, text7);
+		if (!AIConfigHandler.TryCallAuxiliaryActionPostprocess(text6, text8, 5000, 0f, out var content, out var error))
+		{
+			Logger.Log("Logic", "[DuelPostprocess] 调用失败: " + error);
+			return (text + "\n" + AIConfigHandler.ActionPostprocessFallbackMoodTag).Trim();
+		}
+		string duelTags = NormalizeDuelPostprocessTags(content, duelStakeOptions, targetHero);
+		string royalTags = royalRules.Count > 0 ? NormalizeKingdomServicePostprocessTags(content, royalRules) : "";
+		string text9 = MergeNormalizedPostprocessBlocks(duelTags, royalTags);
+		if (string.IsNullOrWhiteSpace(text9))
+		{
+			text9 = AIConfigHandler.ActionPostprocessFallbackMoodTag;
+		}
+		string text10 = (text + "\n" + text9).Trim();
+		Logger.Log("Logic", "[DuelPostprocess] RAW=\n" + content + "\nFINAL=\n" + text10 + "\n");
+		return text10;
+	}
+
 	private string CleanAIResponse(string input)
 	{
 		if (string.IsNullOrEmpty(input))
@@ -35057,6 +35578,23 @@ public partial class MyBehavior : CampaignBehaviorBase
 		input = Regex.Replace(input, "<think>.*?</think>", "", RegexOptions.Singleline);
 		input = input.Replace("**", "").Replace("#", "").Replace("`", "");
 		return input.Trim();
+	}
+
+	private static string NormalizePlayerNameForPostprocess(string text, string npcName = null)
+	{
+		try
+		{
+			string text2 = (text ?? "").Trim();
+			if (string.IsNullOrWhiteSpace(text2))
+			{
+				return text2;
+			}
+			return AIConfigHandler.NormalizeActionPostprocessNameReferences(text2, npcName);
+		}
+		catch
+		{
+			return text ?? "";
+		}
 	}
 
 	private static float GetNowCampaignDay()
@@ -44000,13 +44538,6 @@ public partial class MyBehavior : CampaignBehaviorBase
 
 	public async Task<bool> GenerateWeeklyReportFullByEventIdAsync(string eventId)
 	{
-		// Capture live records and prompts only at the UI/main-thread boundary.
-		if (!TWParallel.IsMainThread() || !ReferenceEquals(Instance, this))
-		{
-			Logger.Log("EventWeeklyReport", "[FullOnDemand] rejected non-current main-thread owner");
-			return false;
-		}
-		long runtimeGeneration = SaveRuntimeGuard.CaptureGeneration();
 		EventRecordEntry eventRecordEntry = FindWeeklyReportRecordById(eventId);
 		if (eventRecordEntry == null)
 		{
@@ -44027,120 +44558,38 @@ public partial class MyBehavior : CampaignBehaviorBase
 		string text = BuildWeeklyReportFullOnDemandSystemPrompt(weeklyEventMaterialPreviewGroup);
 		string text2 = BuildWeeklyReportFullOnDemandUserPrompt(weeklyEventMaterialPreviewGroup, num);
 		string text3 = BuildWeeklyReportPromptPreviewText(weeklyEventMaterialPreviewGroup, text, text2);
-		string capturedEventId = eventRecordEntry.EventId;
-		string capturedSource = BuildWeeklyFullReportSourceState(eventRecordEntry);
 		ShowWeeklyFullOnDemandProgressPopup(eventRecordEntry);
 		try
 		{
-			ApiCallResult apiCallResult = await CallWeeklyReportApiDetailed(text, text2).ConfigureAwait(false);
-			return await QueueWeeklyFullReportCompletionAsync(runtimeGeneration, () =>
+			ApiCallResult apiCallResult = await CallUniversalApiDetailed(text, text2, logToEventLogs: true, eventLogSource: "EventWeeklyReport", route: UniversalApiRoute.EventAndRebellion);
+			if (!apiCallResult.Success)
 			{
-				EventRecordEntry currentEntry = FindWeeklyReportRecordById(capturedEventId);
-				if (currentEntry != null && !string.IsNullOrWhiteSpace(currentEntry.Summary))
-				{
-					// Another accepted request won the race; never overwrite its report.
-					InformationManager.HideInquiry();
-					return true;
-				}
-				if (currentEntry == null || !string.Equals(capturedSource, BuildWeeklyFullReportSourceState(currentEntry), StringComparison.Ordinal))
-				{
-					ShowWeeklyFullOnDemandFailurePopup("该期周报或素材已变更，请重新选择后生成。");
-					return false;
-				}
-				if (apiCallResult == null || !apiCallResult.Success)
-				{
-					ShowWeeklyFullOnDemandFailurePopup("完整周报生成失败：" + (apiCallResult?.ErrorMessage ?? "未知错误"));
-					return false;
-				}
-				if (!TryParseWeeklyFullOnDemandReportResponse(apiCallResult.Content, out var title, out var shortSummary, out var report))
-				{
-					ShowWeeklyFullOnDemandFailurePopup(LlmRetryPrompt.BuildFailureDetail("完整周报返回内容无法解析。", apiCallResult.Content, apiCallResult.ResponseBody));
-					return false;
-				}
-				string previousPublishedProductState = BuildPublishedWorldWeeklyProductState(currentEntry);
-				currentEntry.Title = title;
-				currentEntry.ShortSummary = BuildFallbackWeeklyReportShortSummary(shortSummary);
-				currentEntry.Summary = (report ?? "").Trim();
-				currentEntry.PromptText = text3;
-				currentEntry.Materials = CloneWeeklyReportMaterials(currentEntry.Materials);
-				_eventRecordEntries = SanitizeEventRecordEntries(_eventRecordEntries);
-				NotifyPublishedWorldWeeklyProductChanged(previousPublishedProductState, FindWeeklyReportRecordById(capturedEventId));
-				NotifyWorldMessageWeeklyTimelineChanged();
-				InformationManager.HideInquiry();
-				InformationManager.DisplayMessage(new InformationMessage("完整周报已生成。"));
-				return true;
-			}).ConfigureAwait(false);
+				ShowWeeklyFullOnDemandFailurePopup("完整周报生成失败：" + (apiCallResult.ErrorMessage ?? "未知错误"));
+				return false;
+			}
+			if (!TryParseWeeklyFullOnDemandReportResponse(apiCallResult.Content, out var title, out var shortSummary, out var report))
+			{
+				ShowWeeklyFullOnDemandFailurePopup(LlmRetryPrompt.BuildFailureDetail("完整周报返回内容无法解析。", apiCallResult.Content, apiCallResult.ResponseBody));
+				return false;
+			}
+			string previousPublishedProductState = BuildPublishedWorldWeeklyProductState(eventRecordEntry);
+			eventRecordEntry.Title = title;
+			eventRecordEntry.ShortSummary = BuildFallbackWeeklyReportShortSummary(shortSummary);
+			eventRecordEntry.Summary = (report ?? "").Trim();
+			eventRecordEntry.PromptText = text3;
+			eventRecordEntry.Materials = CloneWeeklyReportMaterials(eventRecordEntry.Materials);
+			_eventRecordEntries = SanitizeEventRecordEntries(_eventRecordEntries);
+			NotifyPublishedWorldWeeklyProductChanged(previousPublishedProductState, FindWeeklyReportRecordById(eventRecordEntry.EventId));
+			// The completed full report changes the selected timeline item's body and action state.
+			NotifyWorldMessageWeeklyTimelineChanged();
+			InformationManager.HideInquiry();
+			InformationManager.DisplayMessage(new InformationMessage("完整周报已生成。"));
+			return true;
 		}
 		catch (Exception ex)
 		{
-			return await QueueWeeklyFullReportCompletionAsync(runtimeGeneration, () =>
-			{
-				ShowWeeklyFullOnDemandFailurePopup("完整周报生成失败：" + ex.Message);
-				return false;
-			}).ConfigureAwait(false);
-		}
-	}
-
-	private static string BuildWeeklyFullReportSourceState(EventRecordEntry entry)
-	{
-		return JsonConvert.SerializeObject(new
-		{
-			WeekIndex = Math.Max(0, entry.WeekIndex),
-			EventKind = (entry.EventKind ?? "").Trim(),
-			ScopeKingdomId = (entry.ScopeKingdomId ?? "").Trim(),
-			Title = (entry.Title ?? "").Trim(),
-			ShortSummary = (entry.ShortSummary ?? "").Trim(),
-			Materials = CloneWeeklyReportMaterials(entry.Materials)
-		});
-	}
-
-	private Task<bool> QueueWeeklyFullReportCompletionAsync(long runtimeGeneration, Func<bool> apply)
-	{
-		lock (_pendingWeeklyReportCommitLock)
-		{
-			if (!ReferenceEquals(Instance, this) || SaveRuntimeGuard.IsStale(runtimeGeneration, "weekly_full_report_enqueue"))
-			{
-				return Task.FromResult(false);
-			}
-			var pending = new WeeklyFullReportCompletion { RuntimeGeneration = runtimeGeneration, Apply = apply };
-			_weeklyFullReportCompletions.Enqueue(pending);
-			return pending.Completion.Task;
-		}
-	}
-
-	private void ProcessWeeklyFullReportCompletions()
-	{
-		// Only completed on-demand requests are queued; at most two commits per engine tick.
-		for (int processed = 0; processed < 2; processed++)
-		{
-			WeeklyFullReportCompletion pending;
-			lock (_pendingWeeklyReportCommitLock)
-			{
-				if (_weeklyFullReportCompletions.Count == 0) return;
-				pending = _weeklyFullReportCompletions.Dequeue();
-			}
-			try
-			{
-				bool accepted = ReferenceEquals(Instance, this)
-					&& !SaveRuntimeGuard.IsStale(pending.RuntimeGeneration, "weekly_full_report_commit");
-				pending.Completion.TrySetResult(accepted && (pending.Apply?.Invoke() ?? false));
-			}
-			catch (Exception ex)
-			{
-				// Observe exceptions in the awaiting request so its failure UI is also queued.
-				pending.Completion.TrySetException(ex);
-			}
-		}
-	}
-
-	private void CancelWeeklyFullReportCompletions()
-	{
-		lock (_pendingWeeklyReportCommitLock)
-		{
-			while (_weeklyFullReportCompletions.Count > 0)
-			{
-				_weeklyFullReportCompletions.Dequeue().Completion.TrySetResult(false);
-			}
+			ShowWeeklyFullOnDemandFailurePopup("完整周报生成失败：" + ex.Message);
+			return false;
 		}
 	}
 
@@ -44519,7 +44968,7 @@ public partial class MyBehavior : CampaignBehaviorBase
 		string text4 = BuildWeeklyReportGroupDisplayLabel(group);
 		for (int i = 1; i <= Math.Max(1, maxAttempts); i++)
 		{
-			ApiCallResult apiCallResult = await CallWeeklyReportApiDetailed(text, text2);
+			ApiCallResult apiCallResult = await CallUniversalApiDetailed(text, text2, logToEventLogs: true, eventLogSource: "EventWeeklyReport", route: UniversalApiRoute.EventAndRebellion);
 			string text5 = apiCallResult.Success ? (apiCallResult.Content ?? "") : ("错误: " + (apiCallResult.ErrorMessage ?? "未知错误"));
 			Logger.LogEventPromptExchange(text4 + " [尝试 " + i + "/" + maxAttempts + "]", text3, text5);
 			if (!apiCallResult.Success)
@@ -44575,7 +45024,7 @@ public partial class MyBehavior : CampaignBehaviorBase
 		weeklyReportBatchRequestResult.PromptPreview = text3;
 		for (int i = 1; i <= Math.Max(1, maxAttempts); i++)
 		{
-			ApiCallResult apiCallResult = await CallWeeklyReportApiDetailed(text, text2);
+			ApiCallResult apiCallResult = await CallUniversalApiDetailed(text, text2, logToEventLogs: true, eventLogSource: "EventWeeklyReport", route: UniversalApiRoute.EventAndRebellion);
 			string text5 = apiCallResult.Success ? (apiCallResult.Content ?? "") : (apiCallResult.ErrorMessage ?? "未知错误");
 			weeklyReportBatchRequestResult.RawResponse = text5;
 			Logger.LogEventPromptExchange(text4 + " [灏濊瘯 " + i + "/" + maxAttempts + "]", text3, text5);
@@ -48315,7 +48764,6 @@ public partial class MyBehavior : CampaignBehaviorBase
 
 	private void ClearAllDataForCurrentSave()
 	{
-		CancelWeeklyFullReportCompletions();
 		_shownRecords = new Dictionary<string, HeroShownRecord>();
 		_shownRecordStorage = new Dictionary<string, string>();
 		_dialogueHistory = new Dictionary<string, List<DialogueDay>>();
@@ -48730,9 +49178,7 @@ public partial class MyBehavior : CampaignBehaviorBase
 		{
 			dialogueDay.Lines[lineIndex] = input;
 		}
-		source = source.Where((DialogueDay x) => x != null
-			&& ((x.Lines != null && x.Lines.Count > 0)
-				|| (x.MemoryCommitMarkers != null && x.MemoryCommitMarkers.Count > 0))).ToList();
+		source = source.Where((DialogueDay x) => x != null && x.Lines != null && x.Lines.Count > 0).ToList();
 		SaveDialogueHistory(npc, source);
 		InformationManager.DisplayMessage(new InformationMessage("对话行已更新."));
 		OpenDevHistoryLineSelection(npc, dayIndex);
@@ -50642,14 +51088,6 @@ public partial class MyBehavior : CampaignBehaviorBase
 			Dictionary<string, int> newCounts = BuildDailyMemorySyncLineCounts(newLines);
 			Dictionary<string, int> removeCounts = BuildDailyMemorySyncCountDelta(oldCounts, newCounts);
 			Dictionary<string, int> addCounts = BuildDailyMemorySyncCountDelta(newCounts, oldCounts);
-			ShoutBehavior.SyncNativeConversationSessionHistoryForDailyMemoryEditExternal(
-				npc,
-				npc.CharacterObject,
-				npc.Name?.ToString(),
-				affectedDayIndex,
-				BuildNativeConversationHistoryEntriesForDailyMemoryEdit(npc, oldLines),
-				BuildNativeConversationHistoryEntriesForDailyMemoryEdit(npc, newLines),
-				reason);
 			if (removeCounts.Count == 0 && addCounts.Count == 0)
 			{
 				return;
@@ -50660,8 +51098,7 @@ public partial class MyBehavior : CampaignBehaviorBase
 			if (day != null)
 			{
 				removedCount = RemoveDialogueHistoryLinesByCounts(day, removeCounts);
-				if ((day.Lines == null || day.Lines.Count == 0)
-					&& (day.MemoryCommitMarkers == null || day.MemoryCommitMarkers.Count == 0))
+				if (day.Lines == null || day.Lines.Count == 0)
 				{
 					records.Remove(day);
 					day = null;
@@ -50687,11 +51124,9 @@ public partial class MyBehavior : CampaignBehaviorBase
 			}
 			if (removedCount > 0 || addedLines.Count > 0)
 			{
-				records = records.Where((DialogueDay x) => x != null
-					&& ((x.Lines != null && x.Lines.Count > 0)
-						|| (x.MemoryCommitMarkers != null && x.MemoryCommitMarkers.Count > 0)))
-					.OrderBy((DialogueDay x) => x.GameDayIndex).ToList();
+				records = records.Where((DialogueDay x) => x != null && x.Lines != null && x.Lines.Count > 0).OrderBy((DialogueDay x) => x.GameDayIndex).ToList();
 				SaveDialogueHistory(npc, records);
+				ShoutBehavior.ClearNativeConversationSessionHistoryForExternal(npc, npc.CharacterObject, npc.Name?.ToString(), affectedDayIndex);
 				Logger.Log("CompressedMemory", "sync_raw_edit_dialogue_history hero=" + GetMemoryHeroId(npc) + " day=" + affectedDayIndex + " removed=" + removedCount + " added=" + addedLines.Count + " reason=" + (reason ?? ""));
 			}
 		}
@@ -50699,41 +51134,6 @@ public partial class MyBehavior : CampaignBehaviorBase
 		{
 			Logger.Log("CompressedMemory", "[WARN] sync_raw_edit_dialogue_history failed: " + ex.Message);
 		}
-	}
-
-	private static List<AnimusForgeDialogueHistoryEntry> BuildNativeConversationHistoryEntriesForDailyMemoryEdit(Hero npc, IEnumerable<DailyMemoryLine> lines)
-	{
-		List<AnimusForgeDialogueHistoryEntry> result = new List<AnimusForgeDialogueHistoryEntry>();
-		string npcName = (npc?.Name?.ToString() ?? "NPC").Trim();
-		if (string.IsNullOrWhiteSpace(npcName))
-		{
-			npcName = "NPC";
-		}
-		foreach (DailyMemoryLine line in lines ?? Enumerable.Empty<DailyMemoryLine>())
-		{
-			ConversationMessage message = BuildUncompressedMemoryConversationMessage(line, npcName, line?.TargetAgentIndex ?? -1);
-			if (message == null || string.IsNullOrWhiteSpace(message.Content))
-			{
-				continue;
-			}
-			string role = (message.Role ?? "").Trim();
-			string kind = string.Equals(role, "system", StringComparison.OrdinalIgnoreCase)
-				? "fact"
-				: (string.Equals(role, "user", StringComparison.OrdinalIgnoreCase) ? "player" : "npc");
-			result.Add(new AnimusForgeDialogueHistoryEntry
-			{
-				GameDayIndex = message.GameDayIndex,
-				GameDate = message.GameDate ?? "",
-				GameHour = message.GameHour,
-				Scene = message.Scene ?? "",
-				Speaker = message.SpeakerName ?? "",
-				TargetAgentIndex = message.TargetAgentIndex,
-				TargetName = message.TargetName ?? "",
-				Text = message.Content ?? "",
-				Kind = kind
-			});
-		}
-		return result;
 	}
 
 	private static List<DailyMemoryLine> CloneDevDailyMemoryLines(IEnumerable<DailyMemoryLine> lines)

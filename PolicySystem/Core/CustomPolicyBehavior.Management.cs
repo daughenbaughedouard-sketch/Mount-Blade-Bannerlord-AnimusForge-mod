@@ -1406,7 +1406,7 @@ public sealed partial class CustomPolicyBehavior
 		return string.Join("\n", lines);
 	}
 
-	private static string BuildPolicyRecordEffectSummary(PolicyRecordSaveData record, bool includeRemainingDays = true)
+	private static string BuildPolicyRecordEffectSummary(PolicyRecordSaveData record)
 	{
 		if (record?.Effects == null || record.Effects.Count <= 0)
 		{
@@ -1419,9 +1419,7 @@ public sealed partial class CustomPolicyBehavior
 				? "永久生效"
 				: effect.IsEnded || effect.RemainingDays <= 0
 					? "已结束"
-					: includeRemainingDays
-						? "剩余 " + effect.RemainingDays.ToString(CultureInfo.InvariantCulture) + "/" + effect.TotalDurationDays.ToString(CultureInfo.InvariantCulture) + " 天"
-						: "生效中";
+					: "剩余 " + effect.RemainingDays.ToString(CultureInfo.InvariantCulture) + "/" + effect.TotalDurationDays.ToString(CultureInfo.InvariantCulture) + " 天";
 			if (!string.IsNullOrWhiteSpace(effect.EndReason)
 				&& (effect.IsEnded || (!effect.IsPermanentEffect && effect.RemainingDays <= 0)))
 			{

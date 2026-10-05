@@ -3,8 +3,6 @@ using System.Collections.Generic;
 using AnimusForge.PolicyEffects;
 using System.IO;
 using System.Text;
-using AnimusForge.Refactor.Contracts;
-using AnimusForge.Refactor.Runtime;
 using Bannerlord.UIExtenderEx;
 using HarmonyLib;
 using TaleWorlds.CampaignSystem;
@@ -13,9 +11,6 @@ using TaleWorlds.CampaignSystem.GameComponents;
 using TaleWorlds.Core;
 using TaleWorlds.Library;
 using TaleWorlds.MountAndBlade;
-using TaleWorlds.ScreenSystem;
-using AFWarStatsTerminal.Behaviors;
-using AFWarStatsTerminal.UI;
 
 namespace AnimusForge;
 
@@ -35,8 +30,6 @@ public class SubModule : MBSubModuleBase
 	private bool _initialApiGuideNoticeShown;
 
 	private long _initialApiGuideNoticeAfterUtcTicks;
-	private AfWarStatsMapButtonLayer _mapButtonLayer;
-	private float _mapButtonRetryDelay;
 
 	public override void OnInitialState()
 	{
@@ -47,14 +40,6 @@ public class SubModule : MBSubModuleBase
 	protected override void OnSubModuleLoad()
 	{
 		base.OnSubModuleLoad();
-		if (FeatureBridgeRuntime.Initialize(out string featureBridgeReason))
-		{
-			Logger.LogTrace("SubModule", ">>> Feature bridge catalog initialized: " + featureBridgeReason);
-		}
-		else
-		{
-			Logger.LogTrace("SubModule", ">>> Feature bridge catalog failed closed: " + featureBridgeReason);
-		}
 		SceneActionsIntegrationBoundary.InitializeRuntime();
 		if (_uiExtenderInitialized)
 		{
@@ -94,15 +79,8 @@ public class SubModule : MBSubModuleBase
 		SceneActionsIntegrationBoundary.VerifyMissionInitialization(mission);
 	}
 
-	public override void OnGameEnd(Game game)
-	{
-		RemoveMapButtonLayer();
-		base.OnGameEnd(game);
-	}
-
 	protected override void OnSubModuleUnloaded()
 	{
-		RemoveMapButtonLayer();
 		SceneActionsIntegrationBoundary.ShutdownRuntime();
 		base.OnSubModuleUnloaded();
 	}
@@ -372,14 +350,6 @@ public class SubModule : MBSubModuleBase
 			catch (Exception ex8ag)
 			{
 				Logger.LogTrace("SubModule", ">>> CampaignTickDiagnosticsPatch init failed: " + ex8ag.Message);
-			}
-			try
-			{
-				MainPartyRosterRunawayGuard.EnsurePatched(harmony);
-			}
-			catch (Exception ex8ag2)
-			{
-				Logger.LogTrace("SubModule", ">>> MainPartyRosterRunawayGuard init failed: " + ex8ag2.Message);
 			}
 			try
 			{
@@ -699,7 +669,6 @@ public class SubModule : MBSubModuleBase
 			campaignGameStarter.AddBehavior(new VassalageBehavior());
 			campaignGameStarter.AddBehavior(new NpcTributeVassalageBehavior());
 			campaignGameStarter.AddBehavior(new KingdomAnnexationBehavior());
-			campaignGameStarter.AddBehavior(new AfWarStatsBehavior());
 		}
 	}
 
@@ -770,7 +739,6 @@ public class SubModule : MBSubModuleBase
 			{
 				RunWatchedApplicationTickPhases();
 			}
-			TickWarStatsMapButton(dt);
 		}
 		catch (Exception ex)
 		{
@@ -798,7 +766,6 @@ public class SubModule : MBSubModuleBase
 		EncyclopediaEntityLinkNavigationCoordinator.ProcessPending();
 		PlayerNotorietyPopup.ProcessDeferredCloseIfNeeded();
 		PlayerRpForgePopup.ProcessDeferredCloseIfNeeded();
-		AnimusForgeApiOnboardingPopup.ProcessDeferredCloseIfNeeded();
 		PolicyEffectModuleManagerPopup.ProcessDeferredCloseIfNeeded();
 		AnimusForgeConversationHistoryLogPopup.OnApplicationTick();
 		AnimusForgeNativeConversationOverlay.OnApplicationTick();
@@ -810,7 +777,6 @@ public class SubModule : MBSubModuleBase
 		ProcessPendingInitialApiGuideNotice();
 		Logger.OnApplicationTick();
 		BannerlordExceptionSentinel.OnApplicationTick();
-		MainPartyRosterRunawayGuard.OnApplicationTick();
 		McmDropdownRuntimeRefresh.OnApplicationTick();
 		EncyclopediaHeroPersonaPatch.OnApplicationTick();
 		EncyclopediaTownRuleMemoryPatch.OnApplicationTick();
@@ -840,7 +806,6 @@ public class SubModule : MBSubModuleBase
 			RunWatchedTickPhase("SubModule.EncyclopediaEntityLinkNavigationCoordinator.ProcessPending", () => EncyclopediaEntityLinkNavigationCoordinator.ProcessPending());
 			RunWatchedTickPhase("SubModule.PlayerNotorietyPopup.ProcessDeferredCloseIfNeeded", () => PlayerNotorietyPopup.ProcessDeferredCloseIfNeeded());
 			RunWatchedTickPhase("SubModule.PlayerRpForgePopup.ProcessDeferredCloseIfNeeded", () => PlayerRpForgePopup.ProcessDeferredCloseIfNeeded());
-			RunWatchedTickPhase("SubModule.AnimusForgeApiOnboardingPopup.ProcessDeferredCloseIfNeeded", () => AnimusForgeApiOnboardingPopup.ProcessDeferredCloseIfNeeded());
 			RunWatchedTickPhase("SubModule.PolicyEffectModuleManagerPopup.ProcessDeferredCloseIfNeeded", () => PolicyEffectModuleManagerPopup.ProcessDeferredCloseIfNeeded());
 			RunWatchedTickPhase("SubModule.AnimusForgeConversationHistoryLogPopup.OnApplicationTick", () => AnimusForgeConversationHistoryLogPopup.OnApplicationTick());
 			RunWatchedTickPhase("SubModule.AnimusForgeNativeConversationOverlay.OnApplicationTick", () => AnimusForgeNativeConversationOverlay.OnApplicationTick());
@@ -852,7 +817,6 @@ public class SubModule : MBSubModuleBase
 			RunWatchedTickPhase("SubModule.ProcessPendingInitialApiGuideNotice", () => ProcessPendingInitialApiGuideNotice());
 			RunWatchedTickPhase("SubModule.Logger.OnApplicationTick", () => Logger.OnApplicationTick());
 			RunWatchedTickPhase("SubModule.BannerlordExceptionSentinel.OnApplicationTick", () => BannerlordExceptionSentinel.OnApplicationTick());
-			RunWatchedTickPhase("SubModule.MainPartyRosterRunawayGuard.OnApplicationTick", () => MainPartyRosterRunawayGuard.OnApplicationTick());
 			RunWatchedTickPhase("SubModule.McmDropdownRuntimeRefresh.OnApplicationTick", () => McmDropdownRuntimeRefresh.OnApplicationTick());
 			RunWatchedTickPhase("SubModule.EncyclopediaHeroPersonaPatch.OnApplicationTick", () => EncyclopediaHeroPersonaPatch.OnApplicationTick());
 			RunWatchedTickPhase("SubModule.EncyclopediaTownRuleMemoryPatch.OnApplicationTick", () => EncyclopediaTownRuleMemoryPatch.OnApplicationTick());
@@ -1016,72 +980,5 @@ public class SubModule : MBSubModuleBase
 	{
 		AIConfigHandler.ReloadConfig();
 		return "Config Reloaded Successfully!";
-	}
-
-	private void TickWarStatsMapButton(float dt)
-	{
-		if (Campaign.Current == null)
-		{
-			if (_mapButtonLayer != null)
-			{
-				RemoveMapButtonLayer();
-			}
-			return;
-		}
-
-		if (_mapButtonLayer != null)
-		{
-			return;
-		}
-
-		_mapButtonRetryDelay = Math.Max(0f, _mapButtonRetryDelay - dt);
-		if (_mapButtonRetryDelay > 0f)
-		{
-			return;
-		}
-
-		ScreenBase topScreen = ScreenManager.TopScreen;
-		if (!AfWarStatsMapButtonLayer.IsCampaignMapScreen(topScreen))
-		{
-			return;
-		}
-
-		try
-		{
-			_mapButtonLayer = new AfWarStatsMapButtonLayer();
-			ScreenManager.AddGlobalLayer(_mapButtonLayer, true);
-			Logger.LogTrace("SubModule", ">>> WarStats map button layer created for " + topScreen.GetType().FullName + ".");
-		}
-		catch (Exception ex)
-		{
-			_mapButtonLayer = null;
-			_mapButtonRetryDelay = 3f;
-			Logger.LogTrace("SubModule", ">>> Failed to create WarStats map button layer: " + ex.Message);
-		}
-	}
-
-	private void RemoveMapButtonLayer()
-	{
-		if (_mapButtonLayer == null)
-		{
-			return;
-		}
-
-		try
-		{
-			ScreenManager.RemoveGlobalLayer(_mapButtonLayer);
-		}
-		catch
-		{
-		}
-
-		try
-		{
-			_mapButtonLayer.FinalizeLayer();
-		}
-		catch
-		{
-		}
-		_mapButtonLayer = null;
 	}
 }

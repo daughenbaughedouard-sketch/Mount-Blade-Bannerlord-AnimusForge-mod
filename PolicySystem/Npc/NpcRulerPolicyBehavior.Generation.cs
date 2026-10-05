@@ -14,8 +14,6 @@ using System.Threading;
 using System.Threading.Tasks;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
-using AnimusForge.Refactor.Adapters;
-using AnimusForge.Refactor.Contracts;
 using AnimusForge.PolicyEffects;
 using AnimusForge.PolicyTargets;
 using TaleWorlds.CampaignSystem;
@@ -243,10 +241,8 @@ public sealed partial class NpcRulerPolicyBehavior
 				ApiProfile = apiProfile,
 				MaxTokens = apiProfile.MaxTokens,
 				HardTimeoutMilliseconds = PolicyApiHardTimeoutMilliseconds,
-				CreatedUtcTicks = DateTime.UtcNow.Ticks,
-				CancellationSource = new CancellationTokenSource()
+				CreatedUtcTicks = DateTime.UtcNow.Ticks
 			};
-			Interlocked.Exchange(ref _generationCancellationSource, job.CancellationSource)?.Dispose();
 			_lastGenerationAttemptHour = currentHour;
 			_lastPolicyRetryContext = null;
 			_pendingPolicySnapshotJobs.Enqueue(job);
@@ -382,10 +378,8 @@ public sealed partial class NpcRulerPolicyBehavior
 				ApiProfile = apiProfile,
 				MaxTokens = apiProfile.MaxTokens,
 				HardTimeoutMilliseconds = PolicyApiHardTimeoutMilliseconds,
-				CreatedUtcTicks = DateTime.UtcNow.Ticks,
-				CancellationSource = new CancellationTokenSource()
+				CreatedUtcTicks = DateTime.UtcNow.Ticks
 			};
-			Interlocked.Exchange(ref _generationCancellationSource, job.CancellationSource)?.Dispose();
 			_lastGenerationAttemptHour = currentHour;
 			_lastPolicyRetryContext = null;
 			PolicySystemLog.Lifecycle("Npc", "generation-start", "started", new PolicyLogContext
@@ -490,22 +484,11 @@ public sealed partial class NpcRulerPolicyBehavior
 		}
 		finally
 		{
-			bool cancellationRequested = job?.CancellationSource?.IsCancellationRequested == true;
-			if (!cancellationRequested)
+			_pendingPolicyCommits.Enqueue(new PendingNpcPolicyCommitContext
 			{
-				_pendingPolicyCommits.Enqueue(new PendingNpcPolicyCommitContext
-				{
-					GenerationResult = result
-				});
-			}
-			ReleasePolicyGenerationLifecycle(job?.InFlightKey, completeGeneration: cancellationRequested);
-			if (job?.CancellationSource != null
-				&& ReferenceEquals(
-					Interlocked.CompareExchange(ref _generationCancellationSource, null, job.CancellationSource),
-					job.CancellationSource))
-			{
-				job.CancellationSource.Dispose();
-			}
+				GenerationResult = result
+			});
+			ReleasePolicyGenerationLifecycle(job?.InFlightKey, completeGeneration: false);
 		}
 	}
 
@@ -515,27 +498,18 @@ public sealed partial class NpcRulerPolicyBehavior
 		int hardTimeoutMilliseconds,
 		string source,
 		long runtimeGeneration,
-		int maxAttempts,
-		CancellationToken cancellationToken)
+		int maxAttempts)
 	{
 		Func<string, string, long, Task<string>> testOverride = NpcPolicyApiTextOverrideForTests;
 		if (testOverride == null)
 		{
-			PromptPackage prompt = LegacyPolicyLlmGateway.BuildPromptPackage(
+			return await PolicyLlmClient.CallPolicyApiWithRetriesAsync(
 				systemPrompt,
-				Math.Max(1, profile?.MaxTokens ?? 1),
-				profile?.ModelName);
-			LlmGenerateRequest request = LegacyPolicyLlmGateway.BuildRequest(
-				prompt,
 				profile,
+				hardTimeoutMilliseconds,
 				source,
 				runtimeGeneration,
-				hardTimeoutMilliseconds,
-				InteractionStage.MainReply);
-			LlmGenerateResult gatewayResult = await new LegacyPolicyLlmGateway(false, profile)
-				.GenerateAsync(request, cancellationToken).ConfigureAwait(false);
-			cancellationToken.ThrowIfCancellationRequested();
-			return LegacyPolicyLlmGateway.ToLegacyResult(gatewayResult);
+				maxAttempts);
 		}
 		try
 		{
@@ -567,27 +541,18 @@ public sealed partial class NpcRulerPolicyBehavior
 		int hardTimeoutMilliseconds,
 		string source,
 		long runtimeGeneration,
-		int maxAttempts,
-		CancellationToken cancellationToken)
+		int maxAttempts)
 	{
 		Func<string, string, long, Task<string>> testOverride = NpcPolicyApiTextOverrideForTests;
 		if (testOverride == null)
 		{
-			PromptPackage prompt = LegacyPolicyLlmGateway.BuildPromptPackage(
+			return await PolicyLlmClient.CallPolicyApiWithRetriesAsync(
 				messages,
-				Math.Max(1, profile?.MaxTokens ?? 1),
-				profile?.ModelName);
-			LlmGenerateRequest request = LegacyPolicyLlmGateway.BuildRequest(
-				prompt,
 				profile,
+				hardTimeoutMilliseconds,
 				source,
 				runtimeGeneration,
-				hardTimeoutMilliseconds,
-				InteractionStage.MainReply);
-			LlmGenerateResult gatewayResult = await new LegacyPolicyLlmGateway(false, profile)
-				.GenerateAsync(request, cancellationToken).ConfigureAwait(false);
-			cancellationToken.ThrowIfCancellationRequested();
-			return LegacyPolicyLlmGateway.ToLegacyResult(gatewayResult);
+				maxAttempts);
 		}
 		try
 		{
@@ -595,7 +560,6 @@ public sealed partial class NpcRulerPolicyBehavior
 				(messages ?? new JArray()).ToString(Formatting.None),
 				source ?? string.Empty,
 				runtimeGeneration);
-			cancellationToken.ThrowIfCancellationRequested();
 			return new NpcPolicyApiCallResult
 			{
 				Success = content != null,
@@ -1476,8 +1440,7 @@ public sealed partial class NpcRulerPolicyBehavior
 			job.HardTimeoutMilliseconds,
 			"NpcRulerPolicyDraft",
 			job.RuntimeGeneration,
-			3,
-			job.CancellationSource?.Token ?? CancellationToken.None);
+			3);
 		CopyApiResultToPolicyResult(result, draftApiResult, accumulateAttempts: false);
 		result.DraftAttemptsUsed = Math.Max(0, draftApiResult?.AttemptsUsed ?? 0);
 		result.AttemptsUsed = result.DraftAttemptsUsed;
@@ -1525,8 +1488,7 @@ public sealed partial class NpcRulerPolicyBehavior
 			job.HardTimeoutMilliseconds,
 			repairSource,
 			job.RuntimeGeneration,
-			3,
-			job.CancellationSource?.Token ?? CancellationToken.None);
+			3);
 		CopyApiResultToPolicyResult(result, repairApiResult, accumulateAttempts: true);
 		result.DraftAttemptsUsed += Math.Max(0, repairApiResult?.AttemptsUsed ?? 0);
 		result.AttemptsUsed = result.DraftAttemptsUsed;
@@ -1579,8 +1541,7 @@ public sealed partial class NpcRulerPolicyBehavior
 			job.HardTimeoutMilliseconds,
 			"NpcRulerPolicyEffectPostprocess",
 			job.RuntimeGeneration,
-			3,
-			job.CancellationSource?.Token ?? CancellationToken.None);
+			3);
 		CopyApiResultToPolicyResult(result, effectApiResult, accumulateAttempts: true);
 		result.EffectAttemptsUsed = Math.Max(0, effectApiResult?.AttemptsUsed ?? 0);
 		result.AttemptsUsed = result.DraftAttemptsUsed + result.EffectAttemptsUsed;
@@ -1654,8 +1615,7 @@ public sealed partial class NpcRulerPolicyBehavior
 			job.HardTimeoutMilliseconds,
 			repairSource,
 			job.RuntimeGeneration,
-			3,
-			job.CancellationSource?.Token ?? CancellationToken.None);
+			3);
 		CopyApiResultToPolicyResult(result, repairApiResult, accumulateAttempts: true);
 		result.EffectAttemptsUsed += Math.Max(0, repairApiResult?.AttemptsUsed ?? 0);
 		result.AttemptsUsed = result.DraftAttemptsUsed + result.EffectAttemptsUsed;
@@ -2771,9 +2731,6 @@ public sealed partial class NpcRulerPolicyBehavior
 				PolicyName = record.PolicyName ?? string.Empty,
 				PolicyContent = FirstNonEmpty(record.PolicyContent, record.PolicyDigest),
 				ImpactSummary = FirstNonEmpty(record.ImpactSummary, BuildEffectSummary(record.Effects)),
-				DiplomacyRevisionKey = string.Join(";", (record.Effects ?? new List<NpcRulerPolicyEffectDto>())
-					.Where(effect => effect != null).Select(effect => effect.EffectId + ":" + effect.DurationDays.ToString(CultureInfo.InvariantCulture))
-					.OrderBy(value => value, StringComparer.Ordinal)),
 				PolicyStatus = policyStatus,
 				RawPolicyStatus = (record.AgendaStatus ?? string.Empty).Trim().ToLowerInvariant(),
 				HistoryBucket = PolicyHistoryRetrievalService.ResolveHistoryBucketFromStatus(record.AgendaStatus),

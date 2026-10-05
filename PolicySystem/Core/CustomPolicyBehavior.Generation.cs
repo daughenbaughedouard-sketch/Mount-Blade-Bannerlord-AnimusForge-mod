@@ -9,8 +9,6 @@ using System.Text;
 using System.Text.RegularExpressions;
 using System.Threading;
 using System.Threading.Tasks;
-using AnimusForge.Refactor.Adapters;
-using AnimusForge.Refactor.Contracts;
 using AnimusForge.PolicyEffects;
 using AnimusForge.PolicyTargets;
 using HarmonyLib;
@@ -3407,23 +3405,14 @@ public sealed partial class CustomPolicyBehavior
 		Func<string, string, long, Task<string>> testOverride = PlayerPolicyApiTextOverrideForTests;
 		if (testOverride == null)
 		{
-			PromptPackage prompt = LegacyPolicyLlmGateway.BuildPromptPackage(
+			apiResult = await PolicyLlmClient.CallPolicyApiWithRetriesAsync(
 				messageArray,
-				Math.Max(1, callProfile?.MaxTokens ?? 1),
-				callProfile?.ModelName);
-			InteractionStage stage = resolvedSource.IndexOf("Postprocess", StringComparison.OrdinalIgnoreCase) >= 0
-				? InteractionStage.Postprocess
-				: InteractionStage.MainReply;
-			LlmGenerateRequest gatewayRequest = LegacyPolicyLlmGateway.BuildRequest(
-				prompt,
 				callProfile,
+				PlayerPolicyEvaluationTimeoutMilliseconds,
 				resolvedSource,
 				runtimeGeneration,
-				PlayerPolicyEvaluationTimeoutMilliseconds,
-				stage);
-			LlmGenerateResult gatewayResult = await new LegacyPolicyLlmGateway(false, callProfile)
-				.GenerateAsync(gatewayRequest, cancellationToken).ConfigureAwait(false);
-			apiResult = LegacyPolicyLlmGateway.ToLegacyResult(gatewayResult);
+				3,
+				cancellationToken);
 		}
 		else
 		{
@@ -5466,10 +5455,6 @@ public sealed partial class CustomPolicyBehavior
 				PolicyName = FirstNonEmpty(policy.PolicyName, history?.PolicyName),
 				PolicyContent = FirstNonEmpty(policy.PolicyContent, history?.PolicyContentSummary),
 				ImpactSummary = FirstNonEmpty(history?.ImpactEffectsSummary, history?.ImpactSummary, policy.SecondaryEffects),
-				DiplomacyImpactSummary = LimitDisplayChars(BuildPolicyRecordEffectSummary(history, includeRemainingDays: false), MaxPolicyRecordImpactChars),
-				DiplomacyRevisionKey = string.Join(";", (history?.Effects ?? new List<PolicyRecordEffectSaveData>())
-					.Where(effect => effect != null).Select(effect => effect.EffectId + ":" + effect.TotalDurationDays.ToString(CultureInfo.InvariantCulture))
-					.OrderBy(value => value, StringComparer.Ordinal)),
 				PolicyStatus = policyStatus,
 				RawPolicyStatus = (policy.Status ?? string.Empty).Trim().ToLowerInvariant(),
 				HistoryBucket = PolicyHistoryRetrievalService.ResolveHistoryBucketFromStatus(policy.Status),
@@ -5519,7 +5504,6 @@ public sealed partial class CustomPolicyBehavior
 				PolicyName = policy.PolicyName ?? string.Empty,
 				PolicyContent = policy.PolicyContent ?? string.Empty,
 				ImpactSummary = FirstNonEmpty(policy.ImpactSummary, policy.EffectReason),
-				DiplomacyRevisionKey = policy.RenewalCount.ToString(CultureInfo.InvariantCulture) + ":" + policy.OriginalDurationDays.ToString(CultureInfo.InvariantCulture),
 				PolicyStatus = policyStatus,
 				RawPolicyStatus = (policy.Status ?? string.Empty).Trim().ToLowerInvariant(),
 				HistoryBucket = PolicyHistoryRetrievalService.ResolveHistoryBucketFromStatus(policy.Status),

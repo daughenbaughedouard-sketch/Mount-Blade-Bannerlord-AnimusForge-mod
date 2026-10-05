@@ -321,10 +321,6 @@ internal sealed class NpcRulerPolicyEffectPlanWireResponse
 
 internal sealed class NpcPolicyHistoryEntry
 {
-	// Diplomacy archives lifecycle observations; other retrievals retain the live countdown display.
-	internal string DiplomacyImpactSummary { get; set; }
-	internal string DiplomacyRevisionKey { get; set; } = string.Empty;
-
 	internal string EntryId { get; set; } = string.Empty;
 
 	internal string SourceKind { get; set; } = string.Empty;
